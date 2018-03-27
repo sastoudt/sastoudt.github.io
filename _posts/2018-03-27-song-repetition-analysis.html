@@ -141,13 +141,13 @@ require(stringr)</code></pre>
 <p>This will prompt you to enter your client access token.</p>
 <pre class="r"><code>genius_token()</code></pre>
 <p>Let’s test it out with the catchy ``Shape of You&quot; by Ed Sheeran.</p>
-<pre class="r"><code>gm_search &lt;- search_song(search_term = &quot;shape of you&quot;) %&gt;%
+<pre class="r"><code>findSong &lt;- search_song(search_term = &quot;shape of you&quot;) %&gt;%
   filter(artist_name == &quot;Ed Sheeran&quot;)
 
-gm_lyrics &lt;- scrape_lyrics_id(song_id = gm_search$song_id[1]) 
+lyrics &lt;- scrape_lyrics_id(song_id = findSong$song_id[1]) 
 ## more than one of this song because of remixes, we just want the first one
 
-head(gm_lyrics)</code></pre>
+head(lyrics)</code></pre>
 <pre><code>## # A tibble: 6 x 5
 ##   line                            song_id song_name  artist_id artist_name
 ##   &lt;chr&gt;                             &lt;int&gt; &lt;chr&gt;          &lt;int&gt; &lt;chr&gt;      
@@ -159,7 +159,7 @@ head(gm_lyrics)</code></pre>
 ## 6 And trust me I'll give it a ch… 2949128 Shape of …     12418 Ed Sheeran</code></pre>
 <p><strong>Step 2: Preprocess Lyrics</strong></p>
 <p>This gives us a line per row, but we want individual words. We also want to pre-process the text, removing punctuation and transferring to lower case.</p>
-<pre class="r"><code>allone=str_c(gm_lyrics$line,collapse=&quot; &quot;) ##concatenate
+<pre class="r"><code>allone=str_c(lyrics$line,collapse=&quot; &quot;) ##concatenate
 
 ## remove punctuation
 allone=gsub(&quot;,&quot;,&quot;&quot;,allone)
@@ -177,13 +177,13 @@ head(wordByWord)</code></pre>
 <pre><code>## [1] &quot;the&quot;   &quot;club&quot;  &quot;isn't&quot; &quot;the&quot;   &quot;best&quot;  &quot;place&quot;</code></pre>
 <p>We can generalize this code into a function for future use.</p>
 <pre class="r"><code>processSong&lt;-function(songName,artist){
-  gm_search &lt;- search_song(search_term = songName) %&gt;%
+  findSong &lt;- search_song(search_term = songName) %&gt;%
     filter(artist_name == artist)
   
-  gm_lyrics &lt;- scrape_lyrics_id(song_id = gm_search$song_id[1])
+  lyrics &lt;- scrape_lyrics_id(song_id = findSong$song_id[1])
   
 
-  allone=str_c(gm_lyrics$line,collapse=&quot; &quot;)
+  allone=str_c(lyrics$line,collapse=&quot; &quot;)
   
   ## remove punctuation
   allone=gsub(&quot;,&quot;,&quot;&quot;,allone)
