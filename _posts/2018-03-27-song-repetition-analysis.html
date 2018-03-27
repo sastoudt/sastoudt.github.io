@@ -125,7 +125,7 @@ $(document).ready(function () {
 </div>
 
 
-<p>Rick Wicklin (<span class="citation">@RickWicklin</span>) posted a blog post <a href="https://blogs.sas.com/content/iml/2018/03/14/visualize-repetition-lyrics.html">blog post</a> recently about how to visualize repetition in song lyrics using SAS. I wanted to do the same thing using R and also utilizing <a href="https://github.com/ewenme/geniusr">geniusr</a> to more easily access a variety of song lyrics to compare.</p>
+<p>Rick Wicklin (<span class="citation">@RickWicklin</span>) posted a <a href="https://blogs.sas.com/content/iml/2018/03/14/visualize-repetition-lyrics.html">blog post</a> recently about how to visualize repetition in song lyrics using SAS. I wanted to do the same thing using R and also utilizing <a href="https://github.com/ewenme/geniusr">geniusr</a> to more easily access a variety of song lyrics to compare.</p>
 <p>Note: There is also <a href="https://github.com/JosiahParry/geniusR">geniusR</a> that I did not dig into further.</p>
 <p>First let’s create some functions to make it easy to compare a bunch of different songs.</p>
 <p><strong>Step 1: Get Lyrics</strong></p>
@@ -211,7 +211,7 @@ findMatch&lt;-function(x,corpus){
 matches=lapply(1:length(wordByWord),findMatch,wordByWord)
 toFill=do.call(&quot;rbind&quot;,matches)
 toPlot[toFill]=1</code></pre>
-<p>Note: to match the plots made in Wicklin’s post, we make (1,1) in the top left corner. White means repeated words. A groups of repeated words often is a chorus.</p>
+<p>Note: to match the plots made in Wicklin’s post, we make (1,1) in the top left corner. White denotes repetition. A groups of repeated words often is a chorus.</p>
 <pre class="r"><code>mtx.tmp.h &lt;- apply(toPlot, 1, rev) ## need to flip horizontally
 # thank you to: https://everydropr.wordpress.com/2012/10/16/a-simple-way-to-flip-a-matrix-or-an-array/
 
@@ -266,7 +266,7 @@ makeRepetitionPlot(lyr2,&quot;Say Something&quot;,&quot;Justin Timberlake&quot;)
 </div>
 <div id="rap-repetitive-v.-story" class="section level3">
 <h3>Rap: Repetitive v. Story</h3>
-<p>When I was trying to pick examples for this post, my brother, Scott recommended looking at the song ``Gucci Gang&quot; because of how often those two words occur in the song. To juxtapose this repetition, I chose Eminem who is known for rap that tells more of a story with songs that sometimes do not even have a reoccurring chorus.</p>
+<p>When I was trying to pick examples for this post, my brother Scott recommended looking at the song ``Gucci Gang&quot; because of how often those two words occur in the song. To juxtapose this repetition, I chose Eminem who is known for rap that tells more of a story with songs that sometimes do not even have a reoccurring chorus.</p>
 <pre class="r"><code>lyr=processSong(&quot;Gucci Gang&quot;,&quot;Lil Pump&quot;)
 lyr2=processSong(&quot;Lose Yourself&quot;,&quot;Eminem&quot;)
 
