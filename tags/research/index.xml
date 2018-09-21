@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Research on Sara A. Stoudt</title>
+    <link>/tags/research/</link>
+    <description>Recent content in Research on Sara A. Stoudt</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
+    
+	<atom:link href="/tags/research/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Research</title>
+      <link>/research/</link>
+      <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
+      
+      <guid>/research/</guid>
+      <description>Graduate Research (ongoing) Clarifying the Identifiability Controversy in Species Distribution Modeling  Advisors: Will Fithian and Perry de Valpine  We are interested in tracking plants and animals over time and space and understanding how their prevalence (proportion of area where they are found) and abundance (quantity) change. Collecting data is expensive, so it is important to know what data collection protocols we need to use in order to have enough information to estimate these quantities of interest.</description>
+    </item>
+    
+  </channel>
+</rss>

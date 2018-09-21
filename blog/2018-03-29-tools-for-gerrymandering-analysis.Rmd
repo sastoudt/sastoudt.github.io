@@ -1,0 +1,391 @@
+---
+title: "Generating and Visualizing Valid Redistricting Scenarios"
+date: 2018-03-29T16:34:33-07:00
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+I recently spent some time at the [Geometry of Redistricting Hackathon](https://gerrymandrsanfrancisco.weebly.com/) where I learned about quantitative approaches to assessing [gerrymandering](https://en.wikipedia.org/wiki/Gerrymandering). Check out the [Metric Geometry and Gerrymandering Group on GitHub](https://github.com/gerrymandr) to see how you can get involved. I focused on improving documentation during my brief time at the hackathon, but I did not get a chance to contribute as much as I would have liked during the hackathon itself due to my own time constraints.  
+
+Here I hope to continue to improve the overall documentation by giving some intuition about how one can generate valid redistricting plans and evaluate them based on compactness measures using the *mandeR* and *redist* packages as well as some code from the [MCMC visualization project](https://github.com/gerrymandr/mcmcviz/). The [*mandeR* package](https://github.com/gerrymandr/mandeR) takes shapefiles and calculates a variety of compactness measures for each polygon. The [*redist* package](https://cran.r-project.org/web/packages/redist/redist.pdf) implements a Markov Chain Monte Carlo (MCMC) approach to generating valid redistricting plans. We combine the functionality of both to get some intuition about the issues facing the quantitative study of gerrymandering. 
+
+```{r,results='hide', message=FALSE, warning=FALSE}
+require(redist)
+require(mandeR)
+require(ggplot2) ## need latest version for geom_sf()
+require(sf) ## for working with shape files
+require(dplyr)
+require(parallel) ## speed up some of the calculations
+require(gridExtra)
+```
+
+*See the [README](https://github.com/gerrymandr/mandeR) for mandeR if you have trouble installing it.
+
+The *redist* package implements a new approach for simulating possible redistricting scenarios using MCMC. [Fifield et al.](https://pdfs.semanticscholar.org/5b98/35432f4ceaf53fca801fd98571e9323fdd25.pdf) define the problem as "a state consisting of $m$ geographical units (e.g. census blocks or voting precincts) must be divided into $n$ contiguous districts."
+
+### redist.enumerate()
+
+For small $m$ or $n$ it may be possible to enumerate all valid redistricting plans with a specified number of districts given a set of geographic units. *redist.enumerate()* does this, but quickly becomes too slow as $m$ and $n$ increase. The example provided by the documentation enumerates all possible redistricting plans for 25 contiguous precincts in Florida. The method only expects an adjacency list (which geographic units share a boundary), and does not utilize any other spatial information. 
+
+```{r,cache=T}
+data(algdat.pfull)
+ptm <- proc.time()
+test=redist.enumerate(adjobj=algdat.pfull$adjlist,ndists=2)#,popvec=algdat.pfull$precinct.data,popcons=0.05)
+time=proc.time() - ptm
+
+time
+
+length(test)
+
+test[[1]]
+```
+
+We can see the number of valid redistricting scenarios. A valid redistricting scenario gives a district label to each geographic unit (here a 1 or 2).
+
+If we want to impose [equal population constraints](http://redistricting.lls.edu/where.php) for each district, the *popvec* argument allows us to give population values for each geographical unit, and *popcons* gives the threshold for how far from equal population we will allow (here we specify within 5%).
+
+```{r,cache=T}
+ptm <- proc.time()
+test=redist.enumerate(adjobj=algdat.pfull$adjlist,ndists=2,popvec=algdat.pfull$precinct.data$pop,popcons=0.05)
+time=proc.time() - ptm
+
+time
+
+length(test)
+
+test[[1]]
+```
+
+We can see there are many fewer valid redistricting scenarios when we impose this constraint.
+
+If we want three districts instead of two, we already reach intractability (at least for my patience level on my laptop).
+
+```{r,eval=F}
+test=redist.enumerate(adjobj=algdat.pfull$adjlist,ndists=3) ## don't run
+```
+
+### redist.mcmc()
+
+If it is not feasible to try all possible combinations, how can we generate possible redistricting scenarios efficiently? The challenge is that a random "redistricting" may not be a valid one. We also need to impose a certain structure (contiguous geographic units) and set of constraints (equal population, geographical compactness). Previous approaches are inefficient and ad-hoc.  *redist.mcmc()* is an algorithm that uses MCMC to uniformly sample redistricting plans with a specified number of contiguous districts subject to constraints.
+
+Let's walk through the example in the documentation:
+
+```{r,cache=T,results='hide', message=FALSE, warning=FALSE}
+## Get an initial partition
+initcds <- algdat.pfull$cdmat[,sample(1:ncol(algdat.pfull$cdmat), 1)]
+## Run the algorithm
+alg_253 <- redist.mcmc(adjobj = algdat.pfull$adjlist, popvec = algdat.pfull$precinct.data$pop, initcds = initcds, nsims = 10000)
+```
+
+```{r,cache=T}
+names(alg_253)
+dim(alg_253$partitions)
+alg_253$partitions[1,1:10]
+```
+
+### Visualization of Districts
+
+For each geographic unit, we see which district it is placed in per iteration. We can also track various constraint measures. However, this all operates via adjacency list, which isn't easy to parse. What if we want to visualize these redistricting scenarios to better see what is going on? We will use some helper functions from the [mcmcviz project](https://github.com/gerrymandr/mcmcviz/blob/master/src/load_functions.R).
+
+```{r}
+## wrapper for redist.mcmc
+## pre-procceing: change shapefile to adjacency list
+## post-processing: thinning
+#redistrict = function(geom, nsims, nthin, nburn, ndists, popcons, eprob, lambda) {
+  redistrict = function(geom, nsims, nthin, nburn, ndists, popcons) { ## changed for our example
+  adj_obj = st_relate(geom, pattern = "****1****")
+  mcmc = redist.mcmc(adj_obj, geom$population, 
+                     nsims=nsims+nburn, ndists=ndists, popcons=popcons) ## removed eprob, lambda for our example
+  
+  mcmc$partitions %>% as.data.frame() %>% as.list() ##thin(nsims, nburn, nthin=nthin) %>% ## took out thin, couldn't find the appropriate function (not coda)
+}
+
+## groups geographic units into districts, makes polygons by pasting all together
+create_district_map = function(geom, districts)
+{
+  mutate(geom, district = as.character(districts)) %>% 
+    group_by(district) %>% 
+    summarize(
+      population = sum(population), 
+      geometry = st_union(geometry)
+    ) 
+}
+
+## gets a district map per iteration
+gather_maps=function(geom, iters) {
+  mclapply(iters,  create_district_map, geom = geom, mc.cores = detectCores()) ## parallel
+}
+```
+
+
+The mcmcviz project also has some real shapefiles of [Anne Arundel, MD](https://github.com/gerrymandr/mcmcviz/tree/master/data) that we will use here. I have this data downloaded locally, but I would love if someone could tell me how to load a shapefile from GitHub via code (I suspect issues because the other .dbf, .prj, etc. files are also needed at the same time).
+
+```{r,cache=T,results='hide', message=FALSE, warning=FALSE}
+setwd("~/Desktop/mcmcviz/data")
+geom = st_read("AnneArundelN.shp", quiet = TRUE)
+names(geom) = tolower(names(geom)) ## needed in order for redist.rsg to be able to create an initial districting
+iters = redistrict(geom, nsims=1000, nthin=10, nburn=100, ndists=3, popcons=0.05)
+
+maps = gather_maps(geom, iters) ## time intensive even in parallel
+```
+
+```{r,cache=T}
+## look at a few iterations
+mapdata1 = maps[[1]]
+mapdata2 = maps[[10]]
+mapdata3 = maps[[20]]
+mapdata4 = maps[[30]]
+mapdata5 = maps[[40]]
+mapdata6 = maps[[50]]
+
+mapDistrict<-function(idx){
+  mapdata=maps[[idx]]
+  g1=ggplot(mapdata)+geom_sf(aes(fill=district))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+  return(g1)
+}
+
+g1=mapDistrict(1)
+g2=mapDistrict(10)
+g3=mapDistrict(20)
+g4=mapDistrict(30)
+g5=mapDistrict(40)
+g6=mapDistrict(50)
+
+grid.arrange(g1,g2,g3,g4,g5,g6,ncol=2)
+```
+
+```{r,eval=F,echo=F}
+g1=ggplot(mapdata1)+geom_sf(aes(fill=district))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g2=ggplot(mapdata2)+geom_sf(aes(fill=district))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g3=ggplot(mapdata3)+geom_sf(aes(fill=district))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g4=ggplot(mapdata4)+geom_sf(aes(fill=district))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g5=ggplot(mapdata5)+geom_sf(aes(fill=district))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g6=ggplot(mapdata6)+geom_sf(aes(fill=district))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+
+grid.arrange(g1,g2,g3,g4,g5,g6,ncol=2)
+```
+
+### Compactness Measures
+
+Using the [README from **mandeR**](https://github.com/gerrymandr/mandeR) we can now check the compactness measures of the proposed redistricting scenarios.
+
+Expanding on the description of compactness measures from [**compactnesslib**](https://github.com/gerrymandr/compactnesslib/blob/master/Scores.md):
+
+
+ - *convex hull score*: ratio of the area of the district to the area of the minimum convex polygon that can enclose the district's geometry
+ - *Reock score*: measure of the ratio of the area of the district to the area of the minimum bounding circle that encloses the district's geometry.
+ - *Schwartzberg score*: ratio of the perimeter of the district to the circumference of a circle whose area is equal to the area of the district
+ - *Polsby-Popper measure*: ratio of the area of the district to the area of a circle whose circumference is equal to the perimeter of the district
+ 
+ Read more about compactness measures [here](https://arxiv.org/pdf/1803.02857.pdf).
+
+
+```{r,cache=T,results='hide', message=FALSE, warning=FALSE}
+mapdata = maps[[1]]
+
+#Convert the shapefile to WKT (class needed by compactlib)
+wkt_str <- lapply(st_geometry(mapdata),st_as_text)
+
+#Retrieve compactness scores from mandeR
+scores <- lapply(wkt_str,getScoresForWKT)
+scores=do.call(rbind,scores)
+scores$id=1:nrow(scores)
+
+#Merge scores back into districts
+dists<-merge(mapdata,scores,by.x="district",by.y="id")
+
+names(dists)
+
+mapScore<-function(dists,name){
+  g1=ggplot(dists)+geom_sf(aes_string(fill =name ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+}
+
+
+
+g1=mapScore(dists,"population")
+g2=mapScore(dists,"CvxHullPS")
+g3=mapScore(dists,"ReockPS")
+g4=mapScore(dists,"Schwartzbe")
+g5=mapScore(dists,"PolsbyPopp")
+grid.arrange(g1,g2,g3,g4,g5,ncol=2)
+
+mapdata = maps[[50]]
+
+#Convert the shapefile to WKT 
+wkt_str <- lapply(st_geometry(mapdata),st_as_text)
+
+#Retrieve compactness scores from mandeR
+scores <- lapply(wkt_str,getScoresForWKT)
+scores=do.call(rbind,scores)
+scores$id=1:nrow(scores)
+
+#Merge scores back into districts
+dists<-merge(mapdata,scores,by.x="district",by.y="id")
+
+g1=mapScore(dists,"population")
+g2=mapScore(dists,"CvxHullPS")
+g3=mapScore(dists,"ReockPS")
+g4=mapScore(dists,"Schwartzbe")
+g5=mapScore(dists,"PolsbyPopp")
+grid.arrange(g1,g2,g3,g4,g5,ncol=2)
+
+
+```
+
+```{r,eval=F,echo=F}
+g1=ggplot(dists)+geom_sf(aes(fill =population ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g2=ggplot(dists)+geom_sf(aes(fill =CvxHullPS ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g3=ggplot(dists)+geom_sf(aes(fill =ReockPS ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g4=ggplot(dists)+geom_sf(aes(fill =Schwartzbe ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g5=ggplot(dists)+geom_sf(aes(fill =PolsbyPopp ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+grid.arrange(g1,g2,g3,g4,g5,ncol=2)
+```
+
+```{r,cache=T,results='hide', message=FALSE, warning=FALSE,eval=F,echo=F}
+mapdata = maps[[50]]
+
+#Convert the shapefile to WKT 
+wkt_str <- lapply(st_geometry(mapdata),st_as_text)
+
+#Retrieve compactness scores from mandeR
+scores <- lapply(wkt_str,getScoresForWKT)
+scores=do.call(rbind,scores)
+scores$id=1:nrow(scores)
+
+#Merge scores back into districts
+dists<-merge(mapdata,scores,by.x="district",by.y="id")
+
+g1=mapScore(dists,"population")
+g2=mapScore(dists,"CvxHullPS")
+g3=mapScore(dists,"ReockPS")
+g4=mapScore(dists,"Schwartzbe")
+g5=mapScore(dists,"PolsbyPopp")
+grid.arrange(g1,g2,g3,g4,g5,ncol=2)
+
+```
+
+```{r,eval=F,echo=F}
+#Plot districts showing each of the scores
+g1=ggplot(dists)+geom_sf(aes(fill =population ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g2=ggplot(dists)+geom_sf(aes(fill =CvxHullPS ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g3=ggplot(dists)+geom_sf(aes(fill =ReockPS ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g4=ggplot(dists)+geom_sf(aes(fill =Schwartzbe ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+g5=ggplot(dists)+geom_sf(aes(fill =PolsbyPopp ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+grid.arrange(g1,g2,g3,g4,g5,ncol=2)
+```
+
+### Comparing Across Possible Redistricting Scenarios
+
+If we want to more systematically compare all of the redistricting options, we can get compactness scores for all of the iterations.
+
+```{r,cache=T}
+getScoresFn=function(mapdata){
+  wkt_str <- lapply(st_geometry(mapdata),st_as_text)
+
+#Retrieve compactness scores from mandeR
+scores <- lapply(wkt_str,getScoresForWKT)
+scores=do.call(rbind,scores)
+scores$id=1:nrow(scores)
+
+#Merge scores back into districts
+dists<-merge(mapdata,scores,by.x="district",by.y="id")
+return(dists)
+}
+
+scoresPerIter=mclapply(maps,getScoresFn,mc.cores = detectCores())
+```
+
+Then we can plot the density of the scores. This can help us see which particular redistricting plans are extreme (used as evidence for intentional gerrymandering).
+
+```{r,fig.width=12,cache=T}
+par(mfrow=c(1,2))
+plot(density(unlist(lapply(scoresPerIter,function(x){mean(x$PolsbyPopp)}))),main="Avg PolsbyPopp")
+plot(density(unlist(lapply(scoresPerIter,function(x){sd(x$PolsbyPopp)}))),main="SD PolsbyPopp")
+```
+
+### Summary 
+
+Now we can: 
+
+1. Take any shapefile that contains geographic units.
+2. Use the *redist.mcmc()* function in *redist* to get possible redistricting scenarios.
+3. Use the *getScoresForWKT()* function in *mandeR* to get compactness scores for the districts proposed in each iteration of the MCMC.
+4. Plot the different district scenarios along with their scores to visually assess their suitability
+5. Look at distributions of particular characteristics of possible redistricting scenarios to help us identify particular scenarios that may be intentionally chosen unfairly. 
+
+#### Feedback, questions, comments, etc. are welcome (@sastoudt).

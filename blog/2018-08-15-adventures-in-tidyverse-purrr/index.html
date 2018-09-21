@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">A Tale of Two Kitties: Two apply Users Convert to purrr</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON AUG 15, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>For this post about <code>purrr</code>, I had help from Kellie Ottoboni (<span class="citation">@kellieotto</span>) since we both wanted to update our skills. We both took some code from our own research and converted it from its original form (usually with variants of <code>apply</code>) to variants of <code>map</code>. This post talks about that experience, pitfalls we ran into, and cool tricks we learned.</p>
+<div id="saras-adventure-in-the-tidyverse" class="section level2">
+<h2>Sara’s Adventure in the Tidyverse</h2>
+<p>The goal for the code I’m revamping is to simulate data under a variety of scenarios where various parameters change. Within each set of parameters, we want to repeat the simulation multiple times (here <code>KK</code>) so that we can quantify our uncertainty. <code>changeHelper</code> simulates the data and analyzes it.</p>
+<p>It’s easier to see what is going on if I start with the purrr version because the original code was A MESS.</p>
+<p><em>Note</em>: I’m showing pseudocode because this is part of a collaborative project that hasn’t been released yet.</p>
+<pre class="r"><code>require(abind)
+
+changeSim &lt;- function(params, KK){
+
+  ## for each set of parameters, repeat the simulation KK times
+  replicateR &lt;- map(rep(list(params), times = KK), changeHelper)
+  
+  ## changeHelper returns a list with two elements: betaStore and lambdaStore
+  replicateRb &lt;- map(replicateR, ~.x$betaStore)
+  replicateRl &lt;- map(replicateR, ~.x$lambdaStore)
+
+  ## or use transpose instead
+  #output &lt;- replicateR %&gt;% transpose
+  
+  ## organize the output so I can easily process it to make plots
+  return(list(betas = abind(replicateRb, along = 0), lambdas = abind(replicateRl, along = 0)))
+  #return(list(betas = abind(output$betaStore, along = 0), lambdas = abind(output$lambdaStore, along = 0)))
+}</code></pre>
+<p>Not only does <code>purrr</code> help simplify running the simulations, it also helps me set up the possible values of parameters. I want to keep most aspects of the simulation the same but change one aspect at a time.</p>
+<pre class="r"><code>betaOpt &lt;- seq(0.1,3,by=.3)
+N &lt;- 100
+
+## get list of parameter sets
+## the variables in toChange are the things I&#39;m varying in this case study
+inputChangeBetaSim &lt;- map(betaOpt,
+                          ~ list(toChange = list(v = rep(0.2, times = N), lambda = 0.5, beta =.x),    
+                              predVT= T, respVT = T, N = N, mu = 5, var = 1.3, alpha = -0.2, n = rpois(N,10), sigma = 1))
+
+## apply list of parameter sets to the simulation function
+changeBetaR &lt;- map(inputChangeBetaSimLL, changeSim, KK)
+
+## get the separate pieces that I need out of the output
+betas &lt;- map(changeBetaR, ~ .x$betas)
+lambdas &lt;- map(changeBetaR, ~ .x$lambdas)
+
+## or we could use transpose
+output &lt;- changeBetaR %&gt;% transpose
+
+## transpose goes from this:
+changeBetaR[[1]]$betas
+changeBetaR[[1]]$lambdas
+
+## to this:
+output$betas[[1]]
+output$lambda[[1]]</code></pre>
+<p>It is possible to get a simulated data set that give the analysis method trouble. To avoid having one error ruin a whole <code>map</code> statement, we can use <code>possibly</code> to fill in blank output if we run into an error in the <code>analyzeData</code> function. This is an alternative to <code>tryCatch</code> and (in my opinion) is easier to remember.</p>
+<pre class="r"><code>carefulAnalyzeData=possibly(analyzeData,list(betaStore=NA,lambdaStore=NA)) ## an alternative to tryCatch
+
+changeHelper &lt;- function(params){
+## simulate data
+  data=simData(params)
+## analyze simulated data
+  #results = analyzeData(data)
+  
+  #results=tryCatch(analyzeData(data),error=function(e){list(betaStore=NA,lambdaStore=NA)})
+  results=carefulAnalyzeData(data)
+  return(results)
+}</code></pre>
+<p>To improve performance, I can choose the slowest <code>map</code> statement and run it in parallel using furrr (akin to <code>mclapply</code>).</p>
+<p><em>Note</em>: I’m doing this on a Mac, so the <code>plan</code> code may differ on a PC.</p>
+<pre class="r"><code>require(furrr) # future purrr
+plan(cluster,workers=makeCluster(2))
+#plan(multiprocess) # will use all available cores
+
+changeBetaR &lt;- future_map(inputChangeBetaSimLL, changeSim, KK)</code></pre>
+<p>Now on to the original version. Brace yourself!</p>
+<p>Originally, all but the parameter I was changing was hard coded into a file that I sourced in <code>changeHelper</code>. This required separate functions depending on which parameter I was changing, and if I wanted to change the other aspects of the simulation, I had to make sure I changed the value everywhere so the results would be comparable. You can imagine how this worked out.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/9RVQKsEIA7MMo/giphy.gif" />
+
+</div>
+<pre class="r"><code>changeSim &lt;- function(betaOpt, KK){
+    betaOptR &lt;- lapply(rep(betaOpt, times = KK), changeBetaHelper)
+    betaOptRb &lt;- lapply(betaOptR, function(x){x$betaStore})
+    betaOptRl &lt;- lapply(betaOptR, function(x){x$lambdaStore})
+    return(list(betas = abind(betaOptRb, along=0),lambdas = abind(betaOptRl, along = 0)))
+}
+
+
+changeBetaR &lt;- lapply(betaOpt, changeBeta, KK)
+betas &lt;- lapply(changeBetaR, function(x){x$betas})
+lambdas &lt;- lapply(changeBetaR, function(x){x$lambdas})</code></pre>
+<p>To be fair this used to all be loops, so making the step towards <code>lapply</code> was progress.</p>
+<p>Recapping what changed:</p>
+<ol style="list-style-type: decimal">
+<li><p><code>lapply</code> –&gt; <code>map</code></p></li>
+<li><p>function(x){x$var} –&gt; ~.x$var</p></li>
+<li><p>hard coded aspects requiring many different source files –&gt; use <code>map</code> to generate sets of parameters where only a few things change</p></li>
+<li><p><code>transpose</code> to re-organize the two outputs</p></li>
+</ol>
+<p><strong>Verdict</strong></p>
+<p>Overall, I found the transition to <code>purrr</code> more straightforward than the transition to other packages in the tidyverse that I’ve learned so far. It definitely helped that I had forced myself to use the <code>apply</code> family of functions more often leading up to this. I wasn’t expecting the extra benefit of <code>possibly</code> and <code>transpose</code> but I can definitely see myself using them into my work moving forward.</p>
+<p>One annoying thing I ran into is that my R session got confused between <code>map</code> in the <code>maps</code> package and <code>map</code> in <code>purrr</code>. I ended up just using <code>purrr::map</code> to avoid any issues, but if I would have just <code>require</code>d <code>purrr</code> after <code>maps</code>, the default <code>map</code> would be the <code>purrr</code> one.</p>
+</div>
+<div id="kellies-adventure-in-the-tidyverse" class="section level2">
+<h2>Kellie’s Adventure in the Tidyverse</h2>
+<p>I’ve rewritten some code that I used to analyze a dataset from a clinical trial. The data needed to be reshaped before it could be pumped into the usual linear model functions. There were seven clinical endpoints, each of which we analyzed individually to determine whether two treatments differed in their effect on patients’ GERD symptoms. Originally, I looped over each variable using <code>apply</code>.</p>
+<p>The original code is <a href="https://github.com/kellieotto/ancova-permutations/blob/master/results/results.Rmd">here</a> if you want to take a look. First, let’s read in the data and have a look at it.</p>
+<pre class="r"><code>require(grid)
+require(gridExtra)
+library(tidyverse)
+datafile &lt;- &quot;https://raw.githubusercontent.com/kellieotto/ancova-permutations/master/data/clinical_cleaned.csv&quot;
+clinical &lt;- read.csv(datafile, header = TRUE, stringsAsFactors = FALSE)
+head(clinical)</code></pre>
+<pre><code>##   SUBJID SITEID VISITNUM tr country heart_sev regurg_sev dysp_sev
+## 1      1      1        1  A       1  1.428571   1.428571 1.571429
+## 2      1      1        2  A       1  1.428571   1.285714 2.142857
+## 3      2      1        1  B       1  2.714286   2.571429 2.000000
+## 4      2      1        2  B       1  2.285714   2.285714 1.857143
+## 5      3      1        1  A       1  2.000000   1.857143 1.714286
+## 6      3      1        2  A       1  1.857143   1.285714 1.142857
+##   heart_freq regurg_freq dysp_freq daily_heart daily_regurg daily_hrdq
+## 1   3.642857    4.285714  3.928571   0.8000000    0.8149357   1.614936
+## 2   3.642857    3.428571  5.571429   0.7831171    0.6688314   1.451949
+## 3   8.142857    7.500000  5.071429   1.9732257    1.7942057   3.767431
+## 4   8.571429    8.071429  5.642857   1.6983043    1.6619400   3.360239
+## 5   5.500000    1.285714  3.785714   1.2353657    0.5285714   1.763937
+## 6   3.428571    1.142857  2.214286   1.0000000    0.3785714   1.378571
+##   daily_dysp
+## 1  0.9000000
+## 2  1.3883129
+## 3  1.2201314
+## 4  1.2595414
+## 5  0.8441571
+## 6  0.5428571</code></pre>
+<p>We have measurements at two timepoints for each patient, and we want to control for the first measurement as a covariate in the regression model that estimates the effect of treatment on the outcome. To do this in R, the values need to be in separate columns. We need to reshape the data, hooray! For whatever reason, this is something I have a lot of trouble with conceptually. This step took me longer than anything involving <code>purrr</code>…</p>
+<p>You get a bonus tidyverse example: in this function, I changed old <code>reshape2</code> code to use <code>tidyr</code> instead. The function turns the data from long into wide format and selects only the relevant columns. The result is a dataframe for the clinical endpoint of interest, with one <code>baseline</code> column and an <code>outcome</code> column, in addition to other variables to put in the model. Previously, this function did something hacky to pick out the variable of interest, then used the <code>dcast</code> function to reshape. The <code>reshape2</code> package used formula syntax to specify keys and values; I find the syntax of <code>tidyr::spread</code> to be more straightforward.</p>
+<pre class="r"><code># Group the data to treat person (SUBJID) and first/second visit (VISITNUM) as a single observation
+data_by_subjid_visitnum &lt;- clinical %&gt;% group_by(SUBJID, VISITNUM)
+
+reshape_data &lt;- function(variable){
+  # Reshape data to be analyzed with regression
+  # Inputs:
+  # variable = the clinical endpoint of interest, input as a string
+  # Output:
+  # A dataframe with a single row per subject and columns for treatment, site ID, baseline + outcome measures
+  cleaned &lt;- data_by_subjid_visitnum %&gt;%
+    select_(&quot;VISITNUM&quot;, &quot;SUBJID&quot;, &quot;tr&quot;, &quot;SITEID&quot;, variable) %&gt;% # Pull out the columns we want
+    tidyr::spread_(key = &quot;VISITNUM&quot;, value = variable) # Turn VISITNUM into columns, with value equal to measure
+  colnames(cleaned) &lt;- c(&quot;SUBJID&quot;, &quot;tr&quot;, &quot;SITEID&quot;, &quot;Baseline&quot;, &quot;Outcome&quot;)
+  cleaned &lt;- ungroup(cleaned) %&gt;% 
+    mutate(difference = Outcome - Baseline) # Ungroup and create a difference column
+  return(cleaned)
+}</code></pre>
+<p>Now, instead of <code>apply</code>ing this function to each of the seven clinical endpoints, I used <code>purrr::map</code>. So clean!</p>
+<pre class="r"><code># Reshape each variable, store in a list
+continuous_vars &lt;- c(&quot;daily_heart&quot;, &quot;daily_regurg&quot;, &quot;daily_dysp&quot;, 
+                     &quot;daily_hrdq&quot;, &quot;heart_freq&quot;, &quot;regurg_freq&quot;, &quot;dysp_freq&quot;)
+reshaped_data &lt;- continuous_vars %&gt;% map(reshape_data)
+head(reshaped_data[[1]])</code></pre>
+<pre><code>## # A tibble: 6 x 6
+##   SUBJID tr    SITEID Baseline Outcome difference
+##    &lt;int&gt; &lt;chr&gt;  &lt;int&gt;    &lt;dbl&gt;   &lt;dbl&gt;      &lt;dbl&gt;
+## 1      1 A          1    0.800   0.783    -0.0169
+## 2      2 B          1    1.97    1.70     -0.275 
+## 3      3 A          1    1.24    1.00     -0.235 
+## 4      4 B          1    1.54    1.54      0.    
+## 5      5 A          1    1.21    1.11     -0.0935
+## 6      6 B          1    1.16    0.913    -0.243</code></pre>
+<p>Now I want to visualize the distribution of these variables in each treatment group. Same idea: I’m going to make the same kind of plot for each clinical endpoint by writing a plot function that I run for each variable. Previously, I used <code>apply</code>. Now, I want to loop over the reshaped data <em>and</em> the variable names (so each plot is labeled appropriately). I used <code>map2</code> for this: it just maps a function over two vectors of paired arguments. The first vector is the datasets and the second vector is the variable names.</p>
+<pre class="r"><code># Plot the distribution of Outcome for each variable
+
+plot_distributions &lt;- function(dataset, varname){
+  p &lt;- dataset %&gt;% 
+    mutate(tr = factor(tr)) %&gt;%
+    ggplot(aes(Outcome)) +
+    geom_density(alpha = 0.6, aes(fill = tr))+ 
+    labs(x = varname, fill = &quot;Treatment&quot;) +
+    theme_bw() +
+    theme(
+      axis.text.x = element_text(size = 12),
+      axis.text.y = element_text(size = 12),
+      axis.title = element_text(size = 16),
+      title = element_text(size = 16),
+      legend.title = element_text(size = 12),
+      legend.text = element_text(size = 14),
+      strip.text.x = element_text(size = 12)
+    ) 
+  return(p)
+}
+
+# Create a list containing a plot for each variable
+all_plots &lt;- map2(reshaped_data, continuous_vars, plot_distributions)</code></pre>
+<p>Ok, now a tricky step. Each plot has its own legend. I want to put all seven plots in one figure and just use one legend. Basically, you can grab just the legend element from one of the plots, remove it from all of the plots, then slap that saved legend wherever you want. That’s what I do below, again using <code>map</code> to set <code>legend.position=&quot;none&quot;</code> on each of the plots. I put the seven plots in a 2x4 grid, then put the legend in the open 8th spot.</p>
+<pre class="r"><code># Move the legend
+tmp &lt;- ggplot_gtable(ggplot_build(all_plots[[1]]))
+leg &lt;- which(sapply(tmp$grobs, function(x) x$name) == &quot;guide-box&quot;)
+legend &lt;- tmp$grobs[[leg]]
+
+# Remove the legend from each plot, then stick it at the end of the plot list
+all_plots &lt;- all_plots %&gt;% map(function(x) x + theme(legend.position=&quot;none&quot;))
+all_plots[[length(all_plots)+1]] &lt;- legend
+do.call(grid.arrange, c(all_plots, nrow = 2))</code></pre>
+<p><img src="/blog/2018-08-15-adventures-in-tidyverse-purrr_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p><strong>Verdict</strong></p>
+<p>Incorporating pipes in my code has made things infinitely more legible, and <code>purrr::map</code> just makes things even clearer. Throwing an <code>apply</code> in the middle of a pipe sequence kind of breaks the flow of reading from left to right. I think I will keep using <code>map</code> going forward!</p>
+<p><code>purrr</code> has so many more capabilities than just <code>map</code> and <code>map2</code>, though. I didn’t have the opportunity to explore all those other functions in this code, and to be frank I can’t think of examples from <em>my</em> work that would require using more complicated mapping functions. However I’m sure they are super useful.</p>
+<p><strong>We did it!</strong></p>
+<div class="figure">
+<img src="https://media.giphy.com/media/1iZT3bqPZIfN3flm/giphy.gif" />
+
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt-kellieotto.-tell-us-about-your-own-purrr-conversion" class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span> <span class="citation">@kellieotto</span>). Tell us about your own <code>purrr</code> conversion!</h4>
+</div>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-06-16-adventures-in-tidyverse-stringr/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-08-26-adventures-in-tidyverse-forcats/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

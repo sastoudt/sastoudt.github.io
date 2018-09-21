@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>About on Sara A. Stoudt</title>
+    <link>/tags/about/</link>
+    <description>Recent content in About on Sara A. Stoudt</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
+    
+	<atom:link href="/tags/about/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>About</title>
+      <link>/about/</link>
+      <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
+      
+      <guid>/about/</guid>
+      <description>My name is Sara Stoudt. I am a fourth year student in the UC Berkeley Statistics Department and a Berkeley Institute for Data Science Fellow. Prior to being a BIDS Fellow, I was supported by a National Physical Sciences Consortium Fellowship  with the National Institute of Standards and Technology  and part of the Data Science for the 21st Century: Environment and Society Training Program .
+My research focus is on ecological applications of statistics, and I am advised by Will Fithian and Perry de Valpine.</description>
+    </item>
+    
+  </channel>
+</rss>

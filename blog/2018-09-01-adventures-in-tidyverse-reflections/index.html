@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">You Can Teach a Base R Dog Tidy Tricks</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON SEP 1, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>This summer I aimed to update my R skills via the tidyverse and blog about my experience. See <a href="https://sastoudt.github.io/blog/2018/04/18/confessions-of-a-tidyverse-straggler">here</a> for my motivations.</p>
+<p>Although I didn’t make it through <strong>all</strong> of the tidyverse affiliated packages, I did finish blog posts for all of the core packages: <a href="https://sastoudt.github.io/blog/2018/04/23/adventures-in-tidyverse-ggplot2-part-1">ggplot</a> took <a href="https://sastoudt.github.io/blog/2018/05/01/adventures-in-tidyverse-ggplot2-part-2">two parts</a>, <a href="https://sastoudt.github.io/blog/2018/05/09/adventures-in-tidyverse-dplyr">dplyr</a>, <a href="https://sastoudt.github.io/blog/2018/05/16/adventures-in-tidyverse-tidyr">tidyr</a>, <a href="https://sastoudt.github.io/blog/2018/05/26/adventures-in-tidyverse-readr">readr</a>, <a href="https://sastoudt.github.io/blog/2018/06/03/adventures-in-tidyverse-tibble">tibble</a>, <a href="https://sastoudt.github.io/blog/2018/06/16/adventures-in-tidyverse-stringR">stringr</a>, <a href="https://sastoudt.github.io/blog/2018/08/15/adventures-in-tidyverse-purrr">purrr</a> joint with <span class="citation">@kellieotto</span>, and <a href="https://sastoudt.github.io/blog/2018/08/26/adventures-in-tidyverse-forcats">forcats</a>.</p>
+<p>This felt like a milestone worth briefly reflecting on, so here goes.</p>
+<div id="take-aways" class="section level3">
+<h3>Take-Aways</h3>
+<p><strong>What I learned has stuck much more than I thought it would.</strong> I didn’t expect my habits to change so noticeably. I’m mainly taking advantage of <code>purrr</code>, <code>tidyr</code>, <code>ggplot2</code>, and new <code>dplyr</code> tricks in my everyday work. Using these packages now comes pretty naturally. I’m not consciously saying to myself “oh, I should switch this to be tidy”, I’m just doing it. It helped that this summer I was interning, so I had my hands in data more than I usually do (muscle memory!). Commuting via public transportation also gave me blocks of time to focus on this. <code>ggplot2</code> is still a stumbling block for me if I’m trying to do something too fancy, but I am faceting and coloring by a variable like a champ. Also, shout out to Tidy Tuesday for giving me a chance to continually practice making a wide range of plots.</p>
+<p><strong>Working on this took longer than I thought.</strong> Thinking of motivating scenarios so that I wasn’t just going through the documentation examples was challenging. As optimistic as I was about a summer of getting things done while working, apparently I have limits. Who knew? There were some tricky aspects to the <code>tibble</code>, <code>stringR</code>, and <code>readr</code> posts that took me awhile to figure out, but because I had a specific goal within the blog’s scenario, I was motivated to persevere.</p>
+<p><strong>This exercise made me more patient and brave.</strong> I am much more likely now to spend some extra time making code nice instead of just slapping together something that works and moving on. Investing in tools and best practices has paid off. I am also less worried about making my code available to others. I hope that by me being open about my stumbling blocks, others will feel more comfortable sharing theirs. The #rstats community is kind and constructive. Plus every “like” on Twitter from one of my posts gives me a little boost #sorrynotsorry.</p>
+</div>
+<div id="whats-next" class="section level3">
+<h3>What’s Next?</h3>
+<p>The elephant in the room is that my actual blog setup is horrendous. When I first started out, I couldn’t figure out blogdown and I didn’t want to lose my momentum to get the blog going. So first up is to improve my website and blog workflow. I am definitely open to suggestions and resources.</p>
+<p>I also want to continue with the other tidyverse affiliated packages (and try to keep up with Tidy Tuesday). There is plenty more to learn.</p>
+<p>Longer term, I want to start getting involved in the open source community. I plan to tackle some beginner pull requests this year (thanks to <span class="citation">@dpseidel</span> and <span class="citation">@alexpghayes</span> for pointing out places to start) to get some experience.</p>
+<p><strong>Thank you to everyone who has kept up with my journey, given my posts a signal boost, and provided suggestions along the way!</strong></p>
+<div class="figure">
+<img src="https://media.giphy.com/media/sAgTPZCbRb0CQ/giphy.gif" alt="I started this whole thing with an Usher reference, so I have to bookend it here." />
+<p class="caption">I started this whole thing with an Usher reference, so I have to bookend it here.</p>
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+</div>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-08-26-adventures-in-tidyverse-forcats/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

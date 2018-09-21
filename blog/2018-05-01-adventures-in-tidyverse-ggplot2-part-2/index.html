@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Reliving my Undergrad Thesis via ggplot2: Part 2</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAY 1, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>In a <a href="https://sastoudt.github.io/blog/2018/04/23/adventures-in-tidyverse-ggplot2-part-1">previous post</a> I tackled reproducing one type of plot from my undergrad thesis (maps with color coded dots). The goal for this post is to recreate an interpolated heat map over an actual US map in ggplot. Full disclosure: this was a struggle, and it still isn’t perfect.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/vO8F4fYQd39h6/giphy.gif" alt="This was definitely me at many points throughout the process." />
+<p class="caption">This was definitely me at many points throughout the process.</p>
+</div>
+<p>But I recognize that practice builds intuition, so if you know how I can do something better or how to answer one of my lingering questions, please reach out!</p>
+<p>The original plots were made by:</p>
+<ol style="list-style-type: decimal">
+<li>Projecting training data.</li>
+<li>Fiting model on projected coordinates.</li>
+<li>Making predictions on a grid bounded by the bounding box of the continental United States.</li>
+<li>Plotting using a hacky version of <code>fitted.contour()</code> where the colors map to quantiles.</li>
+<li>Coloring over everything that is outside of the continental United States in white.</li>
+</ol>
+<p>See the code <a href="https://github.com/sastoudt/sastoudt.github.io/blob/master/_posts/scratchCode/thesisMap2_original.R">here</a>.</p>
+<p>To switch this over to ggplot I first made two simplifications:</p>
+<ol style="list-style-type: decimal">
+<li>Use lat/long instead of projected points.</li>
+<li>Skip the heat map at first and just do color coded points.</li>
+</ol>
+<p>First I get set up, build the model, and get predictions on a grid. Nothing has changed here from my original approach except doing the model on the lat/long coordinates instead of the projected points. The details of the model are not important here. Feel free to skip past this chunk and just know that <code>coordPred</code> holds the predictions we want to plot on a heatmap.</p>
+<pre class="r"><code>### set up ###
+require(ggplot2)
+require(mgcv)
+require(maps)
+require(sp)
+require(tigris)
+require(RColorBrewer)</code></pre>
+<pre class="r"><code>setwd(&quot;~/Smith/Senior Year/Stoudt_Thesis/Data&quot;)
+us&lt;-read.csv(&quot;usToUseNoDuplicates.csv&quot;)
+
+setwd(&quot;~/Smith/Senior Year/Stoudt_Thesis/Data/FINAL&quot;)
+training&lt;-read.csv(&quot;trainingFinal.csv&quot;)
+
+## do on original coordinates for now
+## get bounding box for prediction
+#x = seq(from=min(us$long), to=max(us$long), by=.1)  ## clips off part of west coast
+x=seq(from=min( map_data(&quot;state&quot;)$long),to=max( map_data(&quot;state&quot;)$long),by=.1)
+#y = seq(from=min(us$lat), to=max(us$lat), by=.1)
+y=seq(from=min( map_data(&quot;state&quot;)$lat),to=max( map_data(&quot;state&quot;)$lat),by=.1)
+nx = length(x); ny = length(y)
+xy = expand.grid(long=x,lat=y)
+
+b1=c(&quot;cr&quot;,&quot;ps&quot;,&quot;tp&quot;)
+isPenalized1=c(T,F)
+te1Param&lt;-as.data.frame(expand.grid(b1,isPenalized1))
+names(te1Param)&lt;-c(&quot;basis&quot;,&quot;isPenalized&quot;)
+te1Param$basis=as.character(te1Param$basis)
+
+training$uraniumTransform=1/(1+exp(-training$uranium)) # transform to [0,1] for beta
+
+## optimal parameters in this case
+data=te1Param[3,]
+basis=data[[1]]
+isPenalized=data[[2]]
+
+uranium.gam=gam(uraniumTransform ~ te(long,lat,bs=basis,fx=isPenalized),
+                family=betar(link=&quot;logit&quot;), data=training)
+
+zGRID.gam = predict(uranium.gam, newdata=xy)
+
+coordPred=cbind.data.frame(x,y,zGRID.gam)</code></pre>
+<p>Now I need to eliminate all the predictions that lie outside of the continental United States. To do this, I get the borders of the continental United States and use the <code>over</code> function to figure out which of the predicted points lie within the borders.</p>
+<p><strong>Fun Fact</strong>: The <code>pumas</code> function outputs progress to the console that we want to <a href="https://support.rstudio.com/hc/en-us/community/posts/115005857147-Turn-off-data-frame-and-R-console-output-in-R-Notebook-but-keep-plots">suppress</a> in this RMarkdown file.</p>
+<pre class="r"><code>#### get within continental US ####
+
+pts = SpatialPoints(coordPred[,1:2])
+
+#https://journal.r-project.org/archive/2016/RJ-2016-043/RJ-2016-043.pdf
+## There is probably an easier way to do this.
+us_states &lt;- unique(fips_codes$state)[1:51]
+continental_states &lt;- us_states[!us_states %in% c(&quot;AK&quot;, &quot;HI&quot;)]
+us_pumas &lt;- rbind_tigris(
+ lapply(
+    continental_states, function(x) {
+      pumas(state = x, cb = TRUE)
+    }
+  )
+)
+
+proj4string(pts)=proj4string(us_pumas) ## this is needed for over
+
+withinContinental=over(pts,us_pumas)
+
+toPlot=coordPred[which(!is.na(withinContinental[,1])),] ## all the same NA structure
+names(toPlot)[3]=&quot;z&quot;</code></pre>
+<p><strong>Lingering Question</strong>: Is there an easier way to get the boundary of the continental US?</p>
+<p>Now that we have dropped all of the values outside our area of interest, we can use the code from my last post to plot points color coded by the predicted values.</p>
+<pre class="r"><code>all_states &lt;- map_data(&quot;state&quot;)
+p &lt;- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour=&quot;black&quot;, fill=&quot;white&quot; )
+p=p+geom_point(data=toPlot,aes(x=x,y=y,col=cut(z,quantile(z,seq(0,1,by=.1),include.lowest=T))))+scale_colour_manual(name=&quot;Predicted Quantile of \n Uranium (ppm)&quot;,values=c(brewer.pal(9, &quot;YlOrRd&quot;),&quot;black&quot;))</code></pre>
+<p><strong>Sticking Point</strong>: For awhile I couldn’t figure out how to put the state lines over these points until I found <code>geom_path</code> (I was trying to do <code>geom_polygon</code> with <code>fill=NA</code>).</p>
+<pre class="r"><code>#https://cran.r-project.org/web/packages/autoimage/vignettes/ggplot2-comparison.html
+p+geom_path(aes(x = long, y = lat, group = group), data = all_states)+coord_map(&quot;lambert&quot;, parameters = c(c(33,45)))</code></pre>
+<p><img src="/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2_files/figure-html/unnamed-chunk-5-1.png" width="1152" /></p>
+<p>Next, I’m going to try to make an actual heatmap instead of just color coding the predicted grid points (although on this size of a plot, we can’t tell that these are individual plots).</p>
+<p><strong>Fun Fact</strong>: I’m using the ColorBrewer palette for consistency but <span class="citation">@hadleywickham</span> recommended viridis palettes. ColorBrewer palettes are <a href="https://earthobservatory.nasa.gov/blogs/elegantfigures/2013/08/05/subtleties-of-color-part-1-of-6/">“accurate in lightness and hue, but not in saturation”</a> while viridis palettes are <a href="https://rud.is/b/2015/07/20/using-the-new-viridis-colormap-in-r-thanks-to-simon-garnier/">“perceptually uniform (i.e. changes in the data should be accurately decoded by our brains) even when desaturated”</a>.</p>
+<p><strong>Sticking Point</strong>: I first tried <a href="https://stackoverflow.com/questions/28330821/r-plot-filled-contour-output-in-ggpplot2">this approach</a>. My grid was too dense for the interpolation to run quickly, but even when I made the grid more coarse, the plot didn’t have continuous color (it looked weird).</p>
+<p>So then I found <code>stat_summary_2d</code> which works pretty well except we now lose control over the break points in the colors.</p>
+<pre class="r"><code>  #https://stackoverflow.com/questions/37529116/how-to-plot-a-heat-map-with-irregular-data-in-ordinates-in-ggplot?rq=1
+p= ggplot(toPlot, aes(x = x, y = y, z = z)) + stat_summary_2d(binwidth = 0.3) +scale_fill_gradientn(colours = c(brewer.pal(9, &quot;YlOrRd&quot;),&quot;black&quot;),&quot;Predicted Uranium (ppm)&quot;)
+p</code></pre>
+<p><img src="/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2_files/figure-html/unnamed-chunk-6-1.png" width="1152" /></p>
+<p><strong>Sticking Point</strong>: I wanted to change the title on this legend, but when I tried through the use of <code>guides</code>, the whole legend changes.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/MKCdpXNWYWycw/giphy.gif" alt="But seriously, why?!" />
+<p class="caption">But seriously, why?!</p>
+</div>
+<p>But thanks to <a href="https://groups.google.com/forum/#!topic/ggplot2/zOSV6JgeAIM">this</a> I learned that I can just add text to <code>scale_fill_gradientn</code>.</p>
+<pre class="r"><code>p+guides(fill=guide_legend(title=&quot;Predicted Uranium \n (ppm)&quot;)) </code></pre>
+<p><img src="/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2_files/figure-html/unnamed-chunk-7-1.png" width="1152" /></p>
+<p><strong>Lingering Question</strong>: How do I color code by quantile like I did before (using <code>cut</code> on z)? The motivation for doing this is that the distribution of predictions is highly skewed right. If we bin the colors such that an equal number of points are in each point, the last bin will have a huge range (5ish to 30ish ppm). We see more contrast in the overall predictions if we color code by quantile instead.</p>
+<p>I can project this map after the fact and use the <code>theme_void</code> tip from <span class="citation">@sharoz</span>.</p>
+<pre class="r"><code>p=p+geom_path(aes(x = long, y = lat, z=NA,group = group), data = all_states) 
+p+coord_map(&quot;lambert&quot;, parameters = c(c(33,45)))+theme_void()</code></pre>
+<p><img src="/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2_files/figure-html/unnamed-chunk-8-1.png" width="1152" /></p>
+<p>However, I would like to build the model on the projected scale to avoid distortion. For example, this is what the plot looks like if we model on the projected points (from my original approach). We can see more curvature.</p>
+<div class="figure">
+<img src="scratchcode/mapTrainedProj.jpeg" />
+
+</div>
+<p>I really don’t want to back project the predictions to the lat/long scale to plot just to reproject them via <code>coord_map</code>. There must be a better way.</p>
+<p>The use of <code>coord_map</code> doesn’t transform the coordinates of the points themselves.</p>
+<pre class="r"><code>states &lt;- map_data(&quot;state&quot;)
+p=ggplot(states, aes(long, lat)) +
+  geom_polygon(aes(group = group)) +
+  coord_map(&quot;lambert&quot;, parameters = c(c(33,45)))
+
+head(states$long)</code></pre>
+<pre><code>## [1] -87.46201 -87.48493 -87.52503 -87.53076 -87.57087 -87.58806</code></pre>
+<pre class="r"><code>head(p$data$long)  ## doesn&#39;t actually transform coordinates</code></pre>
+<pre><code>## [1] -87.46201 -87.48493 -87.52503 -87.53076 -87.57087 -87.58806</code></pre>
+<p><strong>Lingering Question</strong>: How do I tell ggplot that I have points that are in a different projection when I want to add a map outline to them?</p>
+<p>In my previous post, I felt satisfied with my ggplot version of my thesis plot, but for this post there are still some unanswered questions and room for more efficient solutions. There is also some lingering frustration that I lack control over certain aspects of plotting using ggplot, although I feel this most prominently when making maps. If anyone has resources that helped them control particular aspects of maps in ggplot, please pass them along.</p>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+<p>Thank you to <span class="citation">@dpseidel</span> for pep talks throughout.</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-05-09-adventures-in-tidyverse-dplyr/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

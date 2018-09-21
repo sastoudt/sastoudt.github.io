@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Generating and Visualizing Valid Redistricting Scenarios</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAR 29, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>I recently spent some time at the <a href="https://gerrymandrsanfrancisco.weebly.com/">Geometry of Redistricting Hackathon</a> where I learned about quantitative approaches to assessing <a href="https://en.wikipedia.org/wiki/Gerrymandering">gerrymandering</a>. Check out the <a href="https://github.com/gerrymandr">Metric Geometry and Gerrymandering Group on GitHub</a> to see how you can get involved. I focused on improving documentation during my brief time at the hackathon, but I did not get a chance to contribute as much as I would have liked during the hackathon itself due to my own time constraints.</p>
+<p>Here I hope to continue to improve the overall documentation by giving some intuition about how one can generate valid redistricting plans and evaluate them based on compactness measures using the <em>mandeR</em> and <em>redist</em> packages as well as some code from the <a href="https://github.com/gerrymandr/mcmcviz/">MCMC visualization project</a>. The <a href="https://github.com/gerrymandr/mandeR"><em>mandeR</em> package</a> takes shapefiles and calculates a variety of compactness measures for each polygon. The <a href="https://cran.r-project.org/web/packages/redist/redist.pdf"><em>redist</em> package</a> implements a Markov Chain Monte Carlo (MCMC) approach to generating valid redistricting plans. We combine the functionality of both to get some intuition about the issues facing the quantitative study of gerrymandering.</p>
+<pre class="r"><code>require(redist)
+require(mandeR)
+require(ggplot2) ## need latest version for geom_sf()
+require(sf) ## for working with shape files
+require(dplyr)
+require(parallel) ## speed up some of the calculations
+require(gridExtra)</code></pre>
+<p>*See the <a href="https://github.com/gerrymandr/mandeR">README</a> for mandeR if you have trouble installing it.</p>
+<p>The <em>redist</em> package implements a new approach for simulating possible redistricting scenarios using MCMC. <a href="https://pdfs.semanticscholar.org/5b98/35432f4ceaf53fca801fd98571e9323fdd25.pdf">Fifield et al.</a> define the problem as “a state consisting of <span class="math inline">\(m\)</span> geographical units (e.g. census blocks or voting precincts) must be divided into <span class="math inline">\(n\)</span> contiguous districts.”</p>
+<div id="redist.enumerate" class="section level3">
+<h3>redist.enumerate()</h3>
+<p>For small <span class="math inline">\(m\)</span> or <span class="math inline">\(n\)</span> it may be possible to enumerate all valid redistricting plans with a specified number of districts given a set of geographic units. <em>redist.enumerate()</em> does this, but quickly becomes too slow as <span class="math inline">\(m\)</span> and <span class="math inline">\(n\)</span> increase. The example provided by the documentation enumerates all possible redistricting plans for 25 contiguous precincts in Florida. The method only expects an adjacency list (which geographic units share a boundary), and does not utilize any other spatial information.</p>
+<pre class="r"><code>data(algdat.pfull)
+ptm &lt;- proc.time()
+test=redist.enumerate(adjobj=algdat.pfull$adjlist,ndists=2)#,popvec=algdat.pfull$precinct.data,popcons=0.05)
+time=proc.time() - ptm
+
+time</code></pre>
+<pre><code>##    user  system elapsed 
+##   1.411   0.041   1.458</code></pre>
+<pre class="r"><code>length(test)</code></pre>
+<pre><code>## [1] 2318</code></pre>
+<pre class="r"><code>test[[1]]</code></pre>
+<pre><code>##  [1] 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2 2</code></pre>
+<p>We can see the number of valid redistricting scenarios. A valid redistricting scenario gives a district label to each geographic unit (here a 1 or 2).</p>
+<p>If we want to impose <a href="http://redistricting.lls.edu/where.php">equal population constraints</a> for each district, the <em>popvec</em> argument allows us to give population values for each geographical unit, and <em>popcons</em> gives the threshold for how far from equal population we will allow (here we specify within 5%).</p>
+<pre class="r"><code>ptm &lt;- proc.time()
+test=redist.enumerate(adjobj=algdat.pfull$adjlist,ndists=2,popvec=algdat.pfull$precinct.data$pop,popcons=0.05)
+time=proc.time() - ptm
+
+time</code></pre>
+<pre><code>##    user  system elapsed 
+##   0.967   0.013   0.987</code></pre>
+<pre class="r"><code>length(test)</code></pre>
+<pre><code>## [1] 180</code></pre>
+<pre class="r"><code>test[[1]]</code></pre>
+<pre><code>##  [1] 1 1 1 2 1 2 1 1 2 1 1 2 2 2 2 2 2 2 2 2 2 2 2 2 2</code></pre>
+<p>We can see there are many fewer valid redistricting scenarios when we impose this constraint.</p>
+<p>If we want three districts instead of two, we already reach intractability (at least for my patience level on my laptop).</p>
+<pre class="r"><code>test=redist.enumerate(adjobj=algdat.pfull$adjlist,ndists=3) ## don&#39;t run</code></pre>
+</div>
+<div id="redist.mcmc" class="section level3">
+<h3>redist.mcmc()</h3>
+<p>If it is not feasible to try all possible combinations, how can we generate possible redistricting scenarios efficiently? The challenge is that a random “redistricting” may not be a valid one. We also need to impose a certain structure (contiguous geographic units) and set of constraints (equal population, geographical compactness). Previous approaches are inefficient and ad-hoc. <em>redist.mcmc()</em> is an algorithm that uses MCMC to uniformly sample redistricting plans with a specified number of contiguous districts subject to constraints.</p>
+<p>Let’s walk through the example in the documentation:</p>
+<pre class="r"><code>## Get an initial partition
+initcds &lt;- algdat.pfull$cdmat[,sample(1:ncol(algdat.pfull$cdmat), 1)]
+## Run the algorithm
+alg_253 &lt;- redist.mcmc(adjobj = algdat.pfull$adjlist, popvec = algdat.pfull$precinct.data$pop, initcds = initcds, nsims = 10000)</code></pre>
+<pre class="r"><code>names(alg_253)</code></pre>
+<pre><code>##  [1] &quot;partitions&quot;             &quot;distance_parity&quot;       
+##  [3] &quot;distance_original&quot;      &quot;mhdecisions&quot;           
+##  [5] &quot;mhprob&quot;                 &quot;pparam&quot;                
+##  [7] &quot;beta_sequence&quot;          &quot;constraint_pop&quot;        
+##  [9] &quot;constraint_compact&quot;     &quot;constraint_segregation&quot;
+## [11] &quot;constraint_similar&quot;     &quot;boundary_partitions&quot;   
+## [13] &quot;boundaryratio&quot;</code></pre>
+<pre class="r"><code>dim(alg_253$partitions)</code></pre>
+<pre><code>## [1]    25 10000</code></pre>
+<pre class="r"><code>alg_253$partitions[1,1:10]</code></pre>
+<pre><code>##  [1] 0 0 0 0 0 0 0 0 0 0</code></pre>
+</div>
+<div id="visualization-of-districts" class="section level3">
+<h3>Visualization of Districts</h3>
+<p>For each geographic unit, we see which district it is placed in per iteration. We can also track various constraint measures. However, this all operates via adjacency list, which isn’t easy to parse. What if we want to visualize these redistricting scenarios to better see what is going on? We will use some helper functions from the <a href="https://github.com/gerrymandr/mcmcviz/blob/master/src/load_functions.R">mcmcviz project</a>.</p>
+<pre class="r"><code>## wrapper for redist.mcmc
+## pre-procceing: change shapefile to adjacency list
+## post-processing: thinning
+#redistrict = function(geom, nsims, nthin, nburn, ndists, popcons, eprob, lambda) {
+  redistrict = function(geom, nsims, nthin, nburn, ndists, popcons) { ## changed for our example
+  adj_obj = st_relate(geom, pattern = &quot;****1****&quot;)
+  mcmc = redist.mcmc(adj_obj, geom$population, 
+                     nsims=nsims+nburn, ndists=ndists, popcons=popcons) ## removed eprob, lambda for our example
+  
+  mcmc$partitions %&gt;% as.data.frame() %&gt;% as.list() ##thin(nsims, nburn, nthin=nthin) %&gt;% ## took out thin, couldn&#39;t find the appropriate function (not coda)
+}
+
+## groups geographic units into districts, makes polygons by pasting all together
+create_district_map = function(geom, districts)
+{
+  mutate(geom, district = as.character(districts)) %&gt;% 
+    group_by(district) %&gt;% 
+    summarize(
+      population = sum(population), 
+      geometry = st_union(geometry)
+    ) 
+}
+
+## gets a district map per iteration
+gather_maps=function(geom, iters) {
+  mclapply(iters,  create_district_map, geom = geom, mc.cores = detectCores()) ## parallel
+}</code></pre>
+<p>The mcmcviz project also has some real shapefiles of <a href="https://github.com/gerrymandr/mcmcviz/tree/master/data">Anne Arundel, MD</a> that we will use here. I have this data downloaded locally, but I would love if someone could tell me how to load a shapefile from GitHub via code (I suspect issues because the other .dbf, .prj, etc. files are also needed at the same time).</p>
+<pre class="r"><code>setwd(&quot;~/Desktop/mcmcviz/data&quot;)
+geom = st_read(&quot;AnneArundelN.shp&quot;, quiet = TRUE)
+names(geom) = tolower(names(geom)) ## needed in order for redist.rsg to be able to create an initial districting
+iters = redistrict(geom, nsims=1000, nthin=10, nburn=100, ndists=3, popcons=0.05)
+
+maps = gather_maps(geom, iters) ## time intensive even in parallel</code></pre>
+<pre class="r"><code>## look at a few iterations
+mapdata1 = maps[[1]]
+mapdata2 = maps[[10]]
+mapdata3 = maps[[20]]
+mapdata4 = maps[[30]]
+mapdata5 = maps[[40]]
+mapdata6 = maps[[50]]
+
+mapDistrict&lt;-function(idx){
+  mapdata=maps[[idx]]
+  g1=ggplot(mapdata)+geom_sf(aes(fill=district))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+  return(g1)
+}
+
+g1=mapDistrict(1)
+g2=mapDistrict(10)
+g3=mapDistrict(20)
+g4=mapDistrict(30)
+g5=mapDistrict(40)
+g6=mapDistrict(50)
+
+grid.arrange(g1,g2,g3,g4,g5,g6,ncol=2)</code></pre>
+<p><img src="/blog/2018-03-29-tools-for-gerrymandering-analysis_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+</div>
+<div id="compactness-measures" class="section level3">
+<h3>Compactness Measures</h3>
+<p>Using the <a href="https://github.com/gerrymandr/mandeR">README from <strong>mandeR</strong></a> we can now check the compactness measures of the proposed redistricting scenarios.</p>
+<p>Expanding on the description of compactness measures from <a href="https://github.com/gerrymandr/compactnesslib/blob/master/Scores.md"><strong>compactnesslib</strong></a>:</p>
+<ul>
+<li><em>convex hull score</em>: ratio of the area of the district to the area of the minimum convex polygon that can enclose the district’s geometry</li>
+<li><em>Reock score</em>: measure of the ratio of the area of the district to the area of the minimum bounding circle that encloses the district’s geometry.</li>
+<li><em>Schwartzberg score</em>: ratio of the perimeter of the district to the circumference of a circle whose area is equal to the area of the district</li>
+<li><em>Polsby-Popper measure</em>: ratio of the area of the district to the area of a circle whose circumference is equal to the perimeter of the district</li>
+</ul>
+<p>Read more about compactness measures <a href="https://arxiv.org/pdf/1803.02857.pdf">here</a>.</p>
+<pre class="r"><code>mapdata = maps[[1]]
+
+#Convert the shapefile to WKT (class needed by compactlib)
+wkt_str &lt;- lapply(st_geometry(mapdata),st_as_text)
+
+#Retrieve compactness scores from mandeR
+scores &lt;- lapply(wkt_str,getScoresForWKT)
+scores=do.call(rbind,scores)
+scores$id=1:nrow(scores)
+
+#Merge scores back into districts
+dists&lt;-merge(mapdata,scores,by.x=&quot;district&quot;,by.y=&quot;id&quot;)
+
+names(dists)
+
+mapScore&lt;-function(dists,name){
+  g1=ggplot(dists)+geom_sf(aes_string(fill =name ))+theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank())
+}
+
+
+
+g1=mapScore(dists,&quot;population&quot;)
+g2=mapScore(dists,&quot;CvxHullPS&quot;)
+g3=mapScore(dists,&quot;ReockPS&quot;)
+g4=mapScore(dists,&quot;Schwartzbe&quot;)
+g5=mapScore(dists,&quot;PolsbyPopp&quot;)
+grid.arrange(g1,g2,g3,g4,g5,ncol=2)</code></pre>
+<p><img src="/blog/2018-03-29-tools-for-gerrymandering-analysis_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<pre class="r"><code>mapdata = maps[[50]]
+
+#Convert the shapefile to WKT 
+wkt_str &lt;- lapply(st_geometry(mapdata),st_as_text)
+
+#Retrieve compactness scores from mandeR
+scores &lt;- lapply(wkt_str,getScoresForWKT)
+scores=do.call(rbind,scores)
+scores$id=1:nrow(scores)
+
+#Merge scores back into districts
+dists&lt;-merge(mapdata,scores,by.x=&quot;district&quot;,by.y=&quot;id&quot;)
+
+g1=mapScore(dists,&quot;population&quot;)
+g2=mapScore(dists,&quot;CvxHullPS&quot;)
+g3=mapScore(dists,&quot;ReockPS&quot;)
+g4=mapScore(dists,&quot;Schwartzbe&quot;)
+g5=mapScore(dists,&quot;PolsbyPopp&quot;)
+grid.arrange(g1,g2,g3,g4,g5,ncol=2)</code></pre>
+<p><img src="/blog/2018-03-29-tools-for-gerrymandering-analysis_files/figure-html/unnamed-chunk-11-2.png" width="672" /></p>
+</div>
+<div id="comparing-across-possible-redistricting-scenarios" class="section level3">
+<h3>Comparing Across Possible Redistricting Scenarios</h3>
+<p>If we want to more systematically compare all of the redistricting options, we can get compactness scores for all of the iterations.</p>
+<pre class="r"><code>getScoresFn=function(mapdata){
+  wkt_str &lt;- lapply(st_geometry(mapdata),st_as_text)
+
+#Retrieve compactness scores from mandeR
+scores &lt;- lapply(wkt_str,getScoresForWKT)
+scores=do.call(rbind,scores)
+scores$id=1:nrow(scores)
+
+#Merge scores back into districts
+dists&lt;-merge(mapdata,scores,by.x=&quot;district&quot;,by.y=&quot;id&quot;)
+return(dists)
+}
+
+scoresPerIter=mclapply(maps,getScoresFn,mc.cores = detectCores())</code></pre>
+<p>Then we can plot the density of the scores. This can help us see which particular redistricting plans are extreme (used as evidence for intentional gerrymandering).</p>
+<pre class="r"><code>par(mfrow=c(1,2))
+plot(density(unlist(lapply(scoresPerIter,function(x){mean(x$PolsbyPopp)}))),main=&quot;Avg PolsbyPopp&quot;)
+plot(density(unlist(lapply(scoresPerIter,function(x){sd(x$PolsbyPopp)}))),main=&quot;SD PolsbyPopp&quot;)</code></pre>
+<p><img src="/blog/2018-03-29-tools-for-gerrymandering-analysis_files/figure-html/unnamed-chunk-16-1.png" width="1152" /></p>
+</div>
+<div id="summary" class="section level3">
+<h3>Summary</h3>
+<p>Now we can:</p>
+<ol style="list-style-type: decimal">
+<li>Take any shapefile that contains geographic units.</li>
+<li>Use the <em>redist.mcmc()</em> function in <em>redist</em> to get possible redistricting scenarios.</li>
+<li>Use the <em>getScoresForWKT()</em> function in <em>mandeR</em> to get compactness scores for the districts proposed in each iteration of the MCMC.</li>
+<li>Plot the different district scenarios along with their scores to visually assess their suitability</li>
+<li>Look at distributions of particular characteristics of possible redistricting scenarios to help us identify particular scenarios that may be intentionally chosen unfairly.</li>
+</ol>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+</div>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-03-27-song-repetition-analysis/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-04-18-confessions-of-a-tidyverse-straggler/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

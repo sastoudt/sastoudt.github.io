@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Wrangling USDA Data with readr</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAY 26, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>When I saw that this week’s blog post was supposed to be about readr I drew a blank on how to get my hands dirty using the functionality in the package. I didn’t want to use the same sample data in the documentation, but I also didn’t want to go scouring for a dataset that I wasn’t really motivated to munge. Then fate stepped in.</p>
+<p>At work I wanted to get some data from the USDA that is not available through their API service. Many of the USDA reports come in .txt or .pdf files, and these files contain tables that have information that I needed. I literally spent days trying to get things organized (but I did it!). Even though it still took a long time (and I am not a patient person), I was grateful that I had perused the readr documentation ahead of time in preparation for writing this blog.</p>
+<p>I can’t go into too much detail about what I did at work, but instead, I’ll show a representative example of a USDA text file full of tables. This example is actually a bit gnarlier than the stuff I was dealing with, so this seems fair.</p>
+<p>Go ahead and look at this <a href="https://www.agcensus.usda.gov/Publications/2012/Full_Report/Volume_1,_Chapter_1_US/usv1.txt">original</a>. WHY?! Why must our government store data in a super inaccessible format?! As much as we complain about Excel, I would be grateful for a .xls file here.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/h1msXowtrhVPW/giphy.gif" />
+
+</div>
+<p>But we must persevere.</p>
+<p><strong>Disclaimer:</strong> I am not claiming that this is the best way to use readr to wrangle the information in these tables. I would love if someone had a less clunky approach they were willing to share.</p>
+<div id="read-in-using-the-default-read_table" class="section level4">
+<h4>Read in using the default <code>read_table</code></h4>
+<p>I manually looked for the number of lines I could skip before getting to the good stuff.</p>
+<pre class="r"><code>require(readr)
+require(dplyr)
+setwd(&quot;~/Desktop&quot;)
+raw=read_table(&quot;usv1.txt&quot;)
+
+head(raw)</code></pre>
+<pre><code>## # A tibble: 6 x 1
+##   X1                                                 
+##   &lt;chr&gt;                                              
+## 1 United States                                      
+## 2 Summary and State Data                             
+## 3 &quot;Volume 1 \x95 Geographic Area Series \x95 Part 51&quot;
+## 4 &lt;NA&gt;                                               
+## 5 AC-12-A-51                                         
+## 6 &lt;NA&gt;</code></pre>
+<pre class="r"><code>rawSkip=read_table(&quot;usv1.txt&quot;,skip=475)</code></pre>
+</div>
+<div id="grep-for-table-or-any-other-key-words" class="section level4">
+<h4><code>grep</code> for “Table” (or any other key words)</h4>
+<p>Note: This is why I manually skipped over the table of contents, since it lists all the tables.</p>
+<pre class="r"><code>tables=which(unlist(lapply(rawSkip[,1],function(x){grepl(&quot;Table&quot;,x)}))==T)</code></pre>
+</div>
+<div id="simplify-the-problem-further-to-start" class="section level4">
+<h4>Simplify the problem further to start</h4>
+<p>Even Table 1 has lots of components and weird structure, so let’s simplify to the smallest chunk in Table 1 that seems to stand alone.</p>
+<pre class="r"><code>toSave=rawSkip[tables[1]:(tables[1]+10),]%&gt;% as.data.frame()
+toSave</code></pre>
+<pre><code>##                                                                                                                                                                                            X1
+## 1                                                                                                                             Table 1.  Historical Highlights:  2012 and Earlier Census Years
+## 2                                                                                                                          [For meaning of abbreviations and symbols, see introductory text.]
+## 3  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## 4                                                                         :                :                :                :                :                     Not adjusted for coverage
+## 5                                                    :                :                :                :                :-------------------------------------------------------------------
+## 6                             All farms                    :      2012      :      2007      :      2002      :      1997      :      1997      :      1992      :      1987      :      1982
+## 7  ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+## 8     Farms ......................................number:    2,109,303        2,204,792        2,128,982        2,215,876        1,911,859        1,925,300        2,087,759        2,240,976
+## 9     Land in farms ...............................acres:  914,527,657      922,095,840      938,279,056      954,752,502      931,795,255      945,531,506      964,470,625      986,796,579
+## 10        Average size of farm ....................acres:          434              418              441              431              487              491              462              440
+## 11                                                                                                                                                                                          :</code></pre>
+</div>
+<div id="trim-a-bunch-of-extra-characters-using-gsub" class="section level4">
+<h4>Trim a bunch of extra characters using <code>gsub</code></h4>
+<p>I initially thought that some of these extra characters (like “:”) would help as delimiters, but because the first column is broken away from the rest in a different way, using the extra characters to help split things up didn’t end up working.</p>
+<pre class="r"><code>toSave[,1]=gsub(&quot;:&quot;,&quot; &quot;,toSave[,1])
+toSave[,1]=gsub(&quot;\\.&quot;,&quot;&quot;,toSave[,1])</code></pre>
+<p>Because white space acts as a delimiter everywhere except the first column, I wanted to replace the spaces between words in the first column with something else.</p>
+<pre class="r"><code>collapseNames=function(x){
+  #browser()
+  words=unlist(strsplit(x,&quot; &quot;)) ## get individual words
+  if(length(which(words==&quot;&quot;))&gt;0){
+    toReturna=paste(words[1:(which(words==&quot;&quot;)[1]-1)],collapse=&quot;_&quot;) ## collapse the actual words in column 1
+    ## need to paste the rest
+    toReturnb=paste(words[which(words==&quot;&quot;)[1]:length(words)],collapse=&quot; &quot;) ## paste on the info in the extra columns
+    
+    toReturn=paste(toReturna,toReturnb,sep=&quot; &quot;)
+    
+  }else{
+    toReturn=x ## if can&#39;t be broken into words, just return the line
+  }
+return(toReturn)
+}
+
+toSave[,1]=unlist(lapply(toSave[1:nrow(toSave),1],collapseNames))
+toSave[5:10,1]</code></pre>
+<pre><code>## [1] &quot;                                                                      -------------------------------------------------------------------&quot;                                                 
+## [2] &quot;All_farms                           2012             2007             2002             1997             1997             1992             1987             1982&quot;                           
+## [3] &quot;------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------&quot;
+## [4] &quot;Farms_number     2,109,303        2,204,792        2,128,982        2,215,876        1,911,859        1,925,300        2,087,759        2,240,976&quot;                                         
+## [5] &quot;Land_in_farms_acres   914,527,657      922,095,840      938,279,056      954,752,502      931,795,255      945,531,506      964,470,625      986,796,579&quot;                                  
+## [6] &quot;Average_size_of_farm_acres           434              418              441              431              487              491              462              440&quot;</code></pre>
+</div>
+<div id="save-a-subset-and-read-it-back-in-using-read_table2-with-a-forced-number-of-columns-using-col_names" class="section level4">
+<h4>Save a subset and read it back in (using <code>read_table2</code>) with a forced number of columns (using <code>col_names</code>)</h4>
+<p><code>read_table2</code> “allows any number of whitespace characters between columns, and the lines can be of different lengths.”</p>
+<p>By giving column names we can ensure that the desired number of columns is respected.</p>
+<pre class="r"><code>setwd(&quot;~/Desktop&quot;)
+write.table(toSave,&quot;tmp.txt&quot;,row.names=F,col.names=F)
+readIn=read_table2(&quot;tmp.txt&quot;,skip=5,col_names=paste(&quot;V&quot;,1:9,sep=&quot;&quot;))
+head(readIn)</code></pre>
+<pre><code>## # A tibble: 6 x 9
+##   V1          V2          V3      V4      V5      V6      V7      V8 V9   
+##   &lt;chr&gt;       &lt;chr&gt;    &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt;
+## 1 &quot;\&quot;All_far… 2012    2.01e3  2.00e3  2.00e3  2.00e3  1.99e3  1.99e3 &quot;198…
+## 2 &quot;\&quot;-------… &lt;NA&gt;   NA      NA      NA      NA      NA      NA      &lt;NA&gt; 
+## 3 &quot;\&quot;Farms_n… 2,109…  2.20e6  2.13e6  2.22e6  1.91e6  1.93e6  2.09e6 &quot;2,2…
+## 4 &quot;\&quot;Land_in… 914,5…  9.22e8  9.38e8  9.55e8  9.32e8  9.46e8  9.64e8 &quot;986…
+## 5 &quot;\&quot;Average… 434     4.18e2  4.41e2  4.31e2  4.87e2  4.91e2  4.62e2 &quot;440…
+## 6 &quot;\&quot;&quot;        &quot;\&quot;&quot;   NA      NA      NA      NA      NA      NA      &lt;NA&gt;</code></pre>
+</div>
+<div id="parse-numbers-using-parse_number-and-remove-empty-rows" class="section level4">
+<h4>Parse numbers (using <code>parse_number</code>) and remove empty rows</h4>
+<p>We convert strings that are clearly numbers into numbers (remove commas, etc.) using <code>parse_number</code>. This also has the added benefit of making filler strings into NA values in the columns where we expect numbers.</p>
+<pre class="r"><code>readIn[,2:9]=apply(readIn[,2:9],2,parse_number)
+
+readIn=readIn[-which(is.na(readIn[,2]) &amp; is.na(readIn[,3])),]
+
+readIn</code></pre>
+<pre><code>## # A tibble: 4 x 9
+##   V1              V2      V3      V4      V5      V6      V7     V8     V9
+##   &lt;chr&gt;        &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;   &lt;dbl&gt;  &lt;dbl&gt;  &lt;dbl&gt;
+## 1 &quot;\&quot;All_fa…  2.01e3  2.01e3  2.00e3  2.00e3  2.00e3  1.99e3 1.99e3 1.98e3
+## 2 &quot;\&quot;Farms_…  2.11e6  2.20e6  2.13e6  2.22e6  1.91e6  1.93e6 2.09e6 2.24e6
+## 3 &quot;\&quot;Land_i…  9.15e8  9.22e8  9.38e8  9.55e8  9.32e8  9.46e8 9.64e8 9.87e8
+## 4 &quot;\&quot;Averag…  4.34e2  4.18e2  4.41e2  4.31e2  4.87e2  4.91e2 4.62e2 4.40e2</code></pre>
+</div>
+<div id="get-more-ambitious" class="section level4">
+<h4>Get more ambitious…</h4>
+<p>Now that we got things working for a subset of the table, let’s try to do the same thing for the rest of the document.</p>
+<pre class="r"><code>toSave=rawSkip[tables[1]:nrow(rawSkip),]%&gt;% as.data.frame()
+toSave[,1]=gsub(&quot;:&quot;,&quot; &quot;,toSave[,1])
+toSave[,1]=gsub(&quot;\\.&quot;,&quot;&quot;,toSave[,1])
+toSave[,1]=unlist(lapply(toSave[1:nrow(toSave),1],collapseNames))</code></pre>
+<pre class="r"><code>setwd(&quot;~/Desktop&quot;)
+write.table(toSave,&quot;tmp.txt&quot;,row.names=F,col.names=F)
+readIn=read_table2(&quot;tmp.txt&quot;,skip=5,col_names=paste(&quot;V&quot;,1:9,sep=&quot;&quot;))
+
+readIn[,2:9]=apply(readIn[,2:9],2,parse_number)</code></pre>
+</div>
+<div id="deal-with-non-ascii-characters-and-remove-extra-rows" class="section level4">
+<h4>Deal with non-ASCII characters and remove extra rows</h4>
+<p>The first column of this dataframe contained some non-ASCII characters which was giving the string related functions a hard time. We remove those and then get rid of some extra rows.</p>
+<p>The resulting file still has some rather sparse rows, but it maintains the structure of the document rather well. We could now <code>grep</code> for the things we are interested in and easily get the numeric values associated with that chunk of the file.</p>
+<pre class="r"><code>#https://stackoverflow.com/questions/9934856/removing-non-ascii-characters-from-data-files
+readIn[,1]=iconv(readIn[,1], &quot;latin1&quot;, &quot;ASCII&quot;, sub=&quot;&quot;)
+readIn=as.data.frame(readIn) ## tibble is giving me a hard time here
+
+
+readIn=readIn[-which(is.na(readIn[,2]) &amp; is.na(readIn[,3]) &amp; nchar(readIn[,1])&lt;=1),]</code></pre>
+</div>
+<div id="an-interesting-dead-end" class="section level4">
+<h4>An interesting dead end…</h4>
+<p><strong>Future Pipe Dream</strong>: I wanted to make a tokenizer that would first try one delimiter, and if it didn’t split the line into the desired number of columns, then it would try the other one (using <code>tokenizer_delim</code>).</p>
+<p>I used <code>read_delim_chunked</code> to help understand how many columns a particular delimiter would produce. I still think designing better callbacks could help make a more flexible tokenizer, but further investigation will have to be saved for later (perhaps for a future post).</p>
+<pre class="r"><code>f=function(x,pos){length(which(!is.na(x)))} ## tell how many columns the data is actually put in 
+f2=function(x,pos){x} ## show what the output will look like if we use this delimiter
+
+setwd(&quot;~/Desktop&quot;)
+test=read_delim_chunked(&quot;tmp.txt&quot;,delim=&quot;   &quot;,callback=DataFrameCallback$new(f),chunk_size=1,col_names=paste(&quot;V&quot;,1:9,sep=&quot;&quot;))
+## want this to be 9
+
+#Note: the callback happens per chunk, so I made the chunk_size 1 to just get the answers per line
+
+test2=read_delim_chunked(&quot;tmp.txt&quot;,delim=&quot;   &quot;,callback=DataFrameCallback$new(f2),chunk_size=1,col_names=paste(&quot;V&quot;,1:9,sep=&quot;&quot;))
+
+head(test)</code></pre>
+<pre><code>##      [,1]
+## [1,]    1
+## [2,]    1
+## [3,]    1
+## [4,]    1
+## [5,]    1
+## [6,]    1</code></pre>
+<pre class="r"><code>head(test2)</code></pre>
+<pre><code>## # A tibble: 6 x 9
+##   V1                       V2    V3    V4    V5    V6    V7    V8    V9   
+##   &lt;chr&gt;                    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+## 1 Table_1  Historical Hig… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 2 [For meaning of abbrevi… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 3 -----------------------… &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 4 &quot;                      … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 5 &quot;                      … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; 
+## 6 All_farms              … &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;</code></pre>
+<p>This post took much more time than I anticipated, but it is reassuring that eventually we can make some sense of this poorly formatted data. Even though this approach seems specialized, there are <a href="https://www.agcensus.usda.gov/Publications/2012/">files</a> for other agricultural census years that I hope would at least keep a consistent, if gross, formatting approach, that we could repurpose this code for. I do wonder if we could do something more clever, perhaps just with <code>readLines</code>, so I’m open to other ideas.</p>
+<p><strong>Sidenote:</strong> If anyone has a similarly convoluted way to wrangle a particular type of government data, I would be curious to see the approach. It would be awesome if we could organize these approaches in one place. Even if they are hacky, it would help increase accessibility of data that hasn’t been API-ified yet.</p>
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-05-16-adventures-in-tidyverse-tidyr/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-06-03-adventures-in-tidyverse-tibble/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

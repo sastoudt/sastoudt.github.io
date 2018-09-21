@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Guilty Pleasures via dplyr</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAY 9, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>Next up on my to-learn list is dplyr. I use <code>group_by</code> and <code>summarize</code> fairly regularly, but there is other functionality that I want to learn to take advantage of.</p>
+<ul>
+<li><code>mutate</code></li>
+<li><code>select</code></li>
+<li><code>filter</code></li>
+<li><code>arrange</code></li>
+<li><code>pull</code> (instead of my favorite, $)</li>
+<li>various joins (instead of <code>merge</code>)</li>
+</ul>
+<p>In anticipation of The Bachelorette starting at the end of May, I’m going to wrangle some data on previous contestants. Yes, watching The Bachelorette/The Bachelor is my guilty pleasure. But this feels fitting because the dollar sign is my <code>R</code> guilty pleasure. I think this will be the hardest habit to break, but here I try to gain some muscle memory for <code>mutate</code> and <code>pull</code>.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/l0HlIfwjHd6w614iY/giphy.gif" />
+
+</div>
+<p>I feel the disapproval already, but <a href="https://entertainment.theonion.com/woman-takes-short-half-hour-break-from-being-feminist-t-1819576049">read this super-scientific article before judging me.</a></p>
+<pre class="r"><code>require(stringr)
+require(dplyr)
+require(ggmap)
+require(fuzzyjoin)
+require(maps)
+require(tigris)
+require(sp)
+require(acs)</code></pre>
+<p>Luckily, both 538 and Kaggle have some data on this, so I don’t have to do any web scraping.</p>
+<pre class="r"><code>#https://github.com/fivethirtyeight/data/tree/master/bachelorette
+#https://www.kaggle.com/brianbgonz/the-bachelor-contestants/data
+
+setwd(&quot;~/Desktop/data-538/bachelorette&quot;)
+
+contestants&lt;-read.csv(&quot;contestants.csv&quot;,stringsAsFactors=F)  ## just female contestants
+bachelors&lt;-read.csv(&quot;bachelors.csv&quot;,stringsAsFactors=F) ## bachelors
+weekByWeek&lt;-read.csv(&quot;bachelorette.csv&quot;,stringsAsFactors=F) ## both</code></pre>
+<p>These datasets contain different information, so the goal of this exercise is to wrangle them together and do something simple with the result. <a href="https://fivethirtyeight.com/features/the-bachelorette/">Plenty</a> of <a href="https://www.huffingtonpost.com/alice-zhao/the-data-behind-the-bachelor--the-bachelorette_b_6744288.html">others</a> have done fancier stuff with this kind of data. I’m just trying to learn some new tidy verbs.</p>
+<pre class="r"><code>head(contestants)</code></pre>
+<pre><code>##             Name Age                      Occupation             Hometown
+## 1   Amanda Marsh  23                   Event Planner      Chanute, Kansas
+## 2    Trista Rehn  29               Miami Heat Dancer       Miami, Florida
+## 3 Shannon Oliver  24 Financial Management Consultant        Dallas, Texas
+## 4            Kim  24                           Nanny       Tempe, Arizona
+## 5   Cathy Grimes  22                Graduate Student Terra Haute, Indiana
+## 6      Christina  28                        Attorney   Bonita, California
+##   Height ElimWeek Season
+## 1     NA       NA      1
+## 2     NA        6      1
+## 3     NA        5      1
+## 4     NA        4      1
+## 5     NA        3      1
+## 6     NA        3      1</code></pre>
+<pre class="r"><code>head(bachelors)</code></pre>
+<pre><code>##               Name Age                  Hometown Height Season
+## 1      Alex Michel  32 Charlottesville, Virginia     NA      1
+## 2     Aaron Buerge  28          Butler, Missouri     NA      2
+## 3     Jesse Palmer  34          Toronto, Ontario     NA      5
+## 4 Lorenzo Borghese  34              Milan, Italy     NA      9
+## 5     Andy Baldwin  30   Lancaster, Pennsylvania     NA     10
+## 6      Brad Womack  35             Austin, Texas     NA     11</code></pre>
+<pre class="r"><code>head(weekByWeek,2)</code></pre>
+<pre><code>##           SHOW SEASON CONTESTANT ELIMINATION.1 ELIMINATION.2 ELIMINATION.3
+## 1         SHOW SEASON         ID             1             2             3
+## 2 Bachelorette     13 13_BRYAN_A            R1                            
+##   ELIMINATION.4 ELIMINATION.5 ELIMINATION.6 ELIMINATION.7 ELIMINATION.8
+## 1             4             5             6             7             8
+## 2             R             R                           R              
+##   ELIMINATION.9 ELIMINATION.10 DATES.1 DATES.2 DATES.3 DATES.4 DATES.5
+## 1             9             10       1       2       3       4       5
+## 2                            W                      D6     D13      D1
+##   DATES.6 DATES.7 DATES.8 DATES.9 DATES.10
+## 1       6       7       8       9       10
+## 2      D7      D1      D1      D1       D1</code></pre>
+<p>Get rid of headers.</p>
+<pre class="r"><code>weekByWeek=weekByWeek[-which(weekByWeek$SEASON==&quot;SEASON&quot;),]</code></pre>
+<div id="counting-dates" class="section level4">
+<h4>Counting Dates</h4>
+<p>Use <code>select</code> and <code>mutate</code> to add the number of dates.</p>
+<p>Usually I would usually just use the dollar sign to add new columns (and I would just manually specify the dates columns).</p>
+<pre class="r"><code>dates=select(weekByWeek,starts_with(&quot;DATES&quot;)) 
+
+weekByWeek=weekByWeek %&gt;% mutate(numOneOnOneDates=apply(dates,1,function(x){length(which(x==&quot;D1&quot;))}))
+
+weekByWeek=weekByWeek %&gt;% mutate(numDates=apply(dates,1,function(x){length(which(x!=&quot;&quot;))}))
+
+weekByWeek=weekByWeek %&gt;% mutate(numGroupDates=numDates-numOneOnOneDates) ## </code></pre>
+</div>
+<div id="string-processing" class="section level4">
+<h4>String Processing</h4>
+<p>Get the names ready to join using <code>mutate</code> and <code>pull</code>. To standardize each data set, I want first names and last initials in all capitals.</p>
+<p><em>Note: The string processing here is rudimentary. stringr will have its own blog post.</em></p>
+<pre class="r"><code>weekByWeek= weekByWeek %&gt;% mutate(firstName=unlist(lapply(pull(weekByWeek, CONTESTANT),
+                                        function(x){unlist(str_split(x, &quot;_&quot;))[2]})))
+
+weekByWeek= weekByWeek %&gt;% mutate(lastInitial=unlist(lapply(pull(weekByWeek, CONTESTANT),
+                                                          function(x){unlist(str_split(x, &quot;_&quot;))[3]})))
+
+weekByWeek=weekByWeek %&gt;% mutate(lastInitial=unlist(lapply(pull(weekByWeek,lastInitial),function(x){ifelse(is.na(x),&quot;&quot;,x)})))
+
+weekByWeek=weekByWeek %&gt;% mutate(nameNice=paste(firstName,lastInitial,sep=&quot; &quot;)) 
+
+
+
+contestants=contestants %&gt;% mutate(firstName=unlist(lapply(pull(contestants,Name),function(x){unlist(str_split(x,&quot; &quot;))[1]})))
+
+contestants=contestants %&gt;% mutate(lastName=unlist(lapply(pull(contestants,Name),function(x){unlist(str_split(x,&quot; &quot;))[2]}))) 
+
+contestants=contestants %&gt;% mutate(lastInitial=unlist(lapply(pull(contestants,lastName),function(x){unlist(str_split(x,&quot;&quot;))[1]}))) 
+
+contestants=contestants %&gt;% mutate(lastInitial=unlist(lapply(pull(contestants,lastInitial),function(x){ifelse(is.na(x),&quot;&quot;,x)})))
+
+contestants=contestants %&gt;% mutate(nameNice=toupper(paste(firstName,lastInitial,sep=&quot; &quot;))) </code></pre>
+<p>Deal with some weird entries (nicknames have parentheses that mess things up).</p>
+<pre class="r"><code>contestants[which(grepl(&quot;\\(&quot;,contestants$Name)),]</code></pre>
+<pre><code>##                       Name Age                  Occupation
+## 100    Britt (Bowe) Newton  28                Beer chemist
+## 212    Elizabeth Kitt (NE)  29                       Nanny
+## 218 Alexa (Lex) McAllister  25                Entrepreneur
+## 221 Elizabeth Kreft (D.C.)  29 Captain, Air National Guard
+##               Hometown Height ElimWeek Season firstName lastName
+## 100       Columbus, OH     NA        1      9     Britt   (Bowe)
+## 212 Imperial, Nebraska     NA        3     14 Elizabeth     Kitt
+## 218     Galloway, Ohio     NA        1     14     Alexa    (Lex)
+## 221    Union, Kentucky     NA        1     14 Elizabeth    Kreft
+##     lastInitial    nameNice
+## 100           (     BRITT (
+## 212           K ELIZABETH K
+## 218           (     ALEXA (
+## 221           K ELIZABETH K</code></pre>
+<pre class="r"><code>contestants$nameNice[which(grepl(&quot;Bowe&quot;,contestants$Name))]=&quot;Britt N&quot;
+contestants$nameNice[which(grepl(&quot;McAllister&quot;,contestants$Name))]=&quot;Alexa A&quot;</code></pre>
+</div>
+<div id="mergingjoining" class="section level4">
+<h4>Merging/Joining</h4>
+<p>Before we start merging, we should have a sense of what the best we can do is. Kaggle warns us that the data is missing some seasons.</p>
+<pre class="r"><code>dim(contestants)</code></pre>
+<pre><code>## [1] 423  11</code></pre>
+<pre class="r"><code>dim(weekByWeek)</code></pre>
+<pre><code>## [1] 887  29</code></pre>
+<p>I usually use <code>merge</code>, but dplyr focuses on <code>inner_join</code>, <code>left_join</code>, <code>right_join</code>, etc. so let’s get used to that syntax.</p>
+<pre class="r"><code>weekByWeek=weekByWeek %&gt;% mutate(SEASON=as.numeric(SEASON))
+tryMerge=inner_join(contestants,weekByWeek,by=c(&quot;nameNice&quot;=&quot;nameNice&quot;,&quot;Season&quot;=&quot;SEASON&quot;))
+dim(tryMerge)</code></pre>
+<pre><code>## [1] 313  38</code></pre>
+<p>Because some contestants don’t have last names listed in the Kaggle data, we are losing a lot of rows. Within a season we should be able to do a rough join instead to recover some of these. However, there are seasons where multiple contestants have the same first name. We can see that duplicates do occur with this fuzzy join.</p>
+<pre class="r"><code>mergedData=weekByWeek %&gt;% regex_inner_join(contestants, by = c(nameNice = &quot;nameNice&quot;,SEASON=&quot;Season&quot;))
+dim(mergedData)</code></pre>
+<pre><code>## [1] 433  40</code></pre>
+<pre class="r"><code>length(which(duplicated(mergedData$CONTESTANT))) </code></pre>
+<pre><code>## [1] 41</code></pre>
+</div>
+<div id="location-location-location" class="section level4">
+<h4>Location, Location, Location</h4>
+<p>Since one of the datasets only has the female contestants, our merged file will only have the women in it. Where are the female contestants from?</p>
+<pre class="r"><code>coordinates=geocode(pull(mergedData,Hometown),output=&quot;latlon&quot;)
+write.csv(coordinates,&quot;bachelorCoords.csv&quot;,row.names=F)</code></pre>
+<p>Using my ggplot skills from previous posts…</p>
+<pre class="r"><code>all_states &lt;- map_data(&quot;state&quot;)
+
+p &lt;- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour=&quot;black&quot;, fill=&quot;white&quot; )
+p &lt;- p+ geom_point(data=coordinates,aes(x=lon,y=lat))+xlim(-125,-60)+ylim(25,50)+theme_void()
+p</code></pre>
+<p><img src="/blog/2018-05-09-adventures-in-tidyverse-dplyr_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<p>Let’s find out how many per state (and take advantage of <code>arrange</code>).</p>
+<p>More building off of previous ggplot skills…</p>
+<pre class="r"><code>pts = SpatialPoints(coordinates[complete.cases(coordinates),])
+
+#https://journal.r-project.org/archive/2016/RJ-2016-043/RJ-2016-043.pdf
+## There is probably an easier way to do this.
+us_states &lt;- unique(fips_codes$state)[1:51]
+continental_states &lt;- us_states[!us_states %in% c(&quot;AK&quot;, &quot;HI&quot;)]
+us_pumas &lt;- rbind_tigris(
+ lapply(
+    continental_states, function(x) {
+      pumas(state = x, cb = TRUE)
+    }
+  )
+)
+
+proj4string(pts)=proj4string(us_pumas) ## this is needed for over
+
+withinContinental=over(pts,us_pumas)
+
+byState=group_by(withinContinental, STATEFP10) %&gt;% summarise(count=n()) 
+byState=byState %&gt;% mutate(STATEFP10=as.numeric(STATEFP10))
+byState=inner_join(byState,fips.state,by=c(&quot;STATEFP10&quot;=&quot;STATE&quot;))%&gt;% arrange(desc(count))</code></pre>
+<p>I’m curious if the males participating on The Bachelorette are from the same types of places. It seems to me like small town southern girls are more represented than small town southern boys, but I want to test this theory. Let’s <code>filter</code> for the South to at least start getting a sense.</p>
+<pre class="r"><code>byState</code></pre>
+<pre><code>## # A tibble: 39 x 5
+##    STATEFP10 count STUSAB STATE_NAME   STATENS
+##        &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;          &lt;int&gt;
+##  1        6.    46 CA     California   1779778
+##  2       48.    37 TX     Texas        1779801
+##  3       12.    27 FL     Florida       294478
+##  4       36.    21 NY     New York     1779796
+##  5       17.    19 IL     Illinois     1779784
+##  6       26.    13 MI     Michigan     1779789
+##  7       42.    12 PA     Pennsylvania 1779798
+##  8        4.    11 AZ     Arizona      1779777
+##  9       47.    10 TN     Tennessee    1325873
+## 10       49.    10 UT     Utah         1455989
+## # ... with 29 more rows</code></pre>
+<pre class="r"><code>region=cbind.data.frame(state.abb, as.character(state.region))
+names(region)=c(&quot;abb&quot;,&quot;reg&quot;)
+
+south=inner_join(byState,region,by=c(&quot;STUSAB&quot;=&quot;abb&quot;))%&gt;%filter(reg==&quot;South&quot;)
+south</code></pre>
+<pre><code>## # A tibble: 15 x 6
+##    STATEFP10 count STUSAB STATE_NAME     STATENS reg  
+##        &lt;dbl&gt; &lt;int&gt; &lt;chr&gt;  &lt;chr&gt;            &lt;int&gt; &lt;fct&gt;
+##  1       48.    37 TX     Texas          1779801 South
+##  2       12.    27 FL     Florida         294478 South
+##  3       47.    10 TN     Tennessee      1325873 South
+##  4       37.     8 NC     North Carolina 1027616 South
+##  5       21.     6 KY     Kentucky       1779786 South
+##  6       40.     6 OK     Oklahoma       1102857 South
+##  7       13.     5 GA     Georgia        1705317 South
+##  8       45.     4 SC     South Carolina 1779799 South
+##  9       51.     4 VA     Virginia       1779803 South
+## 10        5.     3 AR     Arkansas         68085 South
+## 11       24.     3 MD     Maryland       1714934 South
+## 12        1.     2 AL     Alabama        1779775 South
+## 13       22.     2 LA     Louisiana      1629543 South
+## 14       28.     1 MS     Mississippi    1779790 South
+## 15       54.     1 WV     West Virginia  1779805 South</code></pre>
+<pre class="r"><code>sum(pull(south,count))/sum(pull(byState,count))</code></pre>
+<pre><code>## [1] 0.3541667</code></pre>
+<p>That covers the dplyr verbs, and I’m starting to get the hang of it. I think replacing the dollar sign with <code>mutate</code> will come more easily, but I fear that <code>pull</code> will always be a stretch for me. Fingers crossed I can kick the dollar sign habit.</p>
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt.-whats-your-r-guilty-pleasure" class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>). What’s your <code>R</code> guilty pleasure?</h4>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-05-16-adventures-in-tidyverse-tidyr/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

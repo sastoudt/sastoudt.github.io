@@ -1,0 +1,214 @@
+---
+title: "Guilty Pleasures via dplyr"
+date: 2018-05-09T15:56:46-07:00
+draft: true
+---
+
+Next up on my to-learn list is dplyr. I use `group_by` and `summarize` fairly regularly, but there is other functionality that I want to learn to take advantage of.
+
+- `mutate`
+- `select`
+- `filter`
+- `arrange`
+- `pull` (instead of my favorite, $)
+- various joins (instead of `merge`)
+
+In anticipation of The Bachelorette starting at the end of May, I'm going to wrangle some data on previous contestants. Yes, watching The Bachelorette/The Bachelor is my guilty pleasure. But this feels fitting because the dollar sign is my `R` guilty pleasure. I think this will be the hardest habit to break, but here I try to gain some muscle memory for `mutate` and `pull`.
+
+![](https://media.giphy.com/media/l0HlIfwjHd6w614iY/giphy.gif)
+
+I feel the disapproval already, but [read this super-scientific article before judging me.](https://entertainment.theonion.com/woman-takes-short-half-hour-break-from-being-feminist-t-1819576049)
+
+```{r,message=FALSE, warning=FALSE}
+require(stringr)
+require(dplyr)
+require(ggmap)
+require(fuzzyjoin)
+require(maps)
+require(tigris)
+require(sp)
+require(acs)
+```
+
+Luckily, both 538 and Kaggle have some data on this, so I don't have to do any web scraping. 
+
+```{r}
+#https://github.com/fivethirtyeight/data/tree/master/bachelorette
+#https://www.kaggle.com/brianbgonz/the-bachelor-contestants/data
+
+setwd("~/Desktop/data-538/bachelorette")
+
+contestants<-read.csv("contestants.csv",stringsAsFactors=F)  ## just female contestants
+bachelors<-read.csv("bachelors.csv",stringsAsFactors=F) ## bachelors
+weekByWeek<-read.csv("bachelorette.csv",stringsAsFactors=F) ## both
+```
+
+These datasets contain different information, so the goal of this exercise is to wrangle them together and do something simple with the result. [Plenty](https://fivethirtyeight.com/features/the-bachelorette/) of [others](https://www.huffingtonpost.com/alice-zhao/the-data-behind-the-bachelor--the-bachelorette_b_6744288.html) have done fancier stuff with this kind of data. I'm just trying to learn some new tidy verbs.
+
+
+```{r}
+head(contestants)
+head(bachelors)
+head(weekByWeek,2)
+```
+
+Get rid of headers.
+
+```{r}
+weekByWeek=weekByWeek[-which(weekByWeek$SEASON=="SEASON"),]
+```
+
+#### Counting Dates
+
+
+Use `select` and `mutate` to add the number of dates.
+
+Usually I would usually just use the dollar sign to add new columns (and I would just manually specify the dates columns).
+
+```{r}
+dates=select(weekByWeek,starts_with("DATES")) 
+
+weekByWeek=weekByWeek %>% mutate(numOneOnOneDates=apply(dates,1,function(x){length(which(x=="D1"))}))
+
+weekByWeek=weekByWeek %>% mutate(numDates=apply(dates,1,function(x){length(which(x!=""))}))
+
+weekByWeek=weekByWeek %>% mutate(numGroupDates=numDates-numOneOnOneDates) ## 
+
+```
+
+#### String Processing
+
+Get the names ready to join using `mutate` and `pull`. To standardize each data set, I want first names and last initials in all capitals.
+
+*Note: The string processing here is rudimentary. stringr will have its own blog post.*
+
+```{r}
+weekByWeek= weekByWeek %>% mutate(firstName=unlist(lapply(pull(weekByWeek, CONTESTANT),
+                                        function(x){unlist(str_split(x, "_"))[2]})))
+
+weekByWeek= weekByWeek %>% mutate(lastInitial=unlist(lapply(pull(weekByWeek, CONTESTANT),
+                                                          function(x){unlist(str_split(x, "_"))[3]})))
+
+weekByWeek=weekByWeek %>% mutate(lastInitial=unlist(lapply(pull(weekByWeek,lastInitial),function(x){ifelse(is.na(x),"",x)})))
+
+weekByWeek=weekByWeek %>% mutate(nameNice=paste(firstName,lastInitial,sep=" ")) 
+
+
+
+contestants=contestants %>% mutate(firstName=unlist(lapply(pull(contestants,Name),function(x){unlist(str_split(x," "))[1]})))
+
+contestants=contestants %>% mutate(lastName=unlist(lapply(pull(contestants,Name),function(x){unlist(str_split(x," "))[2]}))) 
+
+contestants=contestants %>% mutate(lastInitial=unlist(lapply(pull(contestants,lastName),function(x){unlist(str_split(x,""))[1]}))) 
+
+contestants=contestants %>% mutate(lastInitial=unlist(lapply(pull(contestants,lastInitial),function(x){ifelse(is.na(x),"",x)})))
+
+contestants=contestants %>% mutate(nameNice=toupper(paste(firstName,lastInitial,sep=" "))) 
+
+
+```
+
+Deal with some weird entries (nicknames have parentheses that mess things up).
+
+```{r}
+contestants[which(grepl("\\(",contestants$Name)),]
+contestants$nameNice[which(grepl("Bowe",contestants$Name))]="Britt N"
+contestants$nameNice[which(grepl("McAllister",contestants$Name))]="Alexa A"
+```
+
+#### Merging/Joining
+
+Before we start merging, we should have a sense of what the best we can do is. Kaggle warns us that the data is missing some seasons.
+
+```{r}
+dim(contestants)
+dim(weekByWeek)
+```
+
+I usually use `merge`, but dplyr focuses on `inner_join`, `left_join`, `right_join`, etc. so let's get used to that syntax.
+
+```{r,message=FALSE, warning=FALSE}
+weekByWeek=weekByWeek %>% mutate(SEASON=as.numeric(SEASON))
+tryMerge=inner_join(contestants,weekByWeek,by=c("nameNice"="nameNice","Season"="SEASON"))
+dim(tryMerge)
+
+```
+
+Because some contestants don't have last names listed in the Kaggle data, we are losing a lot of rows. Within a season we should be able to do a rough join instead to recover some of these. However, there are seasons where multiple contestants have the same first name. We can see that duplicates do occur with this fuzzy join.
+
+```{r,message=FALSE, warning=FALSE}
+mergedData=weekByWeek %>% regex_inner_join(contestants, by = c(nameNice = "nameNice",SEASON="Season"))
+dim(mergedData)
+length(which(duplicated(mergedData$CONTESTANT))) 
+```
+
+#### Location, Location, Location
+
+Since one of the datasets only has the female contestants, our merged file will only have the women in it. Where are the female contestants from?
+
+```{r,eval=F}
+coordinates=geocode(pull(mergedData,Hometown),output="latlon")
+write.csv(coordinates,"bachelorCoords.csv",row.names=F)
+```
+
+```{r,echo=F}
+setwd("~/Desktop/data-538/bachelorette")
+coordinates=read.csv("bachelorCoords.csv")
+```
+
+Using my ggplot skills from previous posts...
+
+```{r,message=FALSE, warning=FALSE}
+all_states <- map_data("state")
+
+p <- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour="black", fill="white" )
+p <- p+ geom_point(data=coordinates,aes(x=lon,y=lat))+xlim(-125,-60)+ylim(25,50)+theme_void()
+p
+```
+
+Let's find out how many per state (and take advantage of `arrange`).
+
+More building off of previous ggplot skills...
+
+```{r,message=FALSE, warning=FALSE,cache=T,results='hide'}
+pts = SpatialPoints(coordinates[complete.cases(coordinates),])
+
+#https://journal.r-project.org/archive/2016/RJ-2016-043/RJ-2016-043.pdf
+## There is probably an easier way to do this.
+us_states <- unique(fips_codes$state)[1:51]
+continental_states <- us_states[!us_states %in% c("AK", "HI")]
+us_pumas <- rbind_tigris(
+ lapply(
+    continental_states, function(x) {
+      pumas(state = x, cb = TRUE)
+    }
+  )
+)
+
+proj4string(pts)=proj4string(us_pumas) ## this is needed for over
+
+withinContinental=over(pts,us_pumas)
+
+byState=group_by(withinContinental, STATEFP10) %>% summarise(count=n()) 
+byState=byState %>% mutate(STATEFP10=as.numeric(STATEFP10))
+byState=inner_join(byState,fips.state,by=c("STATEFP10"="STATE"))%>% arrange(desc(count))
+```
+I'm curious if the males participating on The Bachelorette are from the same types of places. It seems to me like small town southern girls are more represented than small town southern boys, but I want to test this theory. Let's `filter` for the South to at least start getting a sense.
+
+```{r,message=FALSE, warning=FALSE}
+byState
+
+region=cbind.data.frame(state.abb, as.character(state.region))
+names(region)=c("abb","reg")
+
+south=inner_join(byState,region,by=c("STUSAB"="abb"))%>%filter(reg=="South")
+south
+
+sum(pull(south,count))/sum(pull(byState,count))
+
+```
+
+That covers the dplyr verbs, and I'm starting to get the hang of it. I think replacing the dollar sign with `mutate` will come more easily, but I fear that `pull` will always be a stretch for me. Fingers crossed I can kick the dollar sign habit.
+
+#### Feedback, questions, comments, etc. are welcome (@sastoudt). What's your `R` guilty pleasure?
+

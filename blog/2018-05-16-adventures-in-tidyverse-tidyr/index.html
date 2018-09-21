@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Grading with tidyr</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAY 17, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>It’s that time of year… The end of the semester means grading galore for professors and graduate student instructors. In this post, I will explore tidyr in the context of organizing and calculating grades.</p>
+<p>I have some familiarity with reshape2, but I always have to Google an example to remember how to go from wide to long format and vice versa. I’m hoping the tidyr functions will be more intuitive, so I won’t end up like:</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/3o7aTtRiVx75hwQTcY/giphy.gif" />
+
+</div>
+<pre class="r"><code>require(tidyr)
+require(dplyr)
+require(ggplot2)</code></pre>
+<p>I’ve generated some fake grade data based on the format that grades come in when you are an instructor at Berkeley (we use bCourses, similar to Moodle, Canvas, etc.).</p>
+<pre class="r"><code>setwd(&quot;~/Desktop&quot;)
+grades=read.csv(&quot;gradesFake.csv&quot;)</code></pre>
+<p>Each row is a student. Each column is an assignment. The value in this table is the number of points earned.</p>
+<pre class="r"><code>head(grades,2) </code></pre>
+<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
+## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2 0.0
+## 2       B  1  1 1.0  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
+##   A19 A20 A21 A22 A23
+## 1 0.5 0.5   0   0 0.0
+## 2 1.0 1.0   1   1 0.5</code></pre>
+<div id="gather-use-when-your-column-names-are-actually-levels-of-a-particular-variable" class="section level4">
+<h4><code>gather</code>: use when your column names are actually levels of a particular variable</h4>
+<p>In the <code>gather</code> syntax, the first element (after piping in the dataframe) is the new key (the name of the new variable we want, refers to what the current column names are) and the second element is the value (associated with the key, refers to what values are currently in each column). The next arguments are the columns that are going to be turned into key-value pairs. By using the minus sign we can say we want to reshape every column except student.</p>
+<pre class="r"><code>gathered.grades=grades %&gt;% gather(assignment,grade,-Student)
+
+head(gathered.grades,2)</code></pre>
+<pre><code>##   Student assignment grade
+## 1       A         A1     0
+## 2       B         A1     1</code></pre>
+<p>This gathered format allows us to easily group by student or assignment and see how things are going. Is a particular student struggling? Is there an assignment that everyone is stuggling with?</p>
+<p><strong>Note:</strong> This example is oversimplifying things since we haven’t yet said how many points each assignment is worth, but we’ll get there.</p>
+<pre class="r"><code>gathered.grades %&gt;% group_by(Student) %&gt;% summarise(meanPoints=mean(grade),sdPoints=sd(grade))%&gt;% head(2)</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   Student meanPoints sdPoints
+##   &lt;chr&gt;        &lt;dbl&gt;    &lt;dbl&gt;
+## 1 A            0.848    0.910
+## 2 B            1.52     0.832</code></pre>
+<pre class="r"><code>gathered.grades %&gt;% group_by(assignment) %&gt;% summarise(meanPoints=mean(grade),sdPoints=sd(grade))%&gt;% head(2)</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   assignment meanPoints sdPoints
+##   &lt;chr&gt;           &lt;dbl&gt;    &lt;dbl&gt;
+## 1 A1              0.933    0.258
+## 2 A10             2.47     0.516</code></pre>
+</div>
+<div id="spread-use-when-you-want-the-levels-of-a-variable-to-be-separate-columns" class="section level4">
+<h4><code>spread</code>: use when you want the levels of a variable to be separate columns</h4>
+<p>We can undo <code>gather</code> by using <code>spread</code>. We may want to look at this shape if we want to see by assignment, how each student does.</p>
+<p>Annoyingly, this doesn’t get us quite back to the original data because the assignments are organized alphabetically instead of numerically.</p>
+<pre class="r"><code>byStudent=gathered.grades %&gt;% spread(assignment, grade) 
+byAssignment=gathered.grades %&gt;% spread(Student, grade) 
+
+head(byStudent,2) ## alphabetical weirdness</code></pre>
+<pre><code>##   Student A1 A10 A11 A12 A13 A14 A15 A16 A17 A18 A19 A2 A20 A21 A22 A23
+## 1       A  0   2   2   2   2   2   1   2   2 0.0 0.5  0 0.5   0   0 0.0
+## 2       B  1   2   3   2   3   2   2   3   3 0.5 1.0  1 1.0   1   1 0.5
+##    A3 A4 A5 A6 A7 A8 A9
+## 1 0.5  0  0  0  0  1  2
+## 2 1.0  1  1  1  1  1  2</code></pre>
+<pre class="r"><code>head(byAssignment,2) ## alphabetical weirdness</code></pre>
+<pre><code>##   assignment A B C D E F G H I J K L M N O
+## 1         A1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## 2        A10 2 2 3 3 2 3 3 2 2 2 2 2 3 3 3</code></pre>
+<p>But we can do a little hack and get things back to normal.</p>
+<pre class="r"><code>orderIwant=paste(&quot;A&quot;,1:(ncol(byStudent)-1),sep=&quot;&quot;)
+
+head(byStudent[,c(&quot;Student&quot;,orderIwant)],3)</code></pre>
+<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
+## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2 0.0
+## 2       B  1  1 1.0  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
+## 3       C  1  1 1.0  1  1  1  1  1  3   3   3   3   3   3   2   2   3 1.0
+##   A19 A20 A21 A22 A23
+## 1 0.5 0.5   0   0 0.0
+## 2 1.0 1.0   1   1 0.5
+## 3 1.0 1.0   1   1 1.0</code></pre>
+<pre class="r"><code>byAssignmentAdjust=byAssignment[unlist(lapply(orderIwant,function(x){which(pull(byAssignment,assignment)==x)})),]
+
+row.names(byAssignmentAdjust)=NULL
+
+head(byAssignmentAdjust,3)</code></pre>
+<pre><code>##   assignment   A B C D E F G   H   I J K L M N O
+## 1         A1 0.0 1 1 1 1 1 1 1.0 1.0 1 1 1 1 1 1
+## 2         A2 0.0 1 1 1 1 1 1 0.5 0.5 1 1 1 1 1 1
+## 3         A3 0.5 1 1 1 1 1 1 0.5 0.5 1 1 1 1 1 1</code></pre>
+</div>
+<div id="calculate-grades" class="section level4">
+<h4>Calculate grades</h4>
+<p>For simplicity, let’s assume that there exists a student for each assigment who got a perfect score, so we can use the maximum per assignment as the number of possible points.</p>
+<pre class="r"><code>scores1=select(byStudent,starts_with(&quot;A&quot;)) 
+scores2=select(byAssignment,one_of(LETTERS[1:(ncol(byAssignment)-1)])) 
+
+head(scores1,2)</code></pre>
+<pre><code>##   A1 A10 A11 A12 A13 A14 A15 A16 A17 A18 A19 A2 A20 A21 A22 A23  A3 A4 A5
+## 1  0   2   2   2   2   2   1   2   2 0.0 0.5  0 0.5   0   0 0.0 0.5  0  0
+## 2  1   2   3   2   3   2   2   3   3 0.5 1.0  1 1.0   1   1 0.5 1.0  1  1
+##   A6 A7 A8 A9
+## 1  0  0  1  2
+## 2  1  1  1  2</code></pre>
+<pre class="r"><code>head(scores2,2)</code></pre>
+<pre><code>##   A B C D E F G H I J K L M N O
+## 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1
+## 2 2 2 3 3 2 3 3 2 2 2 2 2 3 3 3</code></pre>
+<p>The use of purrr is coming in a future blog post (with <span class="citation">@kelliotto</span>) but for now I’m sticking to <code>apply</code>.</p>
+<pre class="r"><code>possiblePoints=sum(apply(scores1,2,max))
+pointsPerStudent=apply(scores1,1,sum)
+studentPercentages=pointsPerStudent/possiblePoints
+studentPercentages</code></pre>
+<pre><code>##         1         2         3         4         5         6         7 
+## 0.4756098 0.8536585 0.9512195 0.9512195 0.9756098 0.9756098 0.8902439 
+##         8         9        10        11        12        13        14 
+## 0.8414634 0.7682927 0.9146341 0.9024390 0.9268293 0.9024390 0.8170732 
+##        15 
+## 0.9756098</code></pre>
+<pre class="r"><code>possiblePoints=sum(apply(scores2,1,max))
+pointsPerStudent=apply(scores2,2,sum)
+studentPercentages=pointsPerStudent/possiblePoints
+studentPercentages</code></pre>
+<pre><code>##         A         B         C         D         E         F         G 
+## 0.4756098 0.8536585 0.9512195 0.9512195 0.9756098 0.9756098 0.8902439 
+##         H         I         J         K         L         M         N 
+## 0.8414634 0.7682927 0.9146341 0.9024390 0.9268293 0.9024390 0.8170732 
+##         O 
+## 0.9756098</code></pre>
+</div>
+<div id="spread-use-when-you-want-to-split-levels-or-values-of-a-variable-into-multiple-components" class="section level4">
+<h4><code>spread</code>: use when you want to split levels (or values) of a variable into multiple components</h4>
+<p>We can imagine many different ways of organizing grades that may require other verbs in the tidyr package. What if our assignment names also included the due date? We may want to be able to calculate the average grade per month of the semester to assess pacing.</p>
+<pre class="r"><code>grades2=grades
+#https://stackoverflow.com/questions/21502332/generating-random-dates
+td = as.Date(&#39;2018/05/01&#39;) - as.Date(&#39;2018/02/01&#39;)
+dates=as.Date(&#39;2018/02/01&#39;) + sample(0:td, ncol(grades)-1)
+dates=dates[order(dates)]
+names(grades2)[2:ncol(grades2)]=paste(names(grades2)[2:ncol(grades2)],dates,sep=&quot;_&quot;)
+head(grades2,2)</code></pre>
+<pre><code>##   Student A1_2018-02-02 A2_2018-02-04 A3_2018-02-05 A4_2018-02-06
+## 1       A             0             0           0.5             0
+## 2       B             1             1           1.0             1
+##   A5_2018-02-07 A6_2018-02-09 A7_2018-02-17 A8_2018-02-21 A9_2018-02-26
+## 1             0             0             0             1             2
+## 2             1             1             1             1             2
+##   A10_2018-02-28 A11_2018-03-03 A12_2018-03-05 A13_2018-03-14
+## 1              2              2              2              2
+## 2              2              3              2              3
+##   A14_2018-03-16 A15_2018-03-18 A16_2018-03-30 A17_2018-03-31
+## 1              2              1              2              2
+## 2              2              2              3              3
+##   A18_2018-04-01 A19_2018-04-13 A20_2018-04-16 A21_2018-04-18
+## 1            0.0            0.5            0.5              0
+## 2            0.5            1.0            1.0              1
+##   A22_2018-04-23 A23_2018-05-01
+## 1              0            0.0
+## 2              1            0.5</code></pre>
+<pre class="r"><code>gathered.grades2=gather(grades2,assignment,grade,-Student)
+head(gathered.grades2,2)</code></pre>
+<pre><code>##   Student    assignment grade
+## 1       A A1_2018-02-02     0
+## 2       B A1_2018-02-02     1</code></pre>
+<pre class="r"><code>gathered.grades.dueDates=gathered.grades2 %&gt;% separate(assignment,c(&quot;assignment&quot;,&quot;year&quot;,&quot;month&quot;,&quot;day&quot;))
+head(gathered.grades.dueDates,2)</code></pre>
+<pre><code>##   Student assignment year month day grade
+## 1       A         A1 2018    02  02     0
+## 2       B         A1 2018    02  02     1</code></pre>
+<p>There is not a lot to go on here, but we could imagine breaking things down by week instead of month to get a better sense.</p>
+<pre class="r"><code>gathered.grades.dueDates=gathered.grades %&gt;% group_by(assignment)%&gt;%summarise(maxPoss=max(grade)) %&gt;%inner_join(gathered.grades.dueDates,by=c(&quot;assignment&quot;=&quot;assignment&quot;))
+
+gathered.grades.dueDates %&gt;% group_by(month)%&gt;% summarise(avgGrade=mean(grade/maxPoss))</code></pre>
+<pre><code>## # A tibble: 4 x 2
+##   month avgGrade
+##   &lt;chr&gt;    &lt;dbl&gt;
+## 1 02       0.888
+## 2 03       0.883
+## 3 04       0.873
+## 4 05       0.800</code></pre>
+<p>We could do something similar with <code>str_split</code> but it would take many more lines of code.</p>
+</div>
+<div id="unite-use-when-you-want-to-concatenate-multiple-variables-into-one" class="section level4">
+<h4><code>unite</code>: use when you want to concatenate multiple variables into one</h4>
+<p>To undo <code>separate</code>, we use <code>unite</code>. We want to collapse all but Student and grade into a variable called assignment. I would usually use <code>paste</code>.</p>
+<pre class="r"><code>gathered.grades.dueDates %&gt;%unite(assignment,-Student, -grade,sep=&quot;-&quot;) %&gt;% head(2)</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##   assignment      Student grade
+##   &lt;chr&gt;           &lt;chr&gt;   &lt;dbl&gt;
+## 1 A1-1-2018-02-02 A          0.
+## 2 A1-1-2018-02-02 B          1.</code></pre>
+</div>
+<div id="replace_na-use-to-replace-missing-values-with-a-particular-value" class="section level4">
+<h4><code>replace_NA</code>: use to replace missing values with a particular value</h4>
+<p>We may want to replace assignments that are missing with zeros. <code>replace_na</code> requires a named list of what to replace an NA with in each column. Since we have many assignment columns, I had to ask Stack Overflow for some assistance.</p>
+<pre class="r"><code>## this seems like a prime candidate for walk from purrr, to be continued...
+grades[1,sample(1:(ncol(grades)-1),1)]=NA
+grades[5,sample(1:(ncol(grades)-1),1)]=NA
+grades[10,sample(1:(ncol(grades)-1),1)]=NA
+grades[15,sample(1:(ncol(grades)-1),1)]=NA
+
+
+#https://stackoverflow.com/questions/45576805/how-to-replace-all-na-in-a-dataframe-using-tidyrreplace-na
+myList &lt;- setNames(lapply(vector(&quot;list&quot;, ncol(grades)-1), function(x) x &lt;- 0), names(grades)[-1])
+head(myList,2)</code></pre>
+<pre><code>## $A1
+## [1] 0
+## 
+## $A2
+## [1] 0</code></pre>
+<pre class="r"><code>grades=grades %&gt;% replace_na(myList)
+head(grades,2)</code></pre>
+<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
+## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2 0.0
+## 2       B  1  1 1.0  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
+##   A19 A20 A21 A22 A23
+## 1 0.5 0.5   0   0 0.0
+## 2 1.0 1.0   1   1 0.5</code></pre>
+</div>
+<div id="drop_na-use-when-you-want-to-remove-rows-with-missing-values-in-certain-columns" class="section level4">
+<h4><code>drop_na</code>: use when you want to remove rows with missing values in certain columns</h4>
+<p><code>drop_na</code> may be useful when we want to drop each student’s lowest grade in a certain category of grades. Assuming all other NA values are converted to zeros…</p>
+<pre class="r"><code>gathered.grades.cat=gathered.grades %&gt;% mutate(category=sample(1:3,nrow(gathered.grades),replace=T))
+
+byStudent=split(gathered.grades.cat,pull(gathered.grades.cat,Student))
+
+
+dropLowestScore=function(studentGrades,categoryToDrop){
+
+  catToDrop=studentGrades %&gt;% filter(category==categoryToDrop)
+  
+  toDrop=which.min(pull(catToDrop,grade))
+  
+  studentGrades$grade[toDrop]=NA
+  ## I don&#39;t think I can use pull here
+  
+  studentGradesAdj=studentGrades %&gt;% drop_na()
+  
+  return(studentGradesAdj)
+}
+
+adjustedGrades=do.call(&quot;rbind&quot;,lapply(byStudent,dropLowestScore,1))
+
+length(unique(pull(adjustedGrades,assignment)))</code></pre>
+<pre><code>## [1] 23</code></pre>
+<pre class="r"><code>adjustedGrades%&gt;%group_by(Student)%&gt;% summarise(count=n())%&gt;%head(2)</code></pre>
+<pre><code>## # A tibble: 2 x 2
+##   Student count
+##   &lt;chr&gt;   &lt;int&gt;
+## 1 A          22
+## 2 B          22</code></pre>
+</div>
+<div id="complete-use-when-you-want-to-make-implicit-missing-data-explicit" class="section level4">
+<h4><code>complete</code>: use when you want to make implicit missing data explicit</h4>
+<p>I often use <code>expand.grid</code> and then <code>merge</code> to do this. This is much more concise.</p>
+<p><strong>Note:</strong> If we only want to include levels of a variable that are present in the data we use <code>nesting</code> to denote this within the <code>complete</code> call.</p>
+<pre class="r"><code>dim(adjustedGrades)</code></pre>
+<pre><code>## [1] 330   4</code></pre>
+<pre class="r"><code>gathered.grades.cat%&gt;%complete(Student,assignment)%&gt;% dim</code></pre>
+<pre><code>## [1] 345   4</code></pre>
+</div>
+<div id="separate_rows-use-when-a-value-contains-more-than-one-piece-of-information-and-you-want-separate-rows-for-each-piece-of-information" class="section level4">
+<h4><code>separate_rows</code>: use when a value contains more than one piece of information and you want separate rows for each piece of information</h4>
+<p>Now suppose our spreadsheet of grades contains the maximum points possible for each assignment. We can separate this information to make it easier to do calculations.</p>
+<pre class="r"><code>maxPts=apply(grades[,2:ncol(grades)],2,max)
+
+pasteGrades=function(idx){
+  x=paste(grades[,idx+1],rep(maxPts[idx],nrow(grades)),sep=&quot;/&quot;)
+  return(x)
+}
+
+pastedGrades=lapply(1:(ncol(grades)-1),pasteGrades)
+
+adjGrades=do.call(&quot;cbind&quot;,pastedGrades)
+
+grades3=cbind.data.frame(pull(grades,Student),adjGrades)
+names(grades3)=names(grades)
+
+head(grades3,2)</code></pre>
+<pre><code>##   Student  A1  A2    A3  A4  A5  A6  A7  A8  A9 A10 A11 A12 A13 A14 A15
+## 1       A 0/1 0/1 0.5/1 0/1 0/1 0/1 0/1 1/1 2/3 2/3 2/3 2/3 2/3 2/3 1/3
+## 2       B 1/1 1/1   1/1 1/1 1/1 1/1 1/1 1/1 2/3 2/3 3/3 2/3 3/3 2/3 2/3
+##   A16 A17   A18   A19   A20 A21 A22   A23
+## 1 2/3 2/3   0/1 0.5/1 0.5/1 0/1 0/1   0/1
+## 2 3/3 3/3 0.5/1   1/1   1/1 1/1 1/1 0.5/1</code></pre>
+<pre class="r"><code>separated.grades=grades3 %&gt;% separate_rows(-Student,sep=&quot;/&quot;)
+head(separated.grades,4)</code></pre>
+<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
+## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2   0
+## 2       A  1  1   1  1  1  1  1  1  3   3   3   3   3   3   3   3   3   1
+## 3       B  1  1   1  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
+## 4       B  1  1   1  1  1  1  1  1  3   3   3   3   3   3   3   3   3   1
+##   A19 A20 A21 A22 A23
+## 1 0.5 0.5   0   0   0
+## 2   1   1   1   1   1
+## 3   1   1   1   1 0.5
+## 4   1   1   1   1   1</code></pre>
+<pre class="r"><code>pointsEarned=separated.grades[seq(1,nrow(separated.grades),by=2),]
+pointsPossible=separated.grades[2,-1]
+row.names(pointsPossible)=NULL
+
+head(pointsEarned,2)</code></pre>
+<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
+## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2   0
+## 3       B  1  1   1  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
+##   A19 A20 A21 A22 A23
+## 1 0.5 0.5   0   0   0
+## 3   1   1   1   1 0.5</code></pre>
+<pre class="r"><code>pointsPossible</code></pre>
+<pre><code>##   A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18 A19 A20
+## 1  1  1  1  1  1  1  1  1  3   3   3   3   3   3   3   3   3   1   1   1
+##   A21 A22 A23
+## 1   1   1   1</code></pre>
+</div>
+<div id="nest-use-when-you-want-to-see-which-levels-of-a-variable-occur-with-the-same-combination-of-levels-of-other-variables" class="section level4">
+<h4><code>nest</code>: use when you want to see which levels of a variable occur with the same combination of levels of other variables</h4>
+<p>We can use <code>nest</code> to see who got the top grade for each assignment (and use <code>unnest</code> to undo the operation). This call makes every row a combination of assignment and grade level. The last column is a list of all the students who received that particular grade on the assignment.</p>
+<pre class="r"><code>byAssignmentGrade=gathered.grades%&gt;%nest(Student)
+head(byAssignmentGrade)</code></pre>
+<pre><code>##   assignment grade                                     data
+## 1         A1   0.0                                        A
+## 2         A1   1.0 B, C, D, E, F, G, H, I, J, K, L, M, N, O
+## 3         A2   0.0                                        A
+## 4         A2   1.0       B, C, D, E, F, G, J, K, L, M, N, O
+## 5         A2   0.5                                     H, I
+## 6         A3   0.5                                  A, H, I</code></pre>
+<pre class="r"><code>pull(byAssignmentGrade,data)[1]</code></pre>
+<pre><code>## [[1]]
+##   Student
+## 1       A</code></pre>
+<pre class="r"><code>unnest(byAssignmentGrade,data) %&gt;%head</code></pre>
+<pre><code>##   assignment grade Student
+## 1         A1     0       A
+## 2         A1     1       B
+## 3         A1     1       C
+## 4         A1     1       D
+## 5         A1     1       E
+## 6         A1     1       F</code></pre>
+<p>That covers most of the tidyr verbs. I suspect that I will still need to look up examples to remember how to use <code>gather</code> and <code>spread</code>, but I’m hoping this cheat sheet will help me remember when to use which without having to try both on a sample data set.</p>
+<p>The other verbs that I can see myself using frequently are <code>complete</code> and <code>spread</code>. I’m doing a project now where I use the <code>expand.grid</code> and <code>merge</code> trick way too often. I suspect it is a lot slower than <code>complete</code>, so I’m going to make this switch and see if it speeds things up.</p>
+<p>P.S. Just for the record: before posting this I searched for the dollar sign and rewrote the lines that involved it. Working on that guilty pleasure…</p>
+<p>Happy Grading!</p>
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-05-09-adventures-in-tidyverse-dplyr/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-05-26-adventures-in-tidyverse-readr/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

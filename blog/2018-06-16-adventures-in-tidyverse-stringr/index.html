@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Gender Neutral Letters of Recommendation with stringR</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON JUN 16, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <pre class="r"><code>require(reticulate)
+require(stringr)
+require(babynames)</code></pre>
+<p>There are lots of functions in stringR that improve upon base R equivalents for string processing. I’m not going to go through all the functionality, but at the end of the post, after the main attraction, I’ll go through examples in the stringR documentation and pick out the ones that seem handiest for scenarios I have run into where base R has been found wanting.</p>
+<div id="gender-neutral-letters-of-rec." class="section level4">
+<h4>Gender Neutral Letters of Rec.</h4>
+<p>Now for the star of the show. I want to be able to read in the text of a letter of recommendation and make all the pronouns gender neutral. I found a template <a href="https://www.themuse.com/advice/heres-a-template-to-write-a-perfect-and-personalized-letter-of-recommendation">here</a> for a letter of recommendation that we will use. Since names are often a give-away of gender, I also would like to replace any names with “Student”. I’m going to change the generic name to “Sara” to test this out. Note that originally I wanted to replace with the less awkward “my student”, but then I would have to worry about whether “my” should be capitalized or not depending on the position of the name in the sentence.</p>
+<pre class="r"><code>letter=&quot;Dear Mr./Mrs./Ms. [Last Name],
+
+It’s my absolute pleasure to recommend Sara for [position] with [Company].
+
+Sara and I [relationship] at [Company] for [length of time].
+
+I thoroughly enjoyed my time working with Sara, and came to know her as a truly valuable asset to absolutely any team. She is honest, dependable, and incredibly hard-working. Beyond that, she is an impressive [soft skill] who is always [result].
+
+Her knowledge of [specific subject] and expertise in [specific subject] was a huge advantage to our entire office. She put this skillset to work in order to [specific achievement].
+
+Along with her undeniable talent, Sara has always been an absolute joy to work with. She is a true team player, and always manages to foster positive discussions and bring the best out of other employees.
+
+Without a doubt, I confidently recommend Sara to join your team at [Company]. As a dedicated and knowledgeable employee and an all-around great person, I know that she will be a beneficial addition to your organization.
+
+Please feel free to contact me at [your contact information] should you like to discuss Sara’s qualifications and experience further. I’d be happy to expand on my recommendation.
+
+Best wishes,
+[Your Name]
+
+&quot;</code></pre>
+</div>
+<div id="names" class="section level4">
+<h4>Names</h4>
+<p>If the candidate has a name that has at least 5 uses in the United States, we can use the babynames package to locate it and replace it. This approach has limitations for international names. <code>str_detect</code> only searches for one pattern. We don’t want to search for every single name one at a time. Instead, I’m going to find each capitalized word in the letter of recommendation and use it as the pattern to look for in the babynames. This is somewhat wasteful because the first word of every sentence is capitalized, but for now, I don’t want to have to deal with deciding whether or not each word comes directly after a punctuation mark.</p>
+<pre class="r"><code>head(unique(babynames$name))</code></pre>
+<pre><code>## [1] &quot;Mary&quot;      &quot;Anna&quot;      &quot;Emma&quot;      &quot;Elizabeth&quot; &quot;Minnie&quot;    &quot;Margaret&quot;</code></pre>
+<pre class="r"><code>#https://stackoverflow.com/questions/21781014/remove-all-line-breaks-enter-symbols-from-the-string-using-r
+nolines=str_replace_all(letter,&quot;[\n]&quot;,&quot; &quot;)
+nolines=str_replace_all(nolines,fixed(&quot;[&quot;),&quot;\\[&quot;)
+nolines=str_replace_all(nolines,fixed(&quot;]&quot;),&quot;\\]&quot;)
+words=str_split(nolines,&quot; &quot;)
+words=words[[1]]
+capitalized=unique(words[str_detect(words,&quot;[A-Z]&quot;)])</code></pre>
+<p>The following is not restrictive enough since the words can be part of a name.</p>
+<pre class="r"><code>isName=lapply(capitalized,function(x){sum(str_detect(unique(babynames$name),x))})
+capitalized[which(unlist(isName)&gt;0)] ## not restrictive enough</code></pre>
+<pre><code>## [1] &quot;Dear&quot; &quot;Sara&quot; &quot;I&quot;    &quot;She&quot;  &quot;Her&quot;  &quot;As&quot;   &quot;Best&quot;</code></pre>
+<p>The following is too restrictive:</p>
+<pre class="r"><code>isName=lapply(capitalized,function(x){sum(str_detect(unique(babynames$name),paste(x,&quot;\\&gt;&quot;,sep=&quot;&quot;)))})
+capitalized[unlist(isName)]</code></pre>
+<pre><code>## character(0)</code></pre>
+<p>But this is weird. <a href="https://stackoverflow.com/questions/46153832/exact-match-with-grepl-r">This</a> tells me that “\&gt;” is the regular expression for the pattern being found at the end of the word.</p>
+<pre class="r"><code>sum(str_detect(unique(babynames$name),&quot;Sara\\&gt;&quot;)) ## default is regex so not looking for that actually</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>sum(str_detect(unique(babynames$name),regex(&quot;Sara\\&gt;&quot;))) ## default is regex so not looking for that actually</code></pre>
+<pre><code>## [1] 0</code></pre>
+<p>This works using <code>grepl</code>. <strong>Can someone please explain this to me?</strong> I thought it might have to do with <a href="https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html">default engines</a>, but I couldn’t find much information on the base R default beyond a note in the “performance consideration section” <a href="http://stat.ethz.ch/R-manual/R-devel/library/base/html/grep.html">here</a>.</p>
+<pre class="r"><code>sum(grepl(&quot;Sara\\&gt;&quot;,unique(babynames$name)))</code></pre>
+<pre><code>## [1] 1</code></pre>
+<p>Here is a hack:</p>
+<pre class="r"><code>allnames=str_flatten(unique(babynames$name),&quot; &quot;) 
+isName=lapply(capitalized,function(x){str_detect(allnames,paste(&quot; &quot;,x,&quot; &quot;,sep=&quot;&quot;))})
+capitalized[unlist(isName)]</code></pre>
+<pre><code>## [1] &quot;Sara&quot; &quot;She&quot;  &quot;Her&quot;</code></pre>
+<p>This is annoying. These are actually names.</p>
+<pre class="r"><code>unique(babynames$name)[which(grepl(&quot;She\\&gt;&quot;,unique(babynames$name)))]</code></pre>
+<pre><code>## [1] &quot;She&quot;</code></pre>
+<pre class="r"><code>unique(babynames$name)[which(grepl(&quot;Her\\&gt;&quot;,unique(babynames$name)))]</code></pre>
+<pre><code>## [1] &quot;Her&quot;</code></pre>
+<p>I’ll just create an exception list.</p>
+<pre class="r"><code>exception=c(&quot;She&quot;,&quot;Her&quot;) ## may need to add more as we experience more weird things</code></pre>
+<p>Pick names to replace. Note we don’t have to worry about “Sara’s” because we will still replace the “Sara” portion with “Student”.</p>
+<pre class="r"><code>namesToReplace=setdiff(capitalized[unlist(isName)],exception)</code></pre>
+<p>Do the replacing. I don’t want to use a loop but I need to continually update <code>words</code>. <strong>Any suggestions?</strong> Will <code>walk</code> in purrr do this?</p>
+<pre class="r"><code>### need to go through everything in namesToReplace but resave every time
+
+for(i in 1:length(namesToReplace)){
+  words=str_replace_all(words,namesToReplace[i],&quot;Student&quot;)
+}</code></pre>
+</div>
+<div id="pronouns" class="section level4">
+<h4>Pronouns</h4>
+<p>Ideally, we could just change everything to the gender neutral singular they/them. However this would require us to change the verbs. Instead we will use “s/he”, while recognizing that this binary is not fully inclusive.</p>
+<p>Again the mystery of different syntax for <a href="http://www.rexegg.com/regex-anchors.html">anchors</a> comes up:</p>
+<pre class="r"><code>which(str_detect(words,&quot;^She\\&gt;&quot;)&gt;0)</code></pre>
+<pre><code>## integer(0)</code></pre>
+<pre class="r"><code>grep(&quot;^She\\&gt;&quot;,words)</code></pre>
+<pre><code>## [1]  51  89 116</code></pre>
+<pre class="r"><code>grep(&quot;^She$&quot;,words)</code></pre>
+<pre><code>## [1]  51  89 116</code></pre>
+<pre class="r"><code>#words=  str_replace_all(words,&quot;^She\\&gt;&quot;,&quot;S/He&quot;) ## doesn&#39;t work
+words=  str_replace_all(words,&quot;^She$&quot;,&quot;S/He&quot;)</code></pre>
+<pre class="r"><code>words=  str_replace_all(words,&quot;^she$&quot;,&quot;s/he&quot;)
+words= str_replace_all(words,&quot;^he$&quot;,&quot;s/he&quot;)
+words=  str_replace_all(words,&quot;^He$&quot;,&quot;S/He&quot;)
+
+## need possessives
+words=  str_replace_all(words,&quot;^She&#39;s$&quot;,&quot;S/He&#39;s&quot;)
+words=  str_replace_all(words,&quot;^she&#39;s$&quot;,&quot;s/he&#39;s&quot;)
+words= str_replace_all(words,&quot;^he&#39;s$&quot;,&quot;s/he&#39;s&quot;)
+words=  str_replace_all(words,&quot;^He&#39;s$&quot;,&quot;S/He&#39;s&quot;)
+ 
+
+ words=  str_replace_all(words,&quot;^hers\\&gt;&quot;,&quot;theirs&quot;) ## shouldn&#39;t be first so no capitalization
+ words= str_replace_all(words,&quot;^him\\&gt;&quot;,&quot;them&quot;) ## shouldn&#39;t be first
+ 
+ str_flatten(words,&quot; &quot;)</code></pre>
+<pre><code>## [1] &quot;Dear Mr./Mrs./Ms. \\[Last Name\\],  It’s my absolute pleasure to recommend Student for \\[position\\] with \\[Company\\].  Student and I \\[relationship\\] at \\[Company\\] for \\[length of time\\].  I thoroughly enjoyed my time working with Student, and came to know her as a truly valuable asset to absolutely any team. S/He is honest, dependable, and incredibly hard-working. Beyond that, s/he is an impressive \\[soft skill\\] who is always \\[result\\].  Her knowledge of \\[specific subject\\] and expertise in \\[specific subject\\] was a huge advantage to our entire office. S/He put this skillset to work in order to \\[specific achievement\\].  Along with her undeniable talent, Student has always been an absolute joy to work with. S/He is a true team player, and always manages to foster positive discussions and bring the best out of other employees.  Without a doubt, I confidently recommend Student to join your team at \\[Company\\]. As a dedicated and knowledgeable employee and an all-around great person, I know that s/he will be a beneficial addition to your organization.  Please feel free to contact me at \\[your contact information\\] should you like to discuss Student’s qualifications and experience further. I’d be happy to expand on my recommendation.  Best wishes, \\[Your Name\\]  &quot;</code></pre>
+<p>Now because English is weird we have a problem. How do we distinguish between the following examples?</p>
+<ol style="list-style-type: decimal">
+<li><p>That is <em>hers</em>. –&gt; theirs</p></li>
+<li><p>That is <em>his</em>. —&gt; theirs</p></li>
+<li><p>That is <em>his</em> experience. —&gt; their</p></li>
+<li><p>That is <em>her</em> experience. —&gt; their</p></li>
+<li><p>Get to know <em>her</em>. —&gt; them</p></li>
+<li><p>Get to know <em>him</em>. —&gt; them</p></li>
+</ol>
+<p>Numbers 1 and 6 are not ambigous, so we can fix those.</p>
+<pre class="r"><code> words= str_replace_all(words,&quot;^hers$&quot;,&quot;theirs&quot;) 
+ words= str_replace_all(words,&quot;^him$&quot;,&quot;them&quot;) 
+ 
+toParse=  str_flatten(words,&quot; &quot;)
+#toParse=r_to_py(toParse)</code></pre>
+<p>To distinguish between 2 and 3 and 4 and 5, we need to automatically determine what part of speech the words are.</p>
+<pre class="r"><code> his=which(str_detect(words,&quot;^his$&quot;))
+
+ His=which(str_detect(words,&quot;^His$&quot;))
+
+ her=which(str_detect(words,&quot;^her$&quot;))
+
+ Her=which(str_detect(words,&quot;^Her$&quot;))
+
+ 
+ toChange=c(his,His,her,Her)</code></pre>
+</div>
+<div id="natural-language-processing" class="section level4">
+<h4>Natural Language Processing</h4>
+<div class="figure">
+<img src="https://media.giphy.com/media/ToMjGpjpXMFPshSYGLm/giphy.gif" />
+
+</div>
+<p>Bet you didn’t expect to see NLP when you clicked on this post. Apparently we need a part of speech (POS) tagger to tell us what type of word each is in a sentence.</p>
+<p>Both the R packages I <a href="http://smart-statistics.com/part-speech-tagging-r/">found</a> to do this had <a href="https://github.com/ropenscilabs/geolocart/issues/9">rJava</a> <a href="ttp://conjugateprior.org/2014/12/r-java8-osx/">issues</a>.</p>
+<pre class="r"><code>## not run
+require(openNLP)
+devtools::install_github(&quot;bnosac/RDRPOSTagger&quot;)</code></pre>
+<p>I guess now is the time to learn some reticulate basics.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/d3MKXEAhuyThl4kg/giphy.gif" />
+
+</div>
+<ul>
+<li><a href="https://www.nltk.org/book/ch05.html">Python package that I need</a></li>
+<li><a href="https://stackoverflow.com/questions/25383030/rpython-using-wrong-python-installation-on-mac-osx">Tell R where my Python is</a></li>
+<li><a href="https://github.com/rstudio/rmarkdown/issues/812#">Tell R where my Python is Pt 2</a></li>
+<li><a href="https://stackoverflow.com/questions/27759418/python-word-tokenize">Missing some downloads Pt 2</a></li>
+<li><a href="https://stackoverflow.com/questions/35861482/nltk-lookup-error">Missing some downloads Pt 3</a></li>
+<li><a href="https://stackoverflow.com/questions/47689968/python-code-chunk-graphs-not-showing-up-in-r-markdown">How to see Python output in RMarkdown</a></li>
+<li><a href="https://stackoverflow.com/questions/44137934/python-output-not-appearing-in-rmarkdown">How to see Python output in RMarkdown Pt 2</a></li>
+</ul>
+<p>I tried to use <code>r_to_py</code> to pass in <code>toParse</code>, but was having trouble (see commented out code), so for now, I’m just copying the contents of <code>toParse</code> into this chunk. <strong>Can somebody please point me to an example of getting an R object to Python in Markdown?</strong></p>
+<pre class="python"><code>import nltk
+text = nltk.word_tokenize(&quot;Dear Mr./Mrs./Ms. [Last Name],  It’s my absolute pleasure to recommend Student for [position] with [Company].  Student and I [relationship] at [Company] for [length of time].  I thoroughly enjoyed my time working with Student, and came to know her as a truly valuable asset to absolutely any team. S/He is honest, dependable, and incredibly hard-working. Beyond that, s/he is an impressive [soft skill] who is always [result].  Her knowledge of [specific subject] and expertise in [specific subject] was a huge advantage to our entire office. S/He put this skillset to work in order to [specific achievement].  Along with her undeniable talent, Student has always been an absolute joy to work with. S/He is a true team player, and always manages to foster positive discussions and bring the best out of other employees.  Without a doubt, I confidently recommend Student to join your team at [Company]. As a dedicated and knowledgeable employee and an all-around great person, I know that s/he will be a beneficial addition to your organization.  Please feel free to contact me at [your contact information] should you like to discuss Student’s qualifications and experience further. I’d be happy to expand on my recommendation.  Best wishes, [Your Name]&quot;)
+test=nltk.pos_tag(text)
+#test=nltk.pos_tag(toParse)</code></pre>
+<pre class="r"><code>print(py$test[[1]])</code></pre>
+<pre><code>## [[1]]
+## [1] &quot;Dear&quot;
+## 
+## [[2]]
+## [1] &quot;NNP&quot;</code></pre>
+<pre class="r"><code>wordsPy=unlist(lapply(py$test,function(x){x[[1]]}))
+
+hisPy=which(str_detect(wordsPy,&quot;^his$&quot;))
+HisPy=which(str_detect(wordsPy,&quot;^His$&quot;))
+
+herPy=which(str_detect(wordsPy,&quot;^her$&quot;))
+HerPy=which(str_detect(wordsPy,&quot;^Her$&quot;))
+
+toGet=c(hisPy,HisPy,herPy,HerPy)
+
+pos=unlist(lapply(toGet,function(x){py$test[[x]][[2]]}))
+pos</code></pre>
+<pre><code>## [1] &quot;PRP&quot;  &quot;PRP$&quot; &quot;PRP$&quot;</code></pre>
+<p>According to the <a href="https://stackoverflow.com/questions/15388831/what-are-all-possible-pos-tags-of-nltk">key here:</a></p>
+<p><em>PRP</em>: pronoun, personal (case 5)</p>
+<p><em>PRP$</em>: pronoun, possessive (case 4)</p>
+<p>So now we can determine what to replace them with. Bear with this loop please.</p>
+<pre class="r"><code>for(i in 1:length(pos)){
+  if(pos[i]==&quot;PRP&quot;){
+     words[toChange[i]]=&quot;them&quot;
+     
+  }else if(pos[i]==&quot;PRP$&quot;&amp;str_detect(words[toChange[i]],&quot;[A-Z]&quot;)){
+     words[toChange[i]]=&quot;Their&quot;
+  }else if(pos[i]==&quot;PRP$&quot;&amp;!str_detect(words[toChange[i]],&quot;[A-Z]&quot;)){
+  words[toChange[i]]=&quot;their&quot;
+  }
+}</code></pre>
+<p>Finally, we can take away the extra escape characters to get back to the original.</p>
+<pre class="r"><code> words= str_replace_all(words,fixed(&quot;\\[&quot;),&quot;[&quot;) 
+ words= str_replace_all(words,fixed(&quot;\\]&quot;),&quot;]&quot;) 
+
+
+str_flatten(words,&quot; &quot;)</code></pre>
+<pre><code>## [1] &quot;Dear Mr./Mrs./Ms. [Last Name],  It’s my absolute pleasure to recommend Student for [position] with [Company].  Student and I [relationship] at [Company] for [length of time].  I thoroughly enjoyed my time working with Student, and came to know them as a truly valuable asset to absolutely any team. S/He is honest, dependable, and incredibly hard-working. Beyond that, s/he is an impressive [soft skill] who is always [result].  Their knowledge of [specific subject] and expertise in [specific subject] was a huge advantage to our entire office. S/He put this skillset to work in order to [specific achievement].  Along with their undeniable talent, Student has always been an absolute joy to work with. S/He is a true team player, and always manages to foster positive discussions and bring the best out of other employees.  Without a doubt, I confidently recommend Student to join your team at [Company]. As a dedicated and knowledgeable employee and an all-around great person, I know that s/he will be a beneficial addition to your organization.  Please feel free to contact me at [your contact information] should you like to discuss Student’s qualifications and experience further. I’d be happy to expand on my recommendation.  Best wishes, [Your Name]  &quot;</code></pre>
+<p>I thought this would be a quick, cute thing, but I was SO wrong; it turned into a mess. But it finally works!!</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/6T9Mh4GSWySVa/giphy.gif" />
+
+</div>
+</div>
+<div id="miscellaneous-stringr-capabilities" class="section level4">
+<h4>Miscellaneous stringR Capabilities</h4>
+<p><code>toupper</code> and <code>tolower</code> have equivalents in stringR, but stringR also has a function to make things like a title. This can come in handy for example, when you need state names to start with a capital later for <code>facet_geo</code>.</p>
+<pre class="r"><code>states&lt;-c(&quot;pennsylvania&quot;,&quot;massachusetts&quot;,&quot;maryland&quot;,&quot;california&quot;)
+
+#str_to_upper ## toupper
+#str_to_lower ## tolower
+str_to_title(states) ## this format needed for geofacet</code></pre>
+<pre><code>## [1] &quot;Pennsylvania&quot;  &quot;Massachusetts&quot; &quot;Maryland&quot;      &quot;California&quot;</code></pre>
+<p>A period matches any character in a regular expression, but sometimes you want to search for acutal periods. You can use <code>fixed</code> in stringR functions to do this without having to remember escape characters. Apparently, base R string functions have a <code>fixed</code> parameter as well, but I wasn’t aware of it before now.</p>
+<pre class="r"><code>pattern&lt;-&quot;a.b&quot; 
+strings&lt;-c(&quot;abb&quot;,&quot;a.b&quot;)
+str_detect(strings,pattern)</code></pre>
+<pre><code>## [1] TRUE TRUE</code></pre>
+<pre class="r"><code>str_detect(strings,fixed(pattern)) </code></pre>
+<pre><code>## [1] FALSE  TRUE</code></pre>
+<p>Using <code>boundary</code> you can split on words and allow for inconsistent spacing.</p>
+<pre class="r"><code>words&lt;-c(&quot;These are   some words.&quot;)
+str_split(words,boundary(&quot;word&quot;))[[1]] ## character, line_break, sentence, word</code></pre>
+<pre><code>## [1] &quot;These&quot; &quot;are&quot;   &quot;some&quot;  &quot;words&quot;</code></pre>
+<p>I always put the wrong argument first in <code>grep</code> and <code>grepl</code>, but the stringR packages have the order of parameters that fit my expectation.</p>
+<pre class="r"><code>str_detect(fruit,&quot;a&quot;) ## grepl(&quot;a&quot;,fruit) </code></pre>
+<p>I always forget how to concatenate a vector with a particular separation using <code>paste</code>.</p>
+<pre class="r"><code>str_flatten(letters,&quot;-&quot;) </code></pre>
+<pre><code>## [1] &quot;a-b-c-d-e-f-g-h-i-j-k-l-m-n-o-p-q-r-s-t-u-v-w-x-y-z&quot;</code></pre>
+<pre class="r"><code>paste(letters,collapse=&quot;-&quot;)</code></pre>
+<pre><code>## [1] &quot;a-b-c-d-e-f-g-h-i-j-k-l-m-n-o-p-q-r-s-t-u-v-w-x-y-z&quot;</code></pre>
+<p><code>glue</code> related functions seem handy. This could be a whole other post, so I’ll save the details for later</p>
+<pre class="r"><code>name &lt;- &quot;Fred&quot;
+str_glue(&quot;My name is {name}, not {{name}}.&quot;)</code></pre>
+<pre><code>## My name is Fred, not {name}.</code></pre>
+<pre class="r"><code>mtcars %&gt;% str_glue_data(&quot;{rownames(.)} has {hp} hp&quot;) %&gt;% head()</code></pre>
+<pre><code>## [1] &quot;Mazda RX4 has 110 hp&quot;         &quot;Mazda RX4 Wag has 110 hp&quot;    
+## [3] &quot;Datsun 710 has 93 hp&quot;         &quot;Hornet 4 Drive has 110 hp&quot;   
+## [5] &quot;Hornet Sportabout has 175 hp&quot; &quot;Valiant has 105 hp&quot;</code></pre>
+<p>stringR has fancier trimming functions.</p>
+<pre class="r"><code>str_trim(&quot; test &quot;,side=&quot;both&quot;) ## trimws</code></pre>
+<pre><code>## [1] &quot;test&quot;</code></pre>
+<pre class="r"><code>str_squish(&quot;\n\nString with excess,  trailing and leading white  space\n\n&quot;)</code></pre>
+<pre><code>## [1] &quot;String with excess, trailing and leading white space&quot;</code></pre>
+<p><strong>If you have any insight into my remaining mysteries, please let me know!</strong></p>
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-06-03-adventures-in-tidyverse-tibble/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-08-15-adventures-in-tidyverse-purrr/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,58 @@
+---
+title: "Confessions of a Tidyverse Straggler"
+date: 2018-04-18T15:33:16-07:00
+draft: true
+---
+
+#### These are my confessions...
+
+![Obligatory Usher Reference](https://media1.tenor.com/images/7bd15639e6b37d9aa0355fb030faf1e2/tenor.gif?itemid=9640095)
+
+I learned R before the tidyverse (shout out to @BaumerBen's Multiple Regression class Fall 2016) and have failed to update my skills. There, I said it. I'm a statistics PhD student whose code is riddled with dollar signs (*pull* Sara!) and the occassional loop that I've never wrangled into a proper apply statement (which should now be switched to *purrr*?). And although I have picked up some *ggplot2* and *dplyr* (I'm not THAT much of an R hermit), I really don't know what new functionality is available. This prevents my code from keeping up with the times. It has always been on my to-do list to work through the tidyverse documentation so that I can start using the packages in my own work, but I've always prioritized "done" over "pretty".
+
+But no longer! My plan of attack is to start blogging about my tidyverse immersion, one package at a time. Each week(ish) I will read up on a tidyverse package and ideally, update some gross code from one of my current or previous projects, showing the before and after. Maybe I'll aim to post on Monday's... #MakeoverMonday anyone?
+
+What do I need to master?
+
+[Core Tidyverse](https://www.tidyverse.org/packages/)
+
+- ggplot2: #TidyTuesday is going to be super helpful for this.
+- dplyr
+- tidyr
+- readr
+- purrr
+- tibble
+- stringr
+- forcats
+
+[Extras](https://github.com/robinsones/rstudio-conf-2018-talk/blob/master/Rstudio_conference_2018_presentation.pdf) 
+
+- readxl, haven, jsonlite, xml2
+- httr, rvest
+- lubridate, hms
+- blob
+- rlang
+- magrittr
+- glue
+- modelr
+- broom
+- lobstr
+- sf
+- bookdown, blogdown
+- reprex
+
+That is a lot of weeks! So why am I doing this now?
+
+1. Hadley Wickham gave a [talk](https://bids.berkeley.edu/events/using-visualisation-understand-r-theory) in our department recently, and I was one of the lucky five to have lunch with him beforehand. He mentioned that failing to update one's R skills is like never updating R and RStudio versions (I'm occasionally guilty on this front as well, but let's deal with one character flaw at a time).
+
+2. When I was trying to help students at UC Berkeley's third annual [DataFest](http://ftp.stat.berkeley.edu/), I realized the students didn't know what I was talking about when I was describing how I would approach a coding problem. I needed a tidyverse translator! 
+
+3. I'm trying to be more open about my work ([GitHub](https://github.com/sastoudt), [Twitter](https://twitter.com/sastoudt)), and there is only so much embarassment I can take. 
+
+4. If not now, when? 
+
+So stay tuned, and hold me accountable. 
+
+Advice? Solidarity? Let me know! (@sastoudt)
+
+Special thanks to @dpseidel for giving me feedback while I was drafting this post (and telling me to *pull* not *select* instead of *$*, see I'm learning already!).

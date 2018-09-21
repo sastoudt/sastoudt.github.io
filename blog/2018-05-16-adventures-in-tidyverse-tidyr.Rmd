@@ -1,0 +1,300 @@
+---
+title: "Grading with tidyr"
+date: 2018-05-17T16:04:23-07:00
+draft: true
+---
+
+It's that time of year... The end of the semester means grading galore for professors and graduate student instructors. In this post, I will explore tidyr in the context of organizing and calculating grades.
+
+I have some familiarity with reshape2, but I always have to Google an example to remember how to go from wide to long format and vice versa. I'm hoping the tidyr functions will be more intuitive, so I won't end up like:
+
+![](https://media.giphy.com/media/3o7aTtRiVx75hwQTcY/giphy.gif)
+
+
+```{r,message=FALSE, warning=FALSE}
+require(tidyr)
+require(dplyr)
+require(ggplot2)
+```
+
+```{r,echo=F}
+setwd("~/Desktop")
+grades=read.csv("gradesFake.csv")
+
+grades=grades[sample(1:nrow(grades),replace=F),]
+grades=grades %>% mutate(Student=LETTERS[1:nrow(grades)])
+
+row.names(grades)=NULL
+
+```
+
+I've generated some fake grade data based on the format that grades come in when you are an instructor at Berkeley (we use bCourses, similar to Moodle, Canvas, etc.). 
+
+```{r,eval=F}
+setwd("~/Desktop")
+grades=read.csv("gradesFake.csv")
+
+```
+
+Each row is a student. Each column is an assignment. The value in this table is the number of points earned.
+
+```{r}
+head(grades,2) 
+```
+
+#### `gather`: use when your column names are actually levels of a particular variable 
+
+In the `gather` syntax, the first element (after piping in the dataframe) is the new key (the name of the new variable we want, refers to what the current column names are) and the second element is the value (associated with the key, refers to what values are currently in each column). The next arguments are the columns that are going to be turned into key-value pairs. By using the minus sign we can say we want to reshape every column except student. 
+
+```{r}
+gathered.grades=grades %>% gather(assignment,grade,-Student)
+
+head(gathered.grades,2)
+```
+
+This gathered format allows us to easily group by student or assignment and see how things are going. Is a particular student struggling? Is there an assignment that everyone is stuggling with?
+
+**Note:** This example is oversimplifying things since we haven't yet said how many points each assignment is worth, but we'll get there. 
+
+```{r}
+gathered.grades %>% group_by(Student) %>% summarise(meanPoints=mean(grade),sdPoints=sd(grade))%>% head(2)
+
+gathered.grades %>% group_by(assignment) %>% summarise(meanPoints=mean(grade),sdPoints=sd(grade))%>% head(2)
+
+```
+
+
+#### `spread`: use when you want the levels of a variable to be separate columns
+
+We can undo `gather` by using `spread`. We may want to look at this shape if we want to see by assignment, how each student does.
+
+Annoyingly, this doesn't get us quite back to the original data because the assignments are organized alphabetically instead of numerically.  
+
+```{r}
+byStudent=gathered.grades %>% spread(assignment, grade) 
+byAssignment=gathered.grades %>% spread(Student, grade) 
+
+head(byStudent,2) ## alphabetical weirdness
+head(byAssignment,2) ## alphabetical weirdness
+```
+
+But we can do a little hack and get things back to normal.
+
+```{r}
+orderIwant=paste("A",1:(ncol(byStudent)-1),sep="")
+
+head(byStudent[,c("Student",orderIwant)],3)
+
+byAssignmentAdjust=byAssignment[unlist(lapply(orderIwant,function(x){which(pull(byAssignment,assignment)==x)})),]
+
+row.names(byAssignmentAdjust)=NULL
+
+head(byAssignmentAdjust,3)
+```
+
+#### Calculate grades
+
+For simplicity, let's assume that there exists a student for each assigment who got a perfect score, so we can use the maximum per assignment as the number of possible points. 
+
+```{r}
+scores1=select(byStudent,starts_with("A")) 
+scores2=select(byAssignment,one_of(LETTERS[1:(ncol(byAssignment)-1)])) 
+
+head(scores1,2)
+head(scores2,2)
+```
+
+
+The use of purrr is coming in a future blog post (with @kelliotto) but for now I'm sticking to `apply`.
+
+```{r}
+
+possiblePoints=sum(apply(scores1,2,max))
+pointsPerStudent=apply(scores1,1,sum)
+studentPercentages=pointsPerStudent/possiblePoints
+studentPercentages
+```
+
+```{r}
+possiblePoints=sum(apply(scores2,1,max))
+pointsPerStudent=apply(scores2,2,sum)
+studentPercentages=pointsPerStudent/possiblePoints
+studentPercentages
+```
+
+#### `spread`: use when you want to split levels (or values) of a variable into multiple components
+
+We can imagine many different ways of organizing grades that may require other verbs in the tidyr package. What if our assignment names also included the due date? We may want to be able to calculate the average grade per month of the semester to assess pacing. 
+
+
+```{r}
+grades2=grades
+#https://stackoverflow.com/questions/21502332/generating-random-dates
+td = as.Date('2018/05/01') - as.Date('2018/02/01')
+dates=as.Date('2018/02/01') + sample(0:td, ncol(grades)-1)
+dates=dates[order(dates)]
+names(grades2)[2:ncol(grades2)]=paste(names(grades2)[2:ncol(grades2)],dates,sep="_")
+head(grades2,2)
+
+
+gathered.grades2=gather(grades2,assignment,grade,-Student)
+head(gathered.grades2,2)
+
+
+gathered.grades.dueDates=gathered.grades2 %>% separate(assignment,c("assignment","year","month","day"))
+head(gathered.grades.dueDates,2)
+
+```
+
+There is not a lot to go on here, but we could imagine breaking things down by week instead of month to get a better sense. 
+
+```{r}
+gathered.grades.dueDates=gathered.grades %>% group_by(assignment)%>%summarise(maxPoss=max(grade)) %>%inner_join(gathered.grades.dueDates,by=c("assignment"="assignment"))
+
+gathered.grades.dueDates %>% group_by(month)%>% summarise(avgGrade=mean(grade/maxPoss))
+
+```
+
+We could do something similar with `str_split` but it would take many more lines of code. 
+
+
+#### `unite`: use when you want to concatenate multiple variables into one
+
+To undo `separate`, we use `unite`. We want to collapse all but Student and grade into a variable called assignment. I would usually use `paste`. 
+
+```{r}
+gathered.grades.dueDates %>%unite(assignment,-Student, -grade,sep="-") %>% head(2)
+
+```
+
+#### `replace_NA`: use to replace missing values with a particular value
+
+We may want to replace assignments that are missing with zeros. `replace_na` requires a named list of what to replace an NA with in each column. Since we have many assignment columns, I had to ask Stack Overflow for some assistance. 
+
+```{r}
+## this seems like a prime candidate for walk from purrr, to be continued...
+grades[1,sample(1:(ncol(grades)-1),1)]=NA
+grades[5,sample(1:(ncol(grades)-1),1)]=NA
+grades[10,sample(1:(ncol(grades)-1),1)]=NA
+grades[15,sample(1:(ncol(grades)-1),1)]=NA
+
+
+#https://stackoverflow.com/questions/45576805/how-to-replace-all-na-in-a-dataframe-using-tidyrreplace-na
+myList <- setNames(lapply(vector("list", ncol(grades)-1), function(x) x <- 0), names(grades)[-1])
+head(myList,2)
+grades=grades %>% replace_na(myList)
+head(grades,2)
+```
+
+#### `drop_na`: use when you want to remove rows with missing values in certain columns
+
+```{r,eval=F,echo=F}
+dim(gathered.grades)
+gathered.grades[sample(1:nrow(gathered.grades),20),3]=NA
+
+gathered.grades3=gathered.grades %>% drop_na() 
+
+dim(gathered.grades3)
+
+
+```
+
+`drop_na` may be useful when we want to drop each student's lowest grade in a certain category of grades. Assuming all other NA values are converted to zeros...
+
+```{r}
+
+gathered.grades.cat=gathered.grades %>% mutate(category=sample(1:3,nrow(gathered.grades),replace=T))
+
+byStudent=split(gathered.grades.cat,pull(gathered.grades.cat,Student))
+
+
+dropLowestScore=function(studentGrades,categoryToDrop){
+
+  catToDrop=studentGrades %>% filter(category==categoryToDrop)
+  
+  toDrop=which.min(pull(catToDrop,grade))
+  
+  studentGrades$grade[toDrop]=NA
+  ## I don't think I can use pull here
+  
+  studentGradesAdj=studentGrades %>% drop_na()
+  
+  return(studentGradesAdj)
+}
+
+adjustedGrades=do.call("rbind",lapply(byStudent,dropLowestScore,1))
+
+length(unique(pull(adjustedGrades,assignment)))
+adjustedGrades%>%group_by(Student)%>% summarise(count=n())%>%head(2)
+
+```
+
+
+#### `complete`: use when you want to make implicit missing data explicit 
+
+I often use `expand.grid` and then `merge` to do this. This is much more concise. 
+
+**Note:** If we only want to include levels of a variable that are present in the data we use `nesting` to denote this within the `complete` call. 
+
+```{r}
+dim(adjustedGrades)
+gathered.grades.cat%>%complete(Student,assignment)%>% dim
+```
+
+
+#### `separate_rows`: use when a value contains more than one piece of information and you want separate rows for each piece of information
+
+Now suppose our spreadsheet of grades contains the maximum points possible for each assignment. We can separate this information to make it easier to do calculations. 
+
+```{r}
+maxPts=apply(grades[,2:ncol(grades)],2,max)
+
+pasteGrades=function(idx){
+  x=paste(grades[,idx+1],rep(maxPts[idx],nrow(grades)),sep="/")
+  return(x)
+}
+
+pastedGrades=lapply(1:(ncol(grades)-1),pasteGrades)
+
+adjGrades=do.call("cbind",pastedGrades)
+
+grades3=cbind.data.frame(pull(grades,Student),adjGrades)
+names(grades3)=names(grades)
+
+head(grades3,2)
+
+separated.grades=grades3 %>% separate_rows(-Student,sep="/")
+head(separated.grades,4)
+
+pointsEarned=separated.grades[seq(1,nrow(separated.grades),by=2),]
+pointsPossible=separated.grades[2,-1]
+row.names(pointsPossible)=NULL
+
+head(pointsEarned,2)
+pointsPossible
+```
+
+#### `nest`: use when you want to see which levels of a variable occur with the same combination of levels of other variables
+
+We can use `nest` to see who got the top grade for each assignment (and use `unnest` to undo the operation). This call makes every row a combination of assignment and grade level. The last column is a list of all the students who received that particular grade on the assignment.
+
+
+
+```{r}
+byAssignmentGrade=gathered.grades%>%nest(Student)
+head(byAssignmentGrade)
+
+pull(byAssignmentGrade,data)[1]
+
+unnest(byAssignmentGrade,data) %>%head
+```
+
+That covers most of the tidyr verbs. I suspect that I will still need to look up examples to remember how to use `gather` and `spread`, but I'm hoping this cheat sheet will help me remember when to use which without having to try both on a sample data set. 
+
+The other verbs that I can see myself using frequently are `complete` and `spread`. I'm doing a project now where I use the `expand.grid` and `merge` trick way too often. I suspect it is a lot slower than `complete`, so I'm going to make this switch and see if it speeds things up. 
+
+P.S. Just for the record: before posting this I searched for the dollar sign and rewrote the lines that involved it. Working on that guilty pleasure...
+
+Happy Grading!
+
+#### Feedback, questions, comments, etc. are welcome (@sastoudt). 

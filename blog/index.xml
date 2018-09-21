@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Blogs on Sara A. Stoudt</title>
+    <link>/blog/</link>
+    <description>Recent content in Blogs on Sara A. Stoudt</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-US</language>
+    <lastBuildDate>Sat, 01 Sep 2018 16:32:48 -0700</lastBuildDate>
+    
+	<atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>You Can Teach a Base R Dog Tidy Tricks</title>
+      <link>/blog/2018-09-01-adventures-in-tidyverse-reflections/</link>
+      <pubDate>Sat, 01 Sep 2018 16:32:48 -0700</pubDate>
+      
+      <guid>/blog/2018-09-01-adventures-in-tidyverse-reflections/</guid>
+      <description>This summer I aimed to update my R skills via the tidyverse and blog about my experience. See here for my motivations.
+Although I didn’t make it through all of the tidyverse affiliated packages, I did finish blog posts for all of the core packages: ggplot took two parts, dplyr, tidyr, readr, tibble, stringr, purrr joint with @kellieotto, and forcats.
+This felt like a milestone worth briefly reflecting on, so here goes.</description>
+    </item>
+    
+    <item>
+      <title>Cursing with Instead of at Factors</title>
+      <link>/blog/2018-08-26-adventures-in-tidyverse-forcats/</link>
+      <pubDate>Sun, 26 Aug 2018 16:29:40 -0700</pubDate>
+      
+      <guid>/blog/2018-08-26-adventures-in-tidyverse-forcats/</guid>
+      <description>library(forcats) library(tidyr) library(dplyr) library(ggplot2) library(sp) library(maps) library(maptools) ## Thank you to Chris Kennedy for kindly telling me I should be using library instead of require on my posts. Forever ago @dpseidel drew my attention to an awesome dataset collected by @jimwebb about tweets that cursed being cold/hot. This reminded me of a project that @danascientist (so many Dana’s!) and I did in @BaumerBen’s class where we tried to assess how cold it had to be for people to talk about being cold on Twitter.</description>
+    </item>
+    
+    <item>
+      <title>A Tale of Two Kitties: Two apply Users Convert to purrr</title>
+      <link>/blog/2018-08-15-adventures-in-tidyverse-purrr/</link>
+      <pubDate>Wed, 15 Aug 2018 16:26:03 -0700</pubDate>
+      
+      <guid>/blog/2018-08-15-adventures-in-tidyverse-purrr/</guid>
+      <description>For this post about purrr, I had help from Kellie Ottoboni (@kellieotto) since we both wanted to update our skills. We both took some code from our own research and converted it from its original form (usually with variants of apply) to variants of map. This post talks about that experience, pitfalls we ran into, and cool tricks we learned.
+Sara’s Adventure in the Tidyverse The goal for the code I’m revamping is to simulate data under a variety of scenarios where various parameters change.</description>
+    </item>
+    
+    <item>
+      <title>Gender Neutral Letters of Recommendation with stringR</title>
+      <link>/blog/2018-06-16-adventures-in-tidyverse-stringr/</link>
+      <pubDate>Sat, 16 Jun 2018 16:24:33 -0700</pubDate>
+      
+      <guid>/blog/2018-06-16-adventures-in-tidyverse-stringr/</guid>
+      <description>require(reticulate) require(stringr) require(babynames) There are lots of functions in stringR that improve upon base R equivalents for string processing. I’m not going to go through all the functionality, but at the end of the post, after the main attraction, I’ll go through examples in the stringR documentation and pick out the ones that seem handiest for scenarios I have run into where base R has been found wanting.
+Gender Neutral Letters of Rec.</description>
+    </item>
+    
+    <item>
+      <title>Troubles with Tibble</title>
+      <link>/blog/2018-06-03-adventures-in-tidyverse-tibble/</link>
+      <pubDate>Sun, 03 Jun 2018 16:20:51 -0700</pubDate>
+      
+      <guid>/blog/2018-06-03-adventures-in-tidyverse-tibble/</guid>
+      <description>require(readr) require(dplyr) require(ggplot2) require(tibble) require(data.table) require(gridExtra) Note: I’m skipping over purrr until @kellieotto returns from her travels, so we can write our joint post.
+This week’s post is on tibbles. This actually came at a perfect time since recently I’ve run into a few mysteries where I get unexpected errors or output after a data frame gets turned into a tibble at some point during my workflow (like when I use functions from the tidyverse).</description>
+    </item>
+    
+    <item>
+      <title>Wrangling USDA Data with readr</title>
+      <link>/blog/2018-05-26-adventures-in-tidyverse-readr/</link>
+      <pubDate>Sat, 26 May 2018 16:14:17 -0700</pubDate>
+      
+      <guid>/blog/2018-05-26-adventures-in-tidyverse-readr/</guid>
+      <description>When I saw that this week’s blog post was supposed to be about readr I drew a blank on how to get my hands dirty using the functionality in the package. I didn’t want to use the same sample data in the documentation, but I also didn’t want to go scouring for a dataset that I wasn’t really motivated to munge. Then fate stepped in.
+At work I wanted to get some data from the USDA that is not available through their API service.</description>
+    </item>
+    
+    <item>
+      <title>Grading with tidyr</title>
+      <link>/blog/2018-05-16-adventures-in-tidyverse-tidyr/</link>
+      <pubDate>Thu, 17 May 2018 16:04:23 -0700</pubDate>
+      
+      <guid>/blog/2018-05-16-adventures-in-tidyverse-tidyr/</guid>
+      <description>It’s that time of year… The end of the semester means grading galore for professors and graduate student instructors. In this post, I will explore tidyr in the context of organizing and calculating grades.
+I have some familiarity with reshape2, but I always have to Google an example to remember how to go from wide to long format and vice versa. I’m hoping the tidyr functions will be more intuitive, so I won’t end up like:</description>
+    </item>
+    
+    <item>
+      <title>Guilty Pleasures via dplyr</title>
+      <link>/blog/2018-05-09-adventures-in-tidyverse-dplyr/</link>
+      <pubDate>Wed, 09 May 2018 15:56:46 -0700</pubDate>
+      
+      <guid>/blog/2018-05-09-adventures-in-tidyverse-dplyr/</guid>
+      <description>Next up on my to-learn list is dplyr. I use group_by and summarize fairly regularly, but there is other functionality that I want to learn to take advantage of.
+ mutate select filter arrange pull (instead of my favorite, $) various joins (instead of merge)  In anticipation of The Bachelorette starting at the end of May, I’m going to wrangle some data on previous contestants. Yes, watching The Bachelorette/The Bachelor is my guilty pleasure.</description>
+    </item>
+    
+    <item>
+      <title>Reliving my Undergrad Thesis via ggplot2: Part 2</title>
+      <link>/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2/</link>
+      <pubDate>Tue, 01 May 2018 15:49:04 -0700</pubDate>
+      
+      <guid>/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2/</guid>
+      <description>In a previous post I tackled reproducing one type of plot from my undergrad thesis (maps with color coded dots). The goal for this post is to recreate an interpolated heat map over an actual US map in ggplot. Full disclosure: this was a struggle, and it still isn’t perfect.
+This was definitely me at many points throughout the process.
+ But I recognize that practice builds intuition, so if you know how I can do something better or how to answer one of my lingering questions, please reach out!</description>
+    </item>
+    
+    <item>
+      <title>Reliving my Undergrad Thesis via ggplot2: Part 1</title>
+      <link>/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1/</link>
+      <pubDate>Mon, 23 Apr 2018 15:41:43 -0700</pubDate>
+      
+      <guid>/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1/</guid>
+      <description>As the first step in tidying my life, I revamp the maps in my undergraduate thesis using ggplot. I admit I am a reluctant ggplot2 user. I feel like I don’t have control over small details, and I’m constantly Googling to change something small. However, I recognize the benefits of ggplot deep down and know that if I just get used to the syntax, I’ll slowly break away from reliance on Google.</description>
+    </item>
+    
+    <item>
+      <title>Confessions of a Tidyverse Straggler</title>
+      <link>/blog/2018-04-18-confessions-of-a-tidyverse-straggler/</link>
+      <pubDate>Wed, 18 Apr 2018 15:33:16 -0700</pubDate>
+      
+      <guid>/blog/2018-04-18-confessions-of-a-tidyverse-straggler/</guid>
+      <description>These are my confessions… Obligatory Usher Reference
+ I learned R before the tidyverse (shout out to @BaumerBen’s Multiple Regression class Fall 2016) and have failed to update my skills. There, I said it. I’m a statistics PhD student whose code is riddled with dollar signs (pull Sara!) and the occassional loop that I’ve never wrangled into a proper apply statement (which should now be switched to purrr?). And although I have picked up some ggplot2 and dplyr (I’m not THAT much of an R hermit), I really don’t know what new functionality is available.</description>
+    </item>
+    
+    <item>
+      <title>Generating and Visualizing Valid Redistricting Scenarios</title>
+      <link>/blog/2018-03-29-tools-for-gerrymandering-analysis/</link>
+      <pubDate>Thu, 29 Mar 2018 16:34:33 -0700</pubDate>
+      
+      <guid>/blog/2018-03-29-tools-for-gerrymandering-analysis/</guid>
+      <description>I recently spent some time at the Geometry of Redistricting Hackathon where I learned about quantitative approaches to assessing gerrymandering. Check out the Metric Geometry and Gerrymandering Group on GitHub to see how you can get involved. I focused on improving documentation during my brief time at the hackathon, but I did not get a chance to contribute as much as I would have liked during the hackathon itself due to my own time constraints.</description>
+    </item>
+    
+    <item>
+      <title>Analyzing Song Repetition in R Using geniusr</title>
+      <link>/blog/2018-03-27-song-repetition-analysis/</link>
+      <pubDate>Tue, 27 Mar 2018 16:44:00 -0700</pubDate>
+      
+      <guid>/blog/2018-03-27-song-repetition-analysis/</guid>
+      <description>Rick Wicklin (@RickWicklin) posted a blog post recently about how to visualize repetition in song lyrics using SAS. I wanted to do the same thing using R and also utilizing geniusr to more easily access a variety of song lyrics to compare.
+Note: There is also geniusR that I did not dig into further.
+First let’s create some functions to make it easy to compare a bunch of different songs.</description>
+    </item>
+    
+  </channel>
+</rss>

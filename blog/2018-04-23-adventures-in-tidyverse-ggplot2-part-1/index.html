@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Reliving my Undergrad Thesis via ggplot2: Part 1</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON APR 23, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <div id="as-the-first-step-in-tidying-my-life-i-revamp-the-maps-in-my-undergraduate-thesis-using-ggplot." class="section level4">
+<h4>As the first step in tidying my life, I revamp the maps in my undergraduate thesis using ggplot.</h4>
+<p>I admit I am a reluctant ggplot2 user. I feel like I don’t have control over small details, and I’m constantly Googling to change something small. However, I recognize the benefits of ggplot deep down and know that if I just get used to the syntax, I’ll slowly break away from reliance on Google. But, I’m currently still in Googling mode, so throughout this post, when I have to make adjustments to the basic ggplot, I include the phrases I Google as well as the link to the help I end up using.</p>
+<p>In my <a href="https://scholarworks.smith.edu/theses/1588/">undergraudate thesis</a> I predicted amounts of trace uranium in the sediment across the continental United States using various geostatistical methods. Look <a href="http://www.geocomputation.org/2015/papers/GC15_78.pdf">here</a> for a brief overview. My thesis contained many, many maps, but I made them in a really gross way using base plot.</p>
+<p>There are two main types of plots in my thesis:</p>
+<ol style="list-style-type: decimal">
+<li>Maps with color coded dots (usually plotting residuals).</li>
+<li>Interpolated heat maps over an actual map (usually plotting predicted surfaces).</li>
+</ol>
+<p>In this post I’ll focus on #1. The one time I actively choose to use ggplot2 is when I need to color-code by a particular variable. This requires a few extra steps in base plot, so ggplot is actually quicker for me. When I looked back at my thesis code (B.G. – before ggplot) to refresh my memory for this post, I couldn’t believe how many lines of code were needed to make this type of plot. I <a href="https://github.com/sastoudt/sastoudt.github.io/blob/master/_posts/scratchCode/thesisMap_original.R">posted</a> an example of my original code, so that we can all appreciate how much ggplot streamlines things (this is probably not the most efficient base code either).</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/l41Ye7i203TfEADYs/giphy.gif" />
+
+</div>
+<p>I will follow up with #2 in another post (I expect this one to be more challenging, so I want to build up to it).</p>
+<p>The data I used in my thesis is curated from various USGS datasets. Unfortunately, my undergraduate thesis came before my knowledge of GitHub, so I cannot easily point to the preprocessing and analysis code online. However, if you are reading this and want to know more, I will endeavor to get all of the relevant code up on GitHub for you. This is on my long-term to-list, but I’ll make it a priority if someone would find it useful.</p>
+<p>Let’s just see what a simple ggplot looks like, color coded by the amount of uranium.</p>
+<pre class="r"><code>require(ggplot2)
+setwd(&quot;~/Smith/Senior Year/Stoudt_Thesis/FINAL_CODE/minDataForThesis&quot;)
+us &lt;- read.csv(&quot;usToUseNoDuplicates.csv&quot;)
+ggplot(us,aes(x=long,y=lat,col=uranium))+geom_point()</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-1-1.png" width="672" /></p>
+<p>My first major problem with this plot is the default blue scale. I really can’t tell the difference between various blues even with data less skewed than this. Let’s try the Color Brewer palette that I used in my thesis.</p>
+<p><em>Google “color by value ggplot2”</em></p>
+<pre class="r"><code>require(RColorBrewer)
+#http://www.sthda.com/english/wiki/ggplot2-colors-how-to-change-colors-automatically-and-manually
+ggplot(us,aes(x=long,y=lat,col=uranium))+geom_point()+scale_color_gradientn(colours = c(brewer.pal(9, &quot;YlOrRd&quot;),&quot;black&quot;))</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>We still have issues with extreme skew in the uranium values. Most are trace values, but there are some locations that are near old uranium mines that have very large values of uranium. In my thesis I color coded by percentiles. Let’s try that.</p>
+<p><em>Google “color by percentile ggplot 2”</em></p>
+<pre class="r"><code>#https://stackoverflow.com/questions/18473382/color-code-points-based-on-percentile-in-ggplot
+ggplot(us,aes(x=long,y=lat,col=cut(uranium,quantile(uranium,seq(0,1,by=.1)),include.lowest=T)))+geom_point()+scale_colour_manual(values=c(brewer.pal(9, &quot;YlOrRd&quot;),&quot;black&quot;))</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Now I want the actual map of the United States to be underneath these points.</p>
+<p><em>Google “add outline of us map ggplot”</em></p>
+<p>While we’re at it, let’s make the name of the legend less gross, so the map isn’t squished.</p>
+<p><em>Google “name of legend ggplot2”</em></p>
+<pre class="r"><code>require(maps)
+all_states &lt;- map_data(&quot;state&quot;)
+p &lt;- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour=&quot;black&quot;, fill=&quot;white&quot; )</code></pre>
+<pre class="r"><code>#https://uchicagoconsulting.wordpress.com/tag/r-ggplot2-maps-visualization/
+#http://www.cookbook-r.com/Graphs/Legends_(ggplot2)/
+p &lt;- p+ geom_point(data=us,aes(x=long,y=lat,col=cut(uranium,quantile(uranium,seq(0,1,by=.1)))))+geom_point()+scale_colour_manual(name=&quot;Quantile of \n Uranium (ppm)&quot;,values=c(brewer.pal(9, &quot;YlOrRd&quot;),&quot;black&quot;))
+p</code></pre>
+<pre><code>## Warning: Removed 1 rows containing missing values (geom_point).</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-5-1.png" width="960" /></p>
+<p>This data is supposed to be clean. What is that one annoying missing value?</p>
+<pre class="r"><code>which(is.na(cut(us$uranium,quantile(us$uranium,seq(0,1,by=.1)))))</code></pre>
+<pre><code>## [1] 26104</code></pre>
+<pre class="r"><code>us$uranium[26104]</code></pre>
+<pre><code>## [1] -1.2</code></pre>
+<pre class="r"><code>range(us$uranium)</code></pre>
+<pre><code>## [1]  -1.2 419.6</code></pre>
+<p>Oh, cut doesn’t include the minimum. That is kind of annoying.</p>
+<p><em>Google “cut to include minimum R”</em></p>
+<p>Yay, I can just specify that I want the minimum included. That was a quick fix.</p>
+<pre class="r"><code>#https://stackoverflow.com/questions/12245149/cut-include-lowest-values
+
+p &lt;- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour=&quot;black&quot;, fill=&quot;white&quot; )
+p &lt;- p+ geom_point(data=us,aes(x=long,y=lat,col=cut(uranium,quantile(uranium,seq(0,1,by=.1)),include.lowest=T)))+geom_point()+scale_colour_manual(name=&quot;Quantile of \n Uranium (ppm)&quot;,values=c(brewer.pal(9, &quot;YlOrRd&quot;),&quot;black&quot;))
+p</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-7-1.png" width="960" /></p>
+<p>So far I have just been using latitude and longitude, but in my thesis I projected my data to avoid distortion.</p>
+<p><em>Google “projected maps ggplot2”</em></p>
+<pre class="r"><code>#https://ggplot2.tidyverse.org/reference/coord_map.html
+p &lt;- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour=&quot;black&quot;, fill=&quot;white&quot; )+coord_map(&quot;lambert&quot;, parameters = c(c(33,45)))
+p</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-8-1.png" width="1152" /></p>
+<pre class="r"><code>p &lt;- p+ geom_point(data=us,aes(x=long,y=lat,col=cut(uranium,quantile(uranium,seq(0,1,by=.1)),include.lowest=T)))+geom_point()+scale_colour_manual(name=&quot;Quantile of \n Uranium (ppm)&quot;,values=c(brewer.pal(9, &quot;YlOrRd&quot;),&quot;black&quot;))
+p</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-9-1.png" width="1152" /></p>
+<p>That was actually easier than I anticipated. Now all that is left is to clean up the labels and the background.</p>
+<p><em>Google “plain background ggplot”</em></p>
+<pre class="r"><code>#http://felixfan.github.io/ggplot2-remove-grid-background-margin/
+p &lt;- p+theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+panel.background = element_blank(), axis.line = element_line(colour = &quot;black&quot;))
+p</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-10-1.png" width="1152" /></p>
+<p>I actually have the syntax for axis labels memorized (yay!).</p>
+<pre class="r"><code>p+xlab(&quot;longitude&quot;)+ylab(&quot;latitude&quot;)+ggtitle(&quot;Uranium in the Continental United States&quot;)</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-11-1.png" width="1152" /></p>
+<p>Since I made many versions of this type of plot in my thesis, if I could go back in time, I would make a function to create these types of plots (by passing in the column name to color by), or at least a <a href="http://joeystanley.com/blog/custom-themes-in-ggplot2">theme</a>, to minimize the amount of typing/copy-paste.</p>
+<p>Creating themes may actually help me use ggplot more readily. If I have standard themes for types of plots I make regularly, I won’t have to get out of the zone to re-Google how to change pieces of the plot. I also might try to use <a href="http://www.sthda.com/english/wiki/qplot-quick-plot-with-ggplot2-r-software-and-data-visualization">qplot</a> when I’m in the exploratory stage and want to make quick plots. Then I can move to ggplot for more formal plots.</p>
+<p><strong>Stay tuned for my attempt at an interpolated heat map over an actual map in ggplot…</strong></p>
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+<p>Special thanks to <span class="citation">@BaumerBen</span> and <span class="citation">@askdrstats</span> for helping me with my undergraduate thesis and for bearing with me through the gross code and many, many maps.</p>
+<p>Thank you to <span class="citation">@dpseidel</span> for reading through this to make sure I was making sense.</p>
+</div>
+<div id="suggestions-from-twitter" class="section level4">
+<h4>Suggestions from Twitter</h4>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+I’d recommend looking j to viridis scale and using ggplot2::cut_number()
+</p>
+— Hadley Wickham (<span class="citation">@hadleywickham</span>) <a href="https://twitter.com/hadleywickham/status/988901594371473409?ref_src=twsrc%5Etfw">April 24, 2018</a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+try using theme_void() to get rid of the unneeded axes
+</p>
+— Steve Haroz (<span class="citation">@sharoz</span>) <a href="https://twitter.com/sharoz/status/988902375510433792?ref_src=twsrc%5Etfw">April 24, 2018</a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>Let’s try these tips out!</p>
+<pre class="r"><code>require(viridis)
+p &lt;- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour=&quot;black&quot;, fill=&quot;white&quot; )+coord_map(&quot;lambert&quot;, parameters = c(c(33,45)))
+
+p &lt;- p+ geom_point(data=us,aes(x=long,y=lat,col=cut_number(uranium,10)))+geom_point()+
+  scale_color_viridis(discrete=TRUE,option=&quot;inferno&quot;,name=&quot;Quantile of \n Uranium (ppm)&quot;)
+  #scale_colour_manual(name=&quot;Quantile of \n Uranium (ppm)&quot;,values=c(brewer.pal(9, &quot;YlOrRd&quot;),&quot;black&quot;))
+p+theme_void()</code></pre>
+<p><img src="/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1_files/figure-html/unnamed-chunk-12-1.png" width="1152" /></p>
+<p>Using <code>cut_number</code> instead of <code>quantile</code> means that each color bin has roughly the same number of points in it. We can see that the bins containing the smallest and largest values have a wide range to ensure that they have the same number of points as more dense, yet narrower ranges. This makes the majority of points have better color contrast, but it hides outliers.</p>
+<p>I thought Color Brewer was a reasonable color palette, but wanted to know why viridis might be preferred. Through some Googling: <a href="https://earthobservatory.nasa.gov/blogs/elegantfigures/2013/08/05/subtleties-of-color-part-1-of-6/">This</a> says that Color Brewer palettes are “accurate in lightness and hue, but not in saturation” while <a href="https://rud.is/b/2015/07/20/using-the-new-viridis-colormap-in-r-thanks-to-simon-garnier/">this</a> says that viridis palettes are “perceptually uniform (i.e. changes in the data should be accurately decoded by our brains) even when desaturated”.</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-04-18-confessions-of-a-tidyverse-straggler/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  
+  <url>
+    <loc>/blog/2018-09-01-adventures-in-tidyverse-reflections/</loc>
+    <lastmod>2018-09-01T16:32:48-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-08-26-adventures-in-tidyverse-forcats/</loc>
+    <lastmod>2018-08-26T16:29:40-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-08-15-adventures-in-tidyverse-purrr/</loc>
+    <lastmod>2018-08-15T16:26:03-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-06-16-adventures-in-tidyverse-stringr/</loc>
+    <lastmod>2018-06-16T16:24:33-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-06-03-adventures-in-tidyverse-tibble/</loc>
+    <lastmod>2018-06-03T16:20:51-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-05-26-adventures-in-tidyverse-readr/</loc>
+    <lastmod>2018-05-26T16:14:17-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-05-16-adventures-in-tidyverse-tidyr/</loc>
+    <lastmod>2018-05-17T16:04:23-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-05-09-adventures-in-tidyverse-dplyr/</loc>
+    <lastmod>2018-05-09T15:56:46-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2/</loc>
+    <lastmod>2018-05-01T15:49:04-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1/</loc>
+    <lastmod>2018-04-23T15:41:43-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-04-18-confessions-of-a-tidyverse-straggler/</loc>
+    <lastmod>2018-04-18T15:33:16-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-03-29-tools-for-gerrymandering-analysis/</loc>
+    <lastmod>2018-03-29T16:34:33-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-03-27-song-repetition-analysis/</loc>
+    <lastmod>2018-03-27T16:44:00-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/about/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/cv/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/research/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/teaching/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/writing/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tags/about/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/about/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/blog/</loc>
+    <lastmod>2018-09-01T16:32:48-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/cv/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/cv/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/research/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/research/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/</loc>
+    <lastmod>2018-09-01T16:32:48-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/teaching/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/teaching/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/writing/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/writing/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+</urlset>

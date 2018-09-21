@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Troubles with Tibble</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON JUN 3, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <pre class="r"><code>require(readr)
+require(dplyr)
+require(ggplot2)
+require(tibble)
+require(data.table)
+require(gridExtra)</code></pre>
+<p>Note: I’m skipping over purrr until <span class="citation">@kellieotto</span> returns from her travels, so we can write our joint post.</p>
+<p>This week’s post is on tibbles. This actually came at a perfect time since recently I’ve run into a few mysteries where I get unexpected errors or output after a data frame gets turned into a tibble at some point during my workflow (like when I use functions from the tidyverse). This is actually a good sign because it means I’m using the tidyverse more in my day to day work. So now to solve some tibble troubles.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/l4pTibO1cY4d5aeyI/giphy.gif" />
+
+</div>
+<div id="mystery-1" class="section level4">
+<h4>Mystery #1</h4>
+<p>This mystery comes from Week 7 of Tidy Tuesday, the dreaded barplots. I’m hiding the process code to streamline the post, but if you want to see it, go <a href="https://github.com/sastoudt/tidytuesday/blob/master/week7/perceptionsStarWarsWomen.md">here</a>. The gist of it, is that I want the order of the side by side bars to be consistent within category.</p>
+<p>The key is to pre-arrange the data to follow the order that we want to plot it in.</p>
+<p>g1 doesn’t work, but g2, g3, and g4 do.</p>
+<p><strong>Key:</strong> It turns out that the tibble format isn’t the issue per se, it is tibble’s lazy evaluation (and ggplot’s) that is the real issue. This is analogous to why you need <code>aes_string</code> instead of <code>aes</code> when you are passing in a variable name to ggplot in a custom made function. The rearranging doesn’t actually happen until wrapped in another function that evaulates it.</p>
+<pre class="r"><code>toPlot</code></pre>
+<pre><code>## # A tibble: 47 x 7
+## # Groups:   Gender, Age [8]
+##    Gender Age   V28                     count.x count.y percent genderAge 
+##    &lt;fct&gt;  &lt;fct&gt; &lt;fct&gt;                     &lt;int&gt;   &lt;int&gt;   &lt;dbl&gt; &lt;fct&gt;     
+##  1 Female &gt; 60  Unfamiliar (N/A)             37      94  0.394  Female &gt; …
+##  2 Female &gt; 60  Very unfavorably              2      94  0.0213 Female &gt; …
+##  3 Female &gt; 60  Somewhat unfavorably          1      94  0.0106 Female &gt; …
+##  4 Female &gt; 60  Neither favorably nor …      24      94  0.255  Female &gt; …
+##  5 Female &gt; 60  Somewhat favorably           16      94  0.170  Female &gt; …
+##  6 Female &gt; 60  Very favorably               14      94  0.149  Female &gt; …
+##  7 Female 18-29 Unfamiliar (N/A)             10      85  0.118  Female 18…
+##  8 Female 18-29 Very unfavorably              3      85  0.0353 Female 18…
+##  9 Female 18-29 Somewhat unfavorably          6      85  0.0706 Female 18…
+## 10 Female 18-29 Neither favorably nor …      18      85  0.212  Female 18…
+## # ... with 37 more rows</code></pre>
+<pre class="r"><code>test=toPlot%&gt;%arrange(Age,V28)
+is.tibble(test) </code></pre>
+<pre><code>## [1] TRUE</code></pre>
+<pre class="r"><code>test2=as.data.frame(toPlot%&gt;%arrange(Age,V28))
+test3=data.frame(toPlot%&gt;%arrange(Age,V28))
+test4=as.tibble(toPlot%&gt;%arrange(Age,V28))
+#test5=tibble(toPlot%&gt;%arrange(Age,V28)) ## Error: Column `toPlot %&gt;% arrange(Age, V28)` must be a 1d atomic vector or a list
+
+
+g1=ggplot(test,aes(V28,y=percent,fill=genderAge))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Padme?&quot;)+scale_fill_manual(&quot;legend&quot;,values=c(&quot;Female 18-29&quot;=&quot;indianred&quot;,&quot;Male 18-29&quot;=&quot;red&quot;,&quot;Female 30-44&quot;=&quot;dodgerblue&quot;,&quot;Male 30-44&quot; =&quot;blue&quot;,&quot;Female 45-60&quot;=&quot;green&quot;, &quot;Male 45-60&quot;=&quot;forestgreen&quot;,&quot;Female &gt; 60&quot; =&quot;grey&quot;,&quot;Male &gt; 60&quot; =&quot;black&quot;))
+
+
+g2=ggplot(test2,aes(V28,y=percent,fill=genderAge))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Padme?&quot;)+scale_fill_manual(&quot;legend&quot;,values=c(&quot;Female 18-29&quot;=&quot;indianred&quot;,&quot;Male 18-29&quot;=&quot;red&quot;,&quot;Female 30-44&quot;=&quot;dodgerblue&quot;,&quot;Male 30-44&quot; =&quot;blue&quot;,&quot;Female 45-60&quot;=&quot;green&quot;, &quot;Male 45-60&quot;=&quot;forestgreen&quot;,&quot;Female &gt; 60&quot; =&quot;grey&quot;,&quot;Male &gt; 60&quot; =&quot;black&quot;))
+
+g3=ggplot(test3,aes(V28,y=percent,fill=genderAge))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Padme?&quot;)+scale_fill_manual(&quot;legend&quot;,values=c(&quot;Female 18-29&quot;=&quot;indianred&quot;,&quot;Male 18-29&quot;=&quot;red&quot;,&quot;Female 30-44&quot;=&quot;dodgerblue&quot;,&quot;Male 30-44&quot; =&quot;blue&quot;,&quot;Female 45-60&quot;=&quot;green&quot;, &quot;Male 45-60&quot;=&quot;forestgreen&quot;,&quot;Female &gt; 60&quot; =&quot;grey&quot;,&quot;Male &gt; 60&quot; =&quot;black&quot;))
+
+g4=ggplot(test4,aes(V28,y=percent,fill=genderAge))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Padme?&quot;)+scale_fill_manual(&quot;legend&quot;,values=c(&quot;Female 18-29&quot;=&quot;indianred&quot;,&quot;Male 18-29&quot;=&quot;red&quot;,&quot;Female 30-44&quot;=&quot;dodgerblue&quot;,&quot;Male 30-44&quot; =&quot;blue&quot;,&quot;Female 45-60&quot;=&quot;green&quot;, &quot;Male 45-60&quot;=&quot;forestgreen&quot;,&quot;Female &gt; 60&quot; =&quot;grey&quot;,&quot;Male &gt; 60&quot; =&quot;black&quot;))
+
+
+g1</code></pre>
+<p><img src="/blog/2018-06-03-adventures-in-tidyverse-tibble_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<pre class="r"><code>g2</code></pre>
+<p><img src="/blog/2018-06-03-adventures-in-tidyverse-tibble_files/figure-html/unnamed-chunk-3-2.png" width="672" /></p>
+<pre class="r"><code>g3</code></pre>
+<p><img src="/blog/2018-06-03-adventures-in-tidyverse-tibble_files/figure-html/unnamed-chunk-3-3.png" width="672" /></p>
+<pre class="r"><code>g4</code></pre>
+<p><img src="/blog/2018-06-03-adventures-in-tidyverse-tibble_files/figure-html/unnamed-chunk-3-4.png" width="672" /></p>
+</div>
+<div id="mystery-2" class="section level4">
+<h4>Mystery #2</h4>
+<p>This mystery comes from a scenario at work. I had one dataset that had different states than another dataset (state was treated as a factor). I wanted to find new levels and replace them with a catch all “other” level. I started with a data frame, but I used <code>complete</code> from tidyr at some point, and unknowingly had switched to a tibble. Therefore, my subsetting procedure was not doing what I expected. Here is a simplified example:</p>
+<pre class="r"><code>state=tibble(state=as.factor(c(&quot;AL&quot;,&quot;AK&quot;,&quot;AR&quot;,&quot;AS&quot;)))
+state2=tibble(state=as.factor(c(&quot;AL&quot;,&quot;AK&quot;,&quot;AR&quot;,&quot;AS&quot;,&quot;CA&quot;,&quot;CO&quot;)))</code></pre>
+<p>What I did:</p>
+<pre class="r"><code>state2[,1] %in% levels(state[,1])</code></pre>
+<pre><code>## [1] FALSE</code></pre>
+<pre class="r"><code>levels(state[,1])</code></pre>
+<pre><code>## NULL</code></pre>
+<p>What I should have did given that I’m working with tibbles:</p>
+<pre class="r"><code>test=state2[[1]] %in% levels(state[[1]])
+test</code></pre>
+<pre><code>## [1]  TRUE  TRUE  TRUE  TRUE FALSE FALSE</code></pre>
+<p><strong>Key</strong>: subsetting tibbles by column requires the double brackets</p>
+<p>What I did:</p>
+<pre class="r"><code>state2[,1]=as.character(state2[,1])
+state2</code></pre>
+<pre><code>## # A tibble: 6 x 1
+##   state              
+##   &lt;chr&gt;              
+## 1 c(2, 1, 3, 4, 5, 6)
+## 2 c(2, 1, 3, 4, 5, 6)
+## 3 c(2, 1, 3, 4, 5, 6)
+## 4 c(2, 1, 3, 4, 5, 6)
+## 5 c(2, 1, 3, 4, 5, 6)
+## 6 c(2, 1, 3, 4, 5, 6)</code></pre>
+<p>What I should have did given that I’m working with tibbles:</p>
+<p><strong>Key</strong>: again this is a subsetting syntax issue</p>
+<pre class="r"><code>state2=tibble(state=as.factor(c(&quot;AL&quot;,&quot;AK&quot;,&quot;AR&quot;,&quot;AS&quot;,&quot;CA&quot;,&quot;CO&quot;)))
+
+state2[[1]]=as.character(state2[[1]])
+state2[test,1]&lt;-&quot;other&quot;</code></pre>
+<p>Compare to behavior on a dataframe (this is the output I expected):</p>
+<pre class="r"><code>state=data.frame(state=as.factor(c(&quot;AL&quot;,&quot;AK&quot;,&quot;AR&quot;,&quot;AS&quot;)))
+state2=data.frame(state=as.factor(c(&quot;AL&quot;,&quot;AK&quot;,&quot;AR&quot;,&quot;AS&quot;,&quot;CA&quot;,&quot;CO&quot;)))
+
+state2[,1] %in% levels(state[,1])</code></pre>
+<pre><code>## [1]  TRUE  TRUE  TRUE  TRUE FALSE FALSE</code></pre>
+<pre class="r"><code>levels(state[,1])</code></pre>
+<pre><code>## [1] &quot;AK&quot; &quot;AL&quot; &quot;AR&quot; &quot;AS&quot;</code></pre>
+<pre class="r"><code>state2[,1]=as.character(state2[,1])
+state2</code></pre>
+<pre><code>##   state
+## 1    AL
+## 2    AK
+## 3    AR
+## 4    AS
+## 5    CA
+## 6    CO</code></pre>
+<pre class="r"><code>state2[test,1]&lt;-&quot;other&quot;
+state2</code></pre>
+<pre><code>##   state
+## 1 other
+## 2 other
+## 3 other
+## 4 other
+## 5    CA
+## 6    CO</code></pre>
+<pre class="r"><code>state2</code></pre>
+<pre><code>##   state
+## 1 other
+## 2 other
+## 3 other
+## 4 other
+## 5    CA
+## 6    CO</code></pre>
+</div>
+<div id="mystery-3" class="section level4">
+<h4>Mystery #3</h4>
+<p>This mystery comes from my <a href="https://sastoudt.github.io/blog/2018/05/26/adventures-in-tidyverse-readr">readr post</a> where I wanted to remove rows that had NAs in certain columns and a certain number of characters in another example. Here is a simplified example:</p>
+<pre class="r"><code>tb=tibble(x=c(NA,NA,3),y=c(NA,2,1),z=c(&quot;A&quot;,&quot;BC&quot;,&quot;D&quot;))
+tb[,1] ## tibble</code></pre>
+<pre><code>## # A tibble: 3 x 1
+##       x
+##   &lt;dbl&gt;
+## 1   NA 
+## 2   NA 
+## 3    3.</code></pre>
+<pre class="r"><code>tb[[1]] ## vector</code></pre>
+<pre><code>## [1] NA NA  3</code></pre>
+<p>The difference in subsetting syntax is a reoccurring issue. I use the syntax expecting my data to be a dataframe, but I forgot that tidyverse functions switch to tibbles.</p>
+<pre class="r"><code>tb[-which(is.na(tb[,2]) &amp; is.na(tb[,1]) &amp; nchar(tb[,3])&lt;=1),]</code></pre>
+<pre><code>## # A tibble: 0 x 3
+## # ... with 3 variables: x &lt;dbl&gt;, y &lt;dbl&gt;, z &lt;chr&gt;</code></pre>
+<p>Weird! I expected the output to remove the first row. What’s going on?</p>
+<pre class="r"><code>is.na(tb[,2])</code></pre>
+<pre><code>##          y
+## [1,]  TRUE
+## [2,] FALSE
+## [3,] FALSE</code></pre>
+<pre class="r"><code>is.na(tb[,1]) </code></pre>
+<pre><code>##          x
+## [1,]  TRUE
+## [2,]  TRUE
+## [3,] FALSE</code></pre>
+<p>These are fine.</p>
+<pre class="r"><code>nchar(tb[,3])&lt;=1</code></pre>
+<pre><code>##     z 
+## FALSE</code></pre>
+<pre class="r"><code>nchar(tb[,3])</code></pre>
+<pre><code>##  z 
+## 17</code></pre>
+<p>Ah, here is the culprit! Switching to tibble subsetting syntax…</p>
+<pre class="r"><code>nchar(tb[[3]])&lt;=1</code></pre>
+<pre><code>## [1]  TRUE FALSE  TRUE</code></pre>
+<p>Much better.</p>
+<p>Original:</p>
+<pre class="r"><code>is.na(tb[,2]) &amp; is.na(tb[,1])  &amp;nchar(tb[,3])&lt;=1</code></pre>
+<pre><code>##          y
+## [1,] FALSE
+## [2,] FALSE
+## [3,] FALSE</code></pre>
+<p>Fix:</p>
+<pre class="r"><code>is.na(tb[,2]) &amp; is.na(tb[,1])  &amp;nchar(tb[[3]])&lt;=1</code></pre>
+<pre><code>##          y
+## [1,]  TRUE
+## [2,] FALSE
+## [3,] FALSE</code></pre>
+<pre class="r"><code>tb[-which(is.na(tb[,2]) &amp; is.na(tb[,1]) &amp; nchar(tb[[3]])&lt;=1),]</code></pre>
+<pre><code>## # A tibble: 2 x 3
+##       x     y z    
+##   &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;
+## 1   NA     2. BC   
+## 2    3.    1. D</code></pre>
+<p>Compare to behavior on a dataframe:</p>
+<pre class="r"><code>tb=tibble(x=c(NA,NA,3),y=c(NA,2,1),z=c(&quot;A&quot;,&quot;BC&quot;,&quot;D&quot;))
+tb2=as.data.frame(tb)
+
+tb2[-which(is.na(tb2[,2]) &amp; is.na(tb2[,1]) &amp; nchar(tb2[,3])&lt;=1),]</code></pre>
+<pre><code>##    x y  z
+## 2 NA 2 BC
+## 3  3 1  D</code></pre>
+<p>This is the output I expected.</p>
+<pre class="r"><code>is.na(tb2[,2])</code></pre>
+<pre><code>## [1]  TRUE FALSE FALSE</code></pre>
+<pre class="r"><code>is.na(tb2[,1]) </code></pre>
+<pre><code>## [1]  TRUE  TRUE FALSE</code></pre>
+<pre class="r"><code>nchar(tb2[,3])&lt;=1</code></pre>
+<pre><code>## [1]  TRUE FALSE  TRUE</code></pre>
+<p>The double bracket subsetting also works:</p>
+<pre class="r"><code>is.na(tb2[[2]])</code></pre>
+<pre><code>## [1]  TRUE FALSE FALSE</code></pre>
+<pre class="r"><code>is.na(tb2[[1]]) </code></pre>
+<pre><code>## [1]  TRUE  TRUE FALSE</code></pre>
+<pre class="r"><code>nchar(tb2[[3]])&lt;=1</code></pre>
+<pre><code>## [1]  TRUE FALSE  TRUE</code></pre>
+<pre class="r"><code>is.na(tb2[,2]) &amp; is.na(tb2[,1])  &amp;nchar(tb2[,3])&lt;=1</code></pre>
+<pre><code>## [1]  TRUE FALSE FALSE</code></pre>
+<pre class="r"><code>is.na(tb2[[2]]) &amp; is.na(tb2[[1]])  &amp;nchar(tb2[[3]])&lt;=1</code></pre>
+<pre><code>## [1]  TRUE FALSE FALSE</code></pre>
+<p><strong>Take-Away:</strong> The unexpected behavior that led to most of these mysteries turned out to be because I was using the wrong subsetting syntax. <img src="https://media.giphy.com/media/zsWVNI1yDmBMc/giphy.gif" /></p>
+<p>Since the double bracket subsetting works for dataframes and tibbles, I should transition to using this syntax so that I am not surprised by output when a tibble gets thrown into the mix.</p>
+<p><strong>Resources</strong> (these helped me solve my mysteries):</p>
+<ul>
+<li><a href="http://r4ds.had.co.nz/tibbles.html" class="uri">http://r4ds.had.co.nz/tibbles.html</a></li>
+<li><a href="https://gist.github.com/jennybc/37481d9d784d2e8222b3" class="uri">https://gist.github.com/jennybc/37481d9d784d2e8222b3</a></li>
+<li><a href="https://www.rdocumentation.org/packages/ggplot2/versions/1.0.0/topics/aes_string" class="uri">https://www.rdocumentation.org/packages/ggplot2/versions/1.0.0/topics/aes_string</a></li>
+<li><a href="http://adv-r.had.co.nz/Functions.html#function-arguments" class="uri">http://adv-r.had.co.nz/Functions.html#function-arguments</a></li>
+<li><a href="http://adv-r.had.co.nz/Computing-on-the-language.html" class="uri">http://adv-r.had.co.nz/Computing-on-the-language.html</a></li>
+</ul>
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-05-26-adventures-in-tidyverse-readr/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-06-16-adventures-in-tidyverse-stringr/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

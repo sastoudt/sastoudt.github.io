@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Cursing with Instead of at Factors</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON AUG 26, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <pre class="r"><code>library(forcats)
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+
+library(sp)
+library(maps)
+library(maptools)
+## Thank you to Chris Kennedy for kindly telling me I should be using library instead of require on my posts.</code></pre>
+<p>Forever ago <span class="citation">@dpseidel</span> drew my attention to an awesome <a href="https://github.com/jimwebb/cold_as_f-ck">dataset</a> collected by <span class="citation">@jimwebb</span> about tweets that cursed being cold/hot. This reminded me of a project that <span class="citation">@danascientist</span> (so many Dana’s!) and I did in <span class="citation">@BaumerBen</span>’s class where we tried to assess how cold it had to be for people to talk about being cold on Twitter. I was curious whether differences in region would impact the overall median per phrase since we expect those in warmer regions to have less of a tolerance to the cold.</p>
+<p>This seemed like a perfect dataset to work through the <code>forcats</code> package and tackle some factors. Be warned, curse words are involved.</p>
+<pre class="r"><code>setwd(&quot;~/Desktop/cold_as_f-ck-master&quot;)
+data &lt;- read.csv(&quot;data/collected-tweets.csv&quot;)</code></pre>
+<p>First I translate lat/long to state.</p>
+<pre class="r"><code>#https://stackoverflow.com/questions/8751497/latitude-longitude-coordinates-to-state-code-in-r
+latlong2state &lt;- function(pointsDF) {
+  # Prepare SpatialPolygons object with one SpatialPolygon
+  # per state (plus DC, minus HI &amp; AK)
+  states &lt;- map(&#39;state&#39;, fill=TRUE, col=&quot;transparent&quot;, plot=FALSE)
+  IDs &lt;- sapply(strsplit(states$names, &quot;:&quot;), function(x) x[1])
+  states_sp &lt;- map2SpatialPolygons(states, IDs=IDs,
+                                   proj4string=CRS(&quot;+proj=longlat +datum=WGS84&quot;))
+  
+  # Convert pointsDF to a SpatialPoints object 
+  pointsSP &lt;- SpatialPoints(pointsDF, 
+                            proj4string=CRS(&quot;+proj=longlat +datum=WGS84&quot;))
+  
+  # Use &#39;over&#39; to get _indices_ of the Polygons object containing each point 
+  indices &lt;- over(pointsSP, states_sp)
+  
+  # Return the state names of the Polygons object containing each point
+  stateNames &lt;- sapply(states_sp@polygons, function(x) x@ID)
+  stateNames[indices]
+}
+
+data$state &lt;- latlong2state(data[,c(&quot;long&quot;,&quot;lat&quot;)])</code></pre>
+<p>Then I break down the states into <a href="https://en.wikipedia.org/wiki/List_of_regions_of_the_United_States">regions</a> using <code>fct_collapse</code> since we don’t have enough tweets per state.</p>
+<pre class="r"><code>data$division &lt;- fct_collapse(data$state,
+
+newengland = c(&quot;connecticut&quot;, &quot;maine&quot;, &quot;massachusetts&quot;, &quot;new hampshire&quot;, &quot;rhode island&quot;, &quot;vermont&quot;),
+midatlantic = c(&quot;new jersey&quot;, &quot;new york&quot;, &quot;pennsylvania&quot;),
+eastnorthcentral = c(&quot;illinois&quot;, &quot;indiana&quot;, &quot;michigan&quot;, &quot;ohio&quot;, &quot;wisconsin&quot;),
+westnorthcentral = c(&quot;iowa&quot;, &quot;kansas&quot;, &quot;minnesota&quot;, &quot;missouri&quot;, &quot;nebraska&quot;, &quot;north dakota&quot;, &quot;south dakota&quot;),
+southatlantic = c(&quot;delaware&quot;, &quot;florida&quot;, &quot;georgia&quot;, &quot;maryland&quot;, &quot;north carolina&quot;, &quot;south carolina&quot;,&quot;district of columbia&quot;, &quot;west virginia&quot;, &quot;virginia&quot;),
+eastsouthcentral = c(&quot;alabama&quot;, &quot;kentucky&quot;, &quot;mississippi&quot;, &quot;tennessee&quot;),
+westsouthcentral = c(&quot;arkansas&quot;, &quot;louisiana&quot;, &quot;oklahoma&quot;, &quot;texas&quot;),
+mountain = c(&quot;arizona&quot;, &quot;colorado&quot;, &quot;idaho&quot;, &quot;montana&quot;, &quot;nevada&quot;, &quot;new mexico&quot;, &quot;utah&quot;, &quot;wyoming&quot;),
+pacific = c(&quot;alaska&quot;, &quot;california&quot;, &quot;hawaii&quot;, &quot;oregon&quot;, &quot;washington&quot;)
+)</code></pre>
+<pre><code>## Warning: Unknown levels in `f`: alaska, hawaii</code></pre>
+<pre class="r"><code>data$region &lt;- fct_collapse(data$division,
+northeast = c(&quot;newengland&quot;, &quot;midatlantic&quot;),
+midwest = c(&quot;eastnorthcentral&quot;, &quot;westnorthcentral&quot;),
+south = c(&quot;southatlantic&quot;, &quot;eastsouthcentral&quot;, &quot;westsouthcentral&quot;),
+west = c(&quot;mountain&quot;, &quot;pacific&quot;)
+)</code></pre>
+<p>No Hawaii or Alaska in our dataset, but that’s fine. Also, am I the only one who thinks it is weird that Delaware is considered the south?</p>
+<p>We can use <code>fct_count</code> to easily count how many tweets fall in each category.</p>
+<pre class="r"><code>fct_count(data$division)</code></pre>
+<pre><code>## # A tibble: 10 x 2
+##    f                    n
+##    &lt;fct&gt;            &lt;int&gt;
+##  1 eastsouthcentral   313
+##  2 mountain           224
+##  3 westsouthcentral   709
+##  4 pacific            911
+##  5 newengland         108
+##  6 southatlantic     1043
+##  7 eastnorthcentral   697
+##  8 westnorthcentral   172
+##  9 midatlantic        500
+## 10 &lt;NA&gt;               698</code></pre>
+<pre class="r"><code>fct_count(data$region)</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   f             n
+##   &lt;fct&gt;     &lt;int&gt;
+## 1 south      2065
+## 2 west       1135
+## 3 northeast   608
+## 4 midwest     869
+## 5 &lt;NA&gt;        698</code></pre>
+<p>Even these are a bit sparse, so we’ll stick with region to try to get a reasonable number of tweets per phrase.</p>
+<p>For reference I want to easily be able to tell which phrase contains “hot” or “cold”.</p>
+<pre class="r"><code>data$type &lt;- ifelse(grepl(&quot;hot&quot;,data$phrase,ignore.case = T),&quot;H&quot;,ifelse(grepl(&quot;cold&quot;,data$phrase,ignore.case = T),&quot;C&quot;,&quot;O&quot;))
+## I should be using stringr, but forgive me</code></pre>
+<p>Now I want to pick the phrases that are displayed in Jim’s plots to make comparisons easier.</p>
+<pre class="r"><code>toCompare = c(&quot;colder than mars&quot;, &quot;colder than a witch&#39;s tit&quot;, &quot;cold as heck&quot;, &quot;colder than a mf&quot;, &quot;cold as a bitch&quot;, &quot;cold as balls&quot;, &quot;cold as tits&quot;, &quot;cold as fuck&quot;, &quot;colder than my heart&quot;, &quot;colder than a bitch&quot;, &quot;cold as a mf&quot;, &quot;cold as hell&quot;, &quot;cold as ice&quot;, &quot;hot as heck&quot;, &quot;hotter than two rats&quot;, &quot;hot as balls&quot;, &quot;hotter than hell&quot;, &quot;hot as tits&quot;, &quot;hot as hell&quot;, &quot;hot as fuck&quot;, &quot;hot as shit&quot;, &quot;hotter than satan&#39;s asshole&quot;, &quot;hot as a mf&quot;, &quot;hot as a bitch&quot;, &quot;hotter than a mf&quot;, &quot;hot as hades&quot;, &quot;hot as dick&quot;)</code></pre>
+<p>We can use <code>fct_other</code> to lump all the other phrases into an “Other” category.</p>
+<pre class="r"><code>data$phrase &lt;- fct_other(data$phrase, keep = toCompare)</code></pre>
+<p>Some regions don’t have every phrase, but I want that to be explicit in the data, so we break out our new friend <code>tidyr</code>. You can read more about my adventures with <code>tidyr</code> <a href="https://sastoudt.github.io/blog/2018/05/16/adventures-in-tidyverse-tidyr">here</a>.</p>
+<pre class="r"><code>data &lt;- left_join(expand(data,phrase,region),data,c(&quot;phrase&quot;=&quot;phrase&quot;,&quot;region&quot;=&quot;region&quot;))
+               
+res &lt;- data %&gt;% group_by(phrase,region) %&gt;% summarise(medAppT = median(apparentTemperature, na.rm = T), count = n()) 
+
+data %&gt;% group_by(phrase) %&gt;% summarise(medAppT = median(apparentTemperature, na.rm = T),count = n()) %&gt;% arrange(medAppT)</code></pre>
+<pre><code>## # A tibble: 28 x 3
+##    phrase                    medAppT count
+##    &lt;fct&gt;                       &lt;dbl&gt; &lt;int&gt;
+##  1 colder than mars            -7.36    12
+##  2 colder than a witch&#39;s tit   24.9     38
+##  3 cold as heck                28.3     39
+##  4 colder than a mf            33.2     16
+##  5 cold as a bitch             36.5     43
+##  6 cold as balls               36.6     78
+##  7 cold as tits                40.5     24
+##  8 cold as fuck                40.7    623
+##  9 colder than my heart        41.8     19
+## 10 colder than a bitch         44.3     14
+## # ... with 18 more rows</code></pre>
+<p>Success! We match Jim’s values. I can try to make a quick plot to assess differences per region.</p>
+<pre class="r"><code>res2 &lt;- subset(res,!is.na(region) &amp; phrase != &quot;Other&quot;)
+ggplot(data = res2, aes(x = phrase, y = medAppT, col = region)) + geom_point() + theme(axis.text.x = element_text(angle = 45, hjust = 1))</code></pre>
+<p><img src="/blog/2018-08-26-adventures-in-tidyverse-forcats_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<p>But my ordering doesn’t match Jim’s so it’s hard to compare. He ordered them by overall median, so I can compute that and then use <code>fct_reorder</code> to rearrange. But first I need to get rid of the pesky “Other” category using <code>fct_drop</code>.</p>
+<pre class="r"><code>data2 &lt;- data %&gt;% filter(phrase != &quot;Other&quot;) 
+data2$phrase &lt;- fct_drop(data2$phrase) ## defaults to drop what isn&#39;t present
+
+toOrder &lt;- data2 %&gt;% group_by(phrase) %&gt;% summarise(medAppT = median(apparentTemperature, na.rm = T), count = n()) %&gt;% arrange(medAppT) %&gt;% mutate(order = 1:nrow(.))
+
+res2$phrase &lt;- fct_drop(res2$phrase) ## drop before merging so levels match
+
+res2 &lt;- left_join(x = res2, y = toOrder, by = c(&quot;phrase&quot;=&quot;phrase&quot;))
+
+res2$phrase &lt;- fct_reorder(res2$phrase, res2$order)
+
+ggplot(data = res2, aes(x = phrase, y = medAppT.x, col = region)) + geom_point() + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + ylab(&quot;median apparent temp (F)&quot;) + xlab(&quot;&quot;)</code></pre>
+<p><img src="/blog/2018-08-26-adventures-in-tidyverse-forcats_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<p>There we go! But it is still hard to see what is going on. The south and west have larger temperatures for cold and hot categories which makes sense. But how much do the differences in number of tweets by region affect the median? Regional differences in phrase usage could potentially skew even a median.</p>
+<pre class="r"><code>## drop levels
+data2 &lt;- data %&gt;% filter(phrase!=&quot;Other&quot;)
+data2$phrase &lt;- fct_drop(data2$phrase,only=&quot;Other&quot;)
+## I would like to be able to do this in one step?
+
+## reorder
+data2 &lt;- left_join(x = data2,y = toOrder, by = c(&quot;phrase&quot;=&quot;phrase&quot;))
+data2$phrase &lt;- fct_reorder(data2$phrase, data2$order)
+
+## add on medians in black
+ggplot(data = filter(data2, !is.na(region)), aes(x = phrase, y = apparentTemperature, col = region)) + geom_point(alpha = .5) + geom_point(aes(x = phrase,  y = medAppT), cex = 2, col = &quot;black&quot;) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + xlab(&quot;&quot;) + ylab(&quot;apparent temperature (F)&quot;)</code></pre>
+<p><img src="/blog/2018-08-26-adventures-in-tidyverse-forcats_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<p>Even with some transparency in the points, we can’t see what may be affecting the medians (shown in black). <a href="https://stackoverflow.com/questions/31405985/r-how-to-spread-jitter-points-with-respect-to-the-x-axis">Jittering on the categorical scale</a> to the rescue!</p>
+<pre class="r"><code>ggplot(data = filter(data2, !is.na(region)), aes(x = phrase, y = apparentTemperature, col = region)) + geom_point(alpha = .5, position = position_jitter(w = .25, h = 0)) + geom_point(aes(x = phrase, y = medAppT), cex = 2, col = &quot;black&quot;) + theme(text = element_text(size=15), axis.text.x = element_text(angle = 45, hjust = 1)) + xlab(&quot;&quot;) + ylab(&quot;apparent temperature (F)&quot;)</code></pre>
+<p><img src="/blog/2018-08-26-adventures-in-tidyverse-forcats_files/figure-html/unnamed-chunk-13-1.png" width="1152" /></p>
+<p>There are no immediately obvious clusters by region in the temperature direction per phrase, so the median seems like a reasonable choice. However, we can see how the mean could be affected by values that differ from the majority per phrase.</p>
+<p>Actually drawing conclusions is beyond the scope of this post but questions remain:</p>
+<ul>
+<li><p>Do particular regions use certain phrases more than we would expect by proportion of people/Twitter users?</p></li>
+<li><p>Within phrases that are common across all regions, are there statistically and practically significant differences between the average temperature when a phrase is used?</p></li>
+</ul>
+<p>I almost made it through this post without a gif (the horror!).</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/lz54ttf11K30Q/giphy.gif" />
+
+</div>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+<p>P.S. <span class="citation">@AmeliaMN</span> and <span class="citation">@askdrstats</span> have a great paper about <a href="https://www.tandfonline.com/doi/abs/10.1080/00031305.2017.1356375">Wrangling Categorical Data in R</a> if you want some serious guidance on factors.</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/2018-08-15-adventures-in-tidyverse-purrr/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-09-01-adventures-in-tidyverse-reflections/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,188 @@
+---
+title: "Reliving my Undergrad Thesis via ggplot2: Part 2"
+date: 2018-05-01T15:49:04-07:00
+draft: true
+---
+
+In a [previous post](https://sastoudt.github.io/blog/2018/04/23/adventures-in-tidyverse-ggplot2-part-1) I tackled reproducing one type of plot from my undergrad thesis (maps with color coded dots). The goal for this post is to recreate an interpolated heat map over an actual US map in ggplot. Full disclosure: this was a struggle, and it still isn't perfect. 
+
+![This was definitely me at many points throughout the process.](https://media.giphy.com/media/vO8F4fYQd39h6/giphy.gif)
+
+But I recognize that practice builds intuition, so if you know how I can do something better or how to answer one of my lingering questions, please reach out!
+
+The original plots were made by:
+
+1. Projecting training data.
+2. Fiting model on projected coordinates.
+3. Making predictions on a grid bounded by the bounding box of the continental United States.
+4. Plotting using a hacky version of `fitted.contour()` where the colors map to quantiles.
+5. Coloring over everything that is outside of the continental United States in white.
+
+See the code [here](https://github.com/sastoudt/sastoudt.github.io/blob/master/_posts/scratchCode/thesisMap2_original.R).
+
+To switch this over to ggplot I first made two simplifications:
+
+1. Use lat/long instead of projected points.
+2. Skip the heat map at first and just do color coded points.
+
+First I get set up, build the model, and get predictions on a grid. Nothing has changed here from my original approach except doing the model on the lat/long coordinates instead of the projected points. The details of the model are not important here. Feel free to skip past this chunk and just know that `coordPred` holds the predictions we want to plot on a heatmap.
+
+```{r,message=FALSE, warning=FALSE}
+### set up ###
+require(ggplot2)
+require(mgcv)
+require(maps)
+require(sp)
+require(tigris)
+require(RColorBrewer)
+```
+
+```{r,message=FALSE, warning=FALSE,cache=T}
+setwd("~/Smith/Senior Year/Stoudt_Thesis/Data")
+us<-read.csv("usToUseNoDuplicates.csv")
+
+setwd("~/Smith/Senior Year/Stoudt_Thesis/Data/FINAL")
+training<-read.csv("trainingFinal.csv")
+
+## do on original coordinates for now
+## get bounding box for prediction
+#x = seq(from=min(us$long), to=max(us$long), by=.1)  ## clips off part of west coast
+x=seq(from=min( map_data("state")$long),to=max( map_data("state")$long),by=.1)
+#y = seq(from=min(us$lat), to=max(us$lat), by=.1)
+y=seq(from=min( map_data("state")$lat),to=max( map_data("state")$lat),by=.1)
+nx = length(x); ny = length(y)
+xy = expand.grid(long=x,lat=y)
+
+b1=c("cr","ps","tp")
+isPenalized1=c(T,F)
+te1Param<-as.data.frame(expand.grid(b1,isPenalized1))
+names(te1Param)<-c("basis","isPenalized")
+te1Param$basis=as.character(te1Param$basis)
+
+training$uraniumTransform=1/(1+exp(-training$uranium)) # transform to [0,1] for beta
+
+## optimal parameters in this case
+data=te1Param[3,]
+basis=data[[1]]
+isPenalized=data[[2]]
+
+uranium.gam=gam(uraniumTransform ~ te(long,lat,bs=basis,fx=isPenalized),
+                family=betar(link="logit"), data=training)
+
+zGRID.gam = predict(uranium.gam, newdata=xy)
+
+coordPred=cbind.data.frame(x,y,zGRID.gam)
+```
+
+Now I need to eliminate all the predictions that lie outside of the continental United States. To do this, I get the borders of the continental United States and use the `over` function to figure out which of the predicted points lie within the borders.
+
+**Fun Fact**: The `pumas` function outputs progress to the console that we want to [suppress](https://support.rstudio.com/hc/en-us/community/posts/115005857147-Turn-off-data-frame-and-R-console-output-in-R-Notebook-but-keep-plots) in this RMarkdown file.
+
+```{r,message=FALSE, warning=FALSE,cache=T,results='hide'}
+#### get within continental US ####
+
+pts = SpatialPoints(coordPred[,1:2])
+
+#https://journal.r-project.org/archive/2016/RJ-2016-043/RJ-2016-043.pdf
+## There is probably an easier way to do this.
+us_states <- unique(fips_codes$state)[1:51]
+continental_states <- us_states[!us_states %in% c("AK", "HI")]
+us_pumas <- rbind_tigris(
+ lapply(
+    continental_states, function(x) {
+      pumas(state = x, cb = TRUE)
+    }
+  )
+)
+
+proj4string(pts)=proj4string(us_pumas) ## this is needed for over
+
+withinContinental=over(pts,us_pumas)
+
+toPlot=coordPred[which(!is.na(withinContinental[,1])),] ## all the same NA structure
+names(toPlot)[3]="z"
+```
+
+**Lingering Question**: Is there an easier way to get the boundary of the continental US?
+
+Now that we have dropped all of the values outside our area of interest, we can use the code from my last post to plot points color coded by the predicted values.
+
+```{r,message=FALSE, warning=FALSE,cache=T}
+all_states <- map_data("state")
+p <- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour="black", fill="white" )
+p=p+geom_point(data=toPlot,aes(x=x,y=y,col=cut(z,quantile(z,seq(0,1,by=.1),include.lowest=T))))+scale_colour_manual(name="Predicted Quantile of \n Uranium (ppm)",values=c(brewer.pal(9, "YlOrRd"),"black"))
+```
+
+**Sticking Point**: For awhile I couldn't figure out how to put the state lines over these points until I found `geom_path` (I was trying to do `geom_polygon` with `fill=NA`).
+
+```{r,message=FALSE, warning=FALSE,cache=T,fig.width=12}
+#https://cran.r-project.org/web/packages/autoimage/vignettes/ggplot2-comparison.html
+p+geom_path(aes(x = long, y = lat, group = group), data = all_states)+coord_map("lambert", parameters = c(c(33,45)))
+```
+
+Next, I'm going to try to make an actual heatmap instead of just color coding the predicted grid points (although on this size of a plot, we can't tell that these are individual plots).
+
+**Fun Fact**: I'm using the ColorBrewer palette for consistency but @hadleywickham recommended viridis palettes. ColorBrewer palettes are ["accurate in lightness and hue, but not in saturation"](https://earthobservatory.nasa.gov/blogs/elegantfigures/2013/08/05/subtleties-of-color-part-1-of-6/) while viridis palettes are ["perceptually uniform (i.e. changes in the data should be accurately decoded by our brains) even when desaturated"](https://rud.is/b/2015/07/20/using-the-new-viridis-colormap-in-r-thanks-to-simon-garnier/).
+
+
+**Sticking Point**: I first tried [this approach](https://stackoverflow.com/questions/28330821/r-plot-filled-contour-output-in-ggpplot2). My grid was too dense for the interpolation to run quickly, but even when I made the grid more coarse, the plot didn't have continuous color (it looked weird).
+
+So then I found `stat_summary_2d` which works pretty well except we now lose control over the break points in the colors. 
+
+```{r,message=FALSE, warning=FALSE,fig.width=12}
+  #https://stackoverflow.com/questions/37529116/how-to-plot-a-heat-map-with-irregular-data-in-ordinates-in-ggplot?rq=1
+p= ggplot(toPlot, aes(x = x, y = y, z = z)) + stat_summary_2d(binwidth = 0.3) +scale_fill_gradientn(colours = c(brewer.pal(9, "YlOrRd"),"black"),"Predicted Uranium (ppm)")
+p
+```
+
+**Sticking Point**: I wanted to change the title on this legend, but when I tried through the use of `guides`, the whole legend changes. 
+
+
+![But seriously, why?!](https://media.giphy.com/media/MKCdpXNWYWycw/giphy.gif)
+
+But thanks to [this](https://groups.google.com/forum/#!topic/ggplot2/zOSV6JgeAIM) I learned that I can just add text to `scale_fill_gradientn`.
+
+
+```{r,fig.width=12}
+p+guides(fill=guide_legend(title="Predicted Uranium \n (ppm)")) 
+```
+
+
+**Lingering Question**: How do I color code by quantile like I did before (using `cut` on z)? The motivation for doing this is that the distribution of predictions is highly skewed right. If we bin the colors such that an equal number of points are in each point, the last bin will have a huge range (5ish to 30ish ppm). We see more contrast in the overall predictions if we color code by quantile instead.
+
+I can project this map after the fact and use the `theme_void` tip from @sharoz.
+
+```{r,message=FALSE, warning=FALSE,fig.width=12}
+p=p+geom_path(aes(x = long, y = lat, z=NA,group = group), data = all_states) 
+p+coord_map("lambert", parameters = c(c(33,45)))+theme_void()
+```
+
+However, I would like to build the model on the projected scale to avoid distortion. For example, this is what the plot looks like if we model on the projected points (from my original approach). We can see more curvature.
+
+![](scratchcode/mapTrainedProj.jpeg)
+
+I really don't want to back project the predictions to the lat/long scale to plot just to reproject them via `coord_map`. There must be a better way.
+
+The use of `coord_map` doesn't transform the coordinates of the points themselves.
+
+```{r,message=FALSE, warning=FALSE,cache=T}
+states <- map_data("state")
+p=ggplot(states, aes(long, lat)) +
+  geom_polygon(aes(group = group)) +
+  coord_map("lambert", parameters = c(c(33,45)))
+
+head(states$long)
+head(p$data$long)  ## doesn't actually transform coordinates
+```
+
+
+**Lingering Question**: How do I tell ggplot that I have points that are in a different projection when I want to add a map outline to them?
+
+In my previous post, I felt satisfied with my ggplot version of my thesis plot, but for this post there are still some unanswered questions and room for more efficient solutions. There is also some lingering frustration that I lack control over certain aspects of plotting using ggplot, although I feel this most prominently when making maps. If anyone has resources that helped them control particular aspects of maps in ggplot, please pass them along. 
+
+
+#### Feedback, questions, comments, etc. are welcome (@sastoudt).
+
+Thank you to @dpseidel for pep talks throughout.
+
+

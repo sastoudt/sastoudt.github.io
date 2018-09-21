@@ -1,0 +1,217 @@
+---
+title: "Analyzing Song Repetition in R Using geniusr"
+date: 2018-03-27T16:44:00-07:00
+draft: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Rick Wicklin (@RickWicklin) posted a [blog post](https://blogs.sas.com/content/iml/2018/03/14/visualize-repetition-lyrics.html) recently about how to visualize repetition in song lyrics using SAS. I wanted to do the same thing using R and also utilizing [geniusr](https://github.com/ewenme/geniusr) to more easily access a variety of song lyrics to compare.
+
+Note: There is also [geniusR](https://github.com/JosiahParry/geniusR) that I did not dig into further. 
+
+First let's create some functions to make it easy to compare a bunch of different songs.
+
+**Step 1: Get Lyrics**
+
+```{r,results='hide', message=FALSE, warning=FALSE}
+require(geniusr)
+require(dplyr)
+require(stringr)
+```
+
+To use the Genius API, you will need a client access token.
+
+- Create a new API client [here](https://genius.com/api-clients/new).
+- For the app website URL you can use http://example.com .
+- For the redirect URL you can use example.com .
+
+
+This will prompt you to enter your client access token. 
+
+```{r,eval=F}
+genius_token()
+```
+
+Let's test it out with the catchy ``Shape of You" by Ed Sheeran.
+
+```{r,cache=T}
+findSong <- search_song(search_term = "shape of you") %>%
+  filter(artist_name == "Ed Sheeran")
+
+lyrics <- scrape_lyrics_id(song_id = findSong$song_id[1]) 
+## more than one of this song because of remixes, we just want the first one
+
+head(lyrics)
+```
+
+**Step 2: Preprocess Lyrics**
+
+This gives us a line per row, but we want individual words. We also want to pre-process the text, removing punctuation and transferring to lower case.
+
+```{r,cache=T}
+allone=str_c(lyrics$line,collapse=" ") ##concatenate
+
+## remove punctuation
+allone=gsub(",","",allone)
+allone=gsub("\\.","",allone)
+allone=gsub("?","",allone)
+allone=gsub("!","",allone)
+allone=gsub("\\(","",allone)
+allone=gsub("\\)","",allone)
+
+alloneLower=tolower(allone)
+
+wordByWord=unlist(strsplit(alloneLower," "))
+
+head(wordByWord)
+```
+
+We can generalize this code into a function for future use.
+
+```{r,cache=T}
+processSong<-function(songName,artist){
+  findSong <- search_song(search_term = songName) %>%
+    filter(artist_name == artist)
+  
+  lyrics <- scrape_lyrics_id(song_id = findSong$song_id[1])
+  
+
+  allone=str_c(lyrics$line,collapse=" ")
+  
+  ## remove punctuation
+  allone=gsub(",","",allone)
+  allone=gsub("\\.","",allone)
+  allone=gsub("?","",allone)
+  allone=gsub("!","",allone)
+  allone=gsub("\\(","",allone)
+  allone=gsub("\\)","",allone)
+  
+  alloneLower=tolower(allone)
+  
+  wordByWord=unlist(strsplit(alloneLower," "))
+  
+}
+```
+
+**Step 3: Make Plot**
+
+We create a matrix of zeros that has the same number of rows and columns as number of words in the song.
+
+If a word occurs as the second and tenth word in the song, we have a match, and (2,10) will be represented by a one.
+
+```{r,cache=T}
+toPlot=matrix(0,nrow=length(wordByWord),ncol=length(wordByWord))
+
+findMatch<-function(x,corpus){
+  matches=which(corpus==corpus[x])
+ cbind(rep(x,length(matches)),matches)
+} ## get (i,j) pairs to fill in
+  
+matches=lapply(1:length(wordByWord),findMatch,wordByWord)
+toFill=do.call("rbind",matches)
+toPlot[toFill]=1
+```
+
+Note: to match the plots made in Wicklin's post, we make (1,1) in the top left corner. White denotes repetition. A groups of repeated words often is a chorus.
+
+```{r,cache=T, fig.width=14,fig.height=10}
+mtx.tmp.h <- apply(toPlot, 1, rev) ## need to flip horizontally
+# thank you to: https://everydropr.wordpress.com/2012/10/16/a-simple-way-to-flip-a-matrix-or-an-array/
+
+image(1:length(wordByWord),1:length(wordByWord),mtx.tmp.h,col=gray.colors(2),xaxt="n",yaxt="n",xlab="",ylab="") ## 1,1 bottom left instead of top left
+```
+
+We calculate the repetition score defined as the proportion of ones in the upper triangular portion of the matrix.
+
+```{r,cache=T}
+length(which(mtx.tmp.h[upper.tri(mtx.tmp.h)]==1))/length(which(upper.tri(mtx.tmp.h)))
+```
+
+We can also generalize this code into a function for future use.
+
+```{r,cache=T}
+makeRepetitionPlot<-function(lyrics,songName,artist){
+  matches=lapply(1:length(lyrics),findMatch,lyrics)
+  toFill=do.call("rbind",matches)
+  toPlot=matrix(0,nrow=length(lyrics),ncol=length(lyrics))
+  toPlot[toFill]=1
+  
+  
+  mtx.tmp.h <- apply(toPlot, 1, rev)
+  #https://everydropr.wordpress.com/2012/10/16/a-simple-way-to-flip-a-matrix-or-an-array/
+  
+  repScore=length(which(mtx.tmp.h[upper.tri(mtx.tmp.h)]==1))/length(which(upper.tri(mtx.tmp.h)))
+    ##proportion of 1s in the upper triangular portion of the matrix
+
+  image(1:length(lyrics),1:length(lyrics),mtx.tmp.h,col=gray.colors(2),xaxt="n",yaxt="n",xlab="",ylab="",
+        main=paste(songName,"by",artist,sep=" "),sub=paste("Repetition Score =",round(repScore,2),sep=" ")) 
+  ## 1,1 bottom left instead of top left
+  
+  
+  
+}
+```
+
+Now that we have the code to make a repetition matrix for any song, we can compare different songs and artists. Below I give some examples of directions that further analysis could take. 
+
+### Hits v. Underated Songs
+
+I would expect a hit to be more repetitive than another song (one without a music video/not played on the radio) off the same album. 
+
+```{r,cache=T,fig.width=14,fig.height=10}
+lyr=processSong("Shape of You","Ed Sheeran")
+lyr2=processSong("New Man","Ed Sheeran")
+
+par(mfrow=c(1,2))
+makeRepetitionPlot(lyr,"Shape of You","Ed Sheeran")
+makeRepetitionPlot(lyr2,"New Man","Ed Sheeran")
+
+```
+
+### Then v. Now
+
+It would be interesting to compare repetition as artists evolve.
+
+```{r,cache=T,fig.width=14,fig.height=10}
+lyr=processSong("Senorita","Justin Timberlake")
+lyr2=processSong("Say Something","Justin Timberlake")
+
+par(mfrow=c(1,2))
+makeRepetitionPlot(lyr,"Senorita","Justin Timberlake")
+makeRepetitionPlot(lyr2,"Say Something","Justin Timberlake")
+```
+
+### Rap: Repetitive v. Story
+
+When I was trying to pick examples for this post, my brother Scott recommended looking at the song ``Gucci Gang" because of how often those two words occur in the song. To juxtapose this repetition, I chose Eminem who is known for rap that tells more of a story with songs that sometimes do not even have a reoccurring chorus.
+
+```{r,cache=T,fig.width=14,fig.height=10}
+lyr=processSong("Gucci Gang","Lil Pump")
+lyr2=processSong("Lose Yourself","Eminem")
+
+par(mfrow=c(1,2))
+makeRepetitionPlot(lyr,"Gucci Gang","Lil Pump")
+makeRepetitionPlot(lyr2,"Lose Yourself","Eminem")
+```
+
+
+### The Different Genres of Taylor Swift
+
+It would also be interesting to compare repetition between different genres. Luckily, Taylor Swift's work has spanned both country and pop (and even some rap).
+
+```{r,cache=T,fig.width=14,fig.height=10}
+lyr=processSong("Teardrops on My Guitar","Taylor Swift")
+lyr2=processSong("Shake it Off","Taylor Swift")
+lyr3=processSong("End Game","Taylor Swift")
+
+par(mfrow=c(1,3))
+makeRepetitionPlot(lyr,"Teardrops on My Guitar","Taylor Swift")
+makeRepetitionPlot(lyr2,"Shake it Off","Taylor Swift")
+makeRepetitionPlot(lyr3,"End Game","Taylor Swift")
+```
+
+
+I am curious to see what others can find. If you use this code to find some interesting patterns in other songs (or improve the code in any way), please let me know (@sastoudt).

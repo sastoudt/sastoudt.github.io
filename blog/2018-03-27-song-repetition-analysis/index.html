@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Analyzing Song Repetition in R Using geniusr</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAR 27, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>Rick Wicklin (<span class="citation">@RickWicklin</span>) posted a <a href="https://blogs.sas.com/content/iml/2018/03/14/visualize-repetition-lyrics.html">blog post</a> recently about how to visualize repetition in song lyrics using SAS. I wanted to do the same thing using R and also utilizing <a href="https://github.com/ewenme/geniusr">geniusr</a> to more easily access a variety of song lyrics to compare.</p>
+<p>Note: There is also <a href="https://github.com/JosiahParry/geniusR">geniusR</a> that I did not dig into further.</p>
+<p>First let’s create some functions to make it easy to compare a bunch of different songs.</p>
+<p><strong>Step 1: Get Lyrics</strong></p>
+<pre class="r"><code>require(geniusr)
+require(dplyr)
+require(stringr)</code></pre>
+<p>To use the Genius API, you will need a client access token.</p>
+<ul>
+<li>Create a new API client <a href="https://genius.com/api-clients/new">here</a>.</li>
+<li>For the app website URL you can use <a href="http://example.com" class="uri">http://example.com</a> .</li>
+<li>For the redirect URL you can use example.com .</li>
+</ul>
+<p>This will prompt you to enter your client access token.</p>
+<pre class="r"><code>genius_token()</code></pre>
+<p>Let’s test it out with the catchy ``Shape of You&quot; by Ed Sheeran.</p>
+<pre class="r"><code>findSong &lt;- search_song(search_term = &quot;shape of you&quot;) %&gt;%
+  filter(artist_name == &quot;Ed Sheeran&quot;)
+
+lyrics &lt;- scrape_lyrics_id(song_id = findSong$song_id[1]) 
+## more than one of this song because of remixes, we just want the first one
+
+head(lyrics)</code></pre>
+<pre><code>## # A tibble: 6 x 5
+##   line                            song_id song_name  artist_id artist_name
+##   &lt;chr&gt;                             &lt;int&gt; &lt;chr&gt;          &lt;int&gt; &lt;chr&gt;      
+## 1 The club isn&#39;t the best place … 2949128 Shape of …     12418 Ed Sheeran 
+## 2 So the bar is where I go        2949128 Shape of …     12418 Ed Sheeran 
+## 3 Me and my friends at the table… 2949128 Shape of …     12418 Ed Sheeran 
+## 4 Drinking fast and then we talk… 2949128 Shape of …     12418 Ed Sheeran 
+## 5 And you come over and start up… 2949128 Shape of …     12418 Ed Sheeran 
+## 6 And trust me I&#39;ll give it a ch… 2949128 Shape of …     12418 Ed Sheeran</code></pre>
+<p><strong>Step 2: Preprocess Lyrics</strong></p>
+<p>This gives us a line per row, but we want individual words. We also want to pre-process the text, removing punctuation and transferring to lower case.</p>
+<pre class="r"><code>allone=str_c(lyrics$line,collapse=&quot; &quot;) ##concatenate
+
+## remove punctuation
+allone=gsub(&quot;,&quot;,&quot;&quot;,allone)
+allone=gsub(&quot;\\.&quot;,&quot;&quot;,allone)
+allone=gsub(&quot;?&quot;,&quot;&quot;,allone)
+allone=gsub(&quot;!&quot;,&quot;&quot;,allone)
+allone=gsub(&quot;\\(&quot;,&quot;&quot;,allone)
+allone=gsub(&quot;\\)&quot;,&quot;&quot;,allone)
+
+alloneLower=tolower(allone)
+
+wordByWord=unlist(strsplit(alloneLower,&quot; &quot;))
+
+head(wordByWord)</code></pre>
+<pre><code>## [1] &quot;the&quot;   &quot;club&quot;  &quot;isn&#39;t&quot; &quot;the&quot;   &quot;best&quot;  &quot;place&quot;</code></pre>
+<p>We can generalize this code into a function for future use.</p>
+<pre class="r"><code>processSong&lt;-function(songName,artist){
+  findSong &lt;- search_song(search_term = songName) %&gt;%
+    filter(artist_name == artist)
+  
+  lyrics &lt;- scrape_lyrics_id(song_id = findSong$song_id[1])
+  
+
+  allone=str_c(lyrics$line,collapse=&quot; &quot;)
+  
+  ## remove punctuation
+  allone=gsub(&quot;,&quot;,&quot;&quot;,allone)
+  allone=gsub(&quot;\\.&quot;,&quot;&quot;,allone)
+  allone=gsub(&quot;?&quot;,&quot;&quot;,allone)
+  allone=gsub(&quot;!&quot;,&quot;&quot;,allone)
+  allone=gsub(&quot;\\(&quot;,&quot;&quot;,allone)
+  allone=gsub(&quot;\\)&quot;,&quot;&quot;,allone)
+  
+  alloneLower=tolower(allone)
+  
+  wordByWord=unlist(strsplit(alloneLower,&quot; &quot;))
+  
+}</code></pre>
+<p><strong>Step 3: Make Plot</strong></p>
+<p>We create a matrix of zeros that has the same number of rows and columns as number of words in the song.</p>
+<p>If a word occurs as the second and tenth word in the song, we have a match, and (2,10) will be represented by a one.</p>
+<pre class="r"><code>toPlot=matrix(0,nrow=length(wordByWord),ncol=length(wordByWord))
+
+findMatch&lt;-function(x,corpus){
+  matches=which(corpus==corpus[x])
+ cbind(rep(x,length(matches)),matches)
+} ## get (i,j) pairs to fill in
+  
+matches=lapply(1:length(wordByWord),findMatch,wordByWord)
+toFill=do.call(&quot;rbind&quot;,matches)
+toPlot[toFill]=1</code></pre>
+<p>Note: to match the plots made in Wicklin’s post, we make (1,1) in the top left corner. White denotes repetition. A groups of repeated words often is a chorus.</p>
+<pre class="r"><code>mtx.tmp.h &lt;- apply(toPlot, 1, rev) ## need to flip horizontally
+# thank you to: https://everydropr.wordpress.com/2012/10/16/a-simple-way-to-flip-a-matrix-or-an-array/
+
+image(1:length(wordByWord),1:length(wordByWord),mtx.tmp.h,col=gray.colors(2),xaxt=&quot;n&quot;,yaxt=&quot;n&quot;,xlab=&quot;&quot;,ylab=&quot;&quot;) ## 1,1 bottom left instead of top left</code></pre>
+<p><img src="/blog/2018-03-27-song-repetition-analysis_files/figure-html/unnamed-chunk-7-1.png" width="1344" /></p>
+<p>We calculate the repetition score defined as the proportion of ones in the upper triangular portion of the matrix.</p>
+<pre class="r"><code>length(which(mtx.tmp.h[upper.tri(mtx.tmp.h)]==1))/length(which(upper.tri(mtx.tmp.h)))</code></pre>
+<pre><code>## [1] 0.03143664</code></pre>
+<p>We can also generalize this code into a function for future use.</p>
+<pre class="r"><code>makeRepetitionPlot&lt;-function(lyrics,songName,artist){
+  matches=lapply(1:length(lyrics),findMatch,lyrics)
+  toFill=do.call(&quot;rbind&quot;,matches)
+  toPlot=matrix(0,nrow=length(lyrics),ncol=length(lyrics))
+  toPlot[toFill]=1
+  
+  
+  mtx.tmp.h &lt;- apply(toPlot, 1, rev)
+  #https://everydropr.wordpress.com/2012/10/16/a-simple-way-to-flip-a-matrix-or-an-array/
+  
+  repScore=length(which(mtx.tmp.h[upper.tri(mtx.tmp.h)]==1))/length(which(upper.tri(mtx.tmp.h)))
+    ##proportion of 1s in the upper triangular portion of the matrix
+
+  image(1:length(lyrics),1:length(lyrics),mtx.tmp.h,col=gray.colors(2),xaxt=&quot;n&quot;,yaxt=&quot;n&quot;,xlab=&quot;&quot;,ylab=&quot;&quot;,
+        main=paste(songName,&quot;by&quot;,artist,sep=&quot; &quot;),sub=paste(&quot;Repetition Score =&quot;,round(repScore,2),sep=&quot; &quot;)) 
+  ## 1,1 bottom left instead of top left
+  
+  
+  
+}</code></pre>
+<p>Now that we have the code to make a repetition matrix for any song, we can compare different songs and artists. Below I give some examples of directions that further analysis could take.</p>
+<div id="hits-v.-underated-songs" class="section level3">
+<h3>Hits v. Underated Songs</h3>
+<p>I would expect a hit to be more repetitive than another song (one without a music video/not played on the radio) off the same album.</p>
+<pre class="r"><code>lyr=processSong(&quot;Shape of You&quot;,&quot;Ed Sheeran&quot;)
+lyr2=processSong(&quot;New Man&quot;,&quot;Ed Sheeran&quot;)
+
+par(mfrow=c(1,2))
+makeRepetitionPlot(lyr,&quot;Shape of You&quot;,&quot;Ed Sheeran&quot;)
+makeRepetitionPlot(lyr2,&quot;New Man&quot;,&quot;Ed Sheeran&quot;)</code></pre>
+<p><img src="/blog/2018-03-27-song-repetition-analysis_files/figure-html/unnamed-chunk-10-1.png" width="1344" /></p>
+</div>
+<div id="then-v.-now" class="section level3">
+<h3>Then v. Now</h3>
+<p>It would be interesting to compare repetition as artists evolve.</p>
+<pre class="r"><code>lyr=processSong(&quot;Senorita&quot;,&quot;Justin Timberlake&quot;)
+lyr2=processSong(&quot;Say Something&quot;,&quot;Justin Timberlake&quot;)
+
+par(mfrow=c(1,2))
+makeRepetitionPlot(lyr,&quot;Senorita&quot;,&quot;Justin Timberlake&quot;)
+makeRepetitionPlot(lyr2,&quot;Say Something&quot;,&quot;Justin Timberlake&quot;)</code></pre>
+<p><img src="/blog/2018-03-27-song-repetition-analysis_files/figure-html/unnamed-chunk-11-1.png" width="1344" /></p>
+</div>
+<div id="rap-repetitive-v.-story" class="section level3">
+<h3>Rap: Repetitive v. Story</h3>
+<p>When I was trying to pick examples for this post, my brother Scott recommended looking at the song ``Gucci Gang&quot; because of how often those two words occur in the song. To juxtapose this repetition, I chose Eminem who is known for rap that tells more of a story with songs that sometimes do not even have a reoccurring chorus.</p>
+<pre class="r"><code>lyr=processSong(&quot;Gucci Gang&quot;,&quot;Lil Pump&quot;)
+lyr2=processSong(&quot;Lose Yourself&quot;,&quot;Eminem&quot;)
+
+par(mfrow=c(1,2))
+makeRepetitionPlot(lyr,&quot;Gucci Gang&quot;,&quot;Lil Pump&quot;)
+makeRepetitionPlot(lyr2,&quot;Lose Yourself&quot;,&quot;Eminem&quot;)</code></pre>
+<p><img src="/blog/2018-03-27-song-repetition-analysis_files/figure-html/unnamed-chunk-12-1.png" width="1344" /></p>
+</div>
+<div id="the-different-genres-of-taylor-swift" class="section level3">
+<h3>The Different Genres of Taylor Swift</h3>
+<p>It would also be interesting to compare repetition between different genres. Luckily, Taylor Swift’s work has spanned both country and pop (and even some rap).</p>
+<pre class="r"><code>lyr=processSong(&quot;Teardrops on My Guitar&quot;,&quot;Taylor Swift&quot;)
+lyr2=processSong(&quot;Shake it Off&quot;,&quot;Taylor Swift&quot;)
+lyr3=processSong(&quot;End Game&quot;,&quot;Taylor Swift&quot;)
+
+par(mfrow=c(1,3))
+makeRepetitionPlot(lyr,&quot;Teardrops on My Guitar&quot;,&quot;Taylor Swift&quot;)
+makeRepetitionPlot(lyr2,&quot;Shake it Off&quot;,&quot;Taylor Swift&quot;)
+makeRepetitionPlot(lyr3,&quot;End Game&quot;,&quot;Taylor Swift&quot;)</code></pre>
+<p><img src="/blog/2018-03-27-song-repetition-analysis_files/figure-html/unnamed-chunk-13-1.png" width="1344" /></p>
+<p>I am curious to see what others can find. If you use this code to find some interesting patterns in other songs (or improve the code in any way), please let me know (<span class="citation">@sastoudt</span>).</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  <span><a class="menu-item" href="/blog/2018-03-29-tools-for-gerrymandering-analysis/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

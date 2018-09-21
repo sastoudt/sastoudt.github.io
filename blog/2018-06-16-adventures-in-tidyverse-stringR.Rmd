@@ -1,0 +1,382 @@
+---
+title: "Gender Neutral Letters of Recommendation with stringR"
+date: 2018-06-16T16:24:33-07:00
+draft: true
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+library(reticulate)
+knitr::opts_chunk$set(echo = TRUE)
+knitr::knit_engines$set(python = reticulate::eng_python)
+
+```
+
+```{r,warning=F,message=F}
+require(reticulate)
+require(stringr)
+require(babynames)
+```
+
+There are lots of functions in stringR that improve upon base R equivalents for string processing. I'm not going to go through all the functionality, but at the end of the post, after the main attraction, I'll go through examples in the stringR documentation and pick out the ones that seem handiest for scenarios I have run into where base R has been found wanting. 
+
+#### Gender Neutral Letters of Rec.
+
+Now for the star of the show. I want to be able to read in the text of a letter of recommendation and make all the pronouns gender neutral. I found a template [here](https://www.themuse.com/advice/heres-a-template-to-write-a-perfect-and-personalized-letter-of-recommendation) for a letter of recommendation that we will use. Since names are often a give-away of gender, I also would like to replace any names with "Student". I'm going to change the generic name to "Sara" to test this out. Note that originally I wanted to replace with the less awkward "my student", but then I would have to worry about whether "my" should be capitalized or not depending on the position of the name in the sentence. 
+
+```{r}
+letter="Dear Mr./Mrs./Ms. [Last Name],
+
+It’s my absolute pleasure to recommend Sara for [position] with [Company].
+
+Sara and I [relationship] at [Company] for [length of time].
+
+I thoroughly enjoyed my time working with Sara, and came to know her as a truly valuable asset to absolutely any team. She is honest, dependable, and incredibly hard-working. Beyond that, she is an impressive [soft skill] who is always [result].
+
+Her knowledge of [specific subject] and expertise in [specific subject] was a huge advantage to our entire office. She put this skillset to work in order to [specific achievement].
+
+Along with her undeniable talent, Sara has always been an absolute joy to work with. She is a true team player, and always manages to foster positive discussions and bring the best out of other employees.
+
+Without a doubt, I confidently recommend Sara to join your team at [Company]. As a dedicated and knowledgeable employee and an all-around great person, I know that she will be a beneficial addition to your organization.
+
+Please feel free to contact me at [your contact information] should you like to discuss Sara’s qualifications and experience further. I’d be happy to expand on my recommendation.
+
+Best wishes,
+[Your Name]
+
+"
+
+
+```
+
+
+#### Names 
+
+If the candidate has a name that has at least 5 uses in the United States, we can use the babynames package to locate it and replace it. This approach has limitations for international names. `str_detect` only searches for one pattern. We don't want to search for every single name one at a time. Instead, I'm going to find each capitalized word in the letter of recommendation and use it as the pattern to look for in the babynames. This is somewhat wasteful because the first word of every sentence is capitalized, but for now, I don't want to have to deal with deciding whether or not each word comes directly after a punctuation mark. 
+
+```{r}
+head(unique(babynames$name))
+
+#https://stackoverflow.com/questions/21781014/remove-all-line-breaks-enter-symbols-from-the-string-using-r
+nolines=str_replace_all(letter,"[\n]"," ")
+nolines=str_replace_all(nolines,fixed("["),"\\[")
+nolines=str_replace_all(nolines,fixed("]"),"\\]")
+words=str_split(nolines," ")
+words=words[[1]]
+capitalized=unique(words[str_detect(words,"[A-Z]")])
+
+
+
+
+```
+
+The following is not restrictive enough since the words can be part of a name.
+
+```{r}
+isName=lapply(capitalized,function(x){sum(str_detect(unique(babynames$name),x))})
+capitalized[which(unlist(isName)>0)] ## not restrictive enough
+```
+
+The following is too restrictive: 
+
+```{r}
+isName=lapply(capitalized,function(x){sum(str_detect(unique(babynames$name),paste(x,"\\>",sep="")))})
+capitalized[unlist(isName)]
+```
+
+But this is weird. [This](https://stackoverflow.com/questions/46153832/exact-match-with-grepl-r) tells me that "\\>" is the regular expression for the pattern being found at the end of the word.
+
+```{r}
+sum(str_detect(unique(babynames$name),"Sara\\>")) ## default is regex so not looking for that actually
+sum(str_detect(unique(babynames$name),regex("Sara\\>"))) ## default is regex so not looking for that actually
+```
+
+This works using `grepl`. **Can someone please explain this to me?** I thought it might have to do with [default engines](https://cran.r-project.org/web/packages/stringr/vignettes/stringr.html), but I couldn't find much information on the base R default beyond a note in the "performance consideration section" [here](http://stat.ethz.ch/R-manual/R-devel/library/base/html/grep.html).
+
+```{r}
+sum(grepl("Sara\\>",unique(babynames$name)))
+```
+
+
+Here is a hack:
+
+```{r}
+allnames=str_flatten(unique(babynames$name)," ") 
+isName=lapply(capitalized,function(x){str_detect(allnames,paste(" ",x," ",sep=""))})
+capitalized[unlist(isName)]
+
+```
+
+This is annoying. These are actually names.
+
+```{r}
+unique(babynames$name)[which(grepl("She\\>",unique(babynames$name)))]
+unique(babynames$name)[which(grepl("Her\\>",unique(babynames$name)))]
+```
+
+I'll just create an exception list.
+
+```{r}
+exception=c("She","Her") ## may need to add more as we experience more weird things
+
+```
+
+Pick names to replace. Note we don't have to worry about "Sara's" because we will still replace the "Sara" portion with "Student".
+
+```{r}
+namesToReplace=setdiff(capitalized[unlist(isName)],exception)
+```
+
+Do the replacing. I don't want to use a loop but I need to continually update `words`. **Any suggestions?** Will `walk` in purrr do this?
+
+```{r}
+### need to go through everything in namesToReplace but resave every time
+
+for(i in 1:length(namesToReplace)){
+  words=str_replace_all(words,namesToReplace[i],"Student")
+}
+
+```
+
+#### Pronouns
+
+Ideally, we could just change everything to the gender neutral singular they/them. However this would require us to change the verbs. Instead we will use "s/he", while recognizing that this binary is not fully inclusive. 
+
+Again the mystery of different syntax for [anchors](http://www.rexegg.com/regex-anchors.html) comes up:
+
+```{r}
+which(str_detect(words,"^She\\>")>0)
+grep("^She\\>",words)
+grep("^She$",words)
+```
+
+
+```{r}
+#words=  str_replace_all(words,"^She\\>","S/He") ## doesn't work
+words=  str_replace_all(words,"^She$","S/He")
+```
+
+
+```{r}
+words=  str_replace_all(words,"^she$","s/he")
+words= str_replace_all(words,"^he$","s/he")
+words=  str_replace_all(words,"^He$","S/He")
+
+## need possessives
+words=  str_replace_all(words,"^She's$","S/He's")
+words=  str_replace_all(words,"^she's$","s/he's")
+words= str_replace_all(words,"^he's$","s/he's")
+words=  str_replace_all(words,"^He's$","S/He's")
+ 
+
+ words=  str_replace_all(words,"^hers\\>","theirs") ## shouldn't be first so no capitalization
+ words= str_replace_all(words,"^him\\>","them") ## shouldn't be first
+ 
+ str_flatten(words," ")
+
+```
+
+
+Now because English is weird we have a problem. How do we distinguish between the following examples?
+
+1. That is *hers*. --> theirs
+
+2. That is *his*. ---> theirs
+
+3. That is *his* experience. ---> their 
+
+4. That is *her* experience. ---> their
+
+5. Get to know *her*. ---> them
+
+6. Get to know *him*. ---> them
+
+
+Numbers 1 and 6 are not ambigous, so we can fix those.
+
+```{r}
+ words= str_replace_all(words,"^hers$","theirs") 
+ words= str_replace_all(words,"^him$","them") 
+ 
+toParse=  str_flatten(words," ")
+#toParse=r_to_py(toParse)
+```
+ 
+To distinguish between 2 and 3 and 4 and 5, we need to automatically determine what part of speech the words are.
+ 
+```{r}
+ his=which(str_detect(words,"^his$"))
+
+ His=which(str_detect(words,"^His$"))
+
+ her=which(str_detect(words,"^her$"))
+
+ Her=which(str_detect(words,"^Her$"))
+
+ 
+ toChange=c(his,His,her,Her)
+```
+
+#### Natural Language Processing
+ 
+
+![](https://media.giphy.com/media/ToMjGpjpXMFPshSYGLm/giphy.gif)
+
+
+Bet you didn't expect to see NLP when you clicked on this post. Apparently we need a part of speech (POS) tagger to tell us what type of word each is in a sentence.
+
+Both the R packages I [found](http://smart-statistics.com/part-speech-tagging-r/) to do this had [rJava](https://github.com/ropenscilabs/geolocart/issues/9) [issues](ttp://conjugateprior.org/2014/12/r-java8-osx/). 
+
+```{r,eval=F}
+## not run
+require(openNLP)
+devtools::install_github("bnosac/RDRPOSTagger")
+```
+
+I guess now is the time to learn some reticulate basics. 
+
+
+![](https://media.giphy.com/media/d3MKXEAhuyThl4kg/giphy.gif)
+
+
+
+- [Python package that I need](https://www.nltk.org/book/ch05.html)
+- [Tell R where my Python is](https://stackoverflow.com/questions/25383030/rpython-using-wrong-python-installation-on-mac-osx)
+- [Tell R where my Python is Pt 2](https://github.com/rstudio/rmarkdown/issues/812#)
+- [Missing some downloads Pt 2](https://stackoverflow.com/questions/27759418/python-word-tokenize)
+- [Missing some downloads Pt 3](https://stackoverflow.com/questions/35861482/nltk-lookup-error)
+- [How to see Python output in RMarkdown](https://stackoverflow.com/questions/47689968/python-code-chunk-graphs-not-showing-up-in-r-markdown)
+- [How to see Python output in RMarkdown Pt 2](https://stackoverflow.com/questions/44137934/python-output-not-appearing-in-rmarkdown)
+
+
+I tried to use `r_to_py` to pass in `toParse`, but was having trouble (see commented out code), so for now, I'm just copying the contents of `toParse` into this chunk. **Can somebody please point me to an example of getting an R object to Python in Markdown?**
+
+
+```{python, engine.path="/Users/Sara/anaconda/bin/python"}
+import nltk
+text = nltk.word_tokenize("Dear Mr./Mrs./Ms. [Last Name],  It’s my absolute pleasure to recommend Student for [position] with [Company].  Student and I [relationship] at [Company] for [length of time].  I thoroughly enjoyed my time working with Student, and came to know her as a truly valuable asset to absolutely any team. S/He is honest, dependable, and incredibly hard-working. Beyond that, s/he is an impressive [soft skill] who is always [result].  Her knowledge of [specific subject] and expertise in [specific subject] was a huge advantage to our entire office. S/He put this skillset to work in order to [specific achievement].  Along with her undeniable talent, Student has always been an absolute joy to work with. S/He is a true team player, and always manages to foster positive discussions and bring the best out of other employees.  Without a doubt, I confidently recommend Student to join your team at [Company]. As a dedicated and knowledgeable employee and an all-around great person, I know that s/he will be a beneficial addition to your organization.  Please feel free to contact me at [your contact information] should you like to discuss Student’s qualifications and experience further. I’d be happy to expand on my recommendation.  Best wishes, [Your Name]")
+test=nltk.pos_tag(text)
+#test=nltk.pos_tag(toParse)
+```
+
+
+```{r}
+print(py$test[[1]])
+
+wordsPy=unlist(lapply(py$test,function(x){x[[1]]}))
+
+hisPy=which(str_detect(wordsPy,"^his$"))
+HisPy=which(str_detect(wordsPy,"^His$"))
+
+herPy=which(str_detect(wordsPy,"^her$"))
+HerPy=which(str_detect(wordsPy,"^Her$"))
+
+toGet=c(hisPy,HisPy,herPy,HerPy)
+
+pos=unlist(lapply(toGet,function(x){py$test[[x]][[2]]}))
+pos
+```
+
+According to the [key here:](https://stackoverflow.com/questions/15388831/what-are-all-possible-pos-tags-of-nltk)
+
+*PRP*: pronoun, personal (case 5)
+
+*PRP$*: pronoun, possessive (case 4)
+
+So now we can determine what to replace them with. Bear with this loop please.
+
+```{r}
+
+for(i in 1:length(pos)){
+  if(pos[i]=="PRP"){
+     words[toChange[i]]="them"
+     
+  }else if(pos[i]=="PRP$"&str_detect(words[toChange[i]],"[A-Z]")){
+     words[toChange[i]]="Their"
+  }else if(pos[i]=="PRP$"&!str_detect(words[toChange[i]],"[A-Z]")){
+  words[toChange[i]]="their"
+  }
+}
+```
+
+Finally, we can take away the extra escape characters to get back to the original.
+
+```{r}
+ words= str_replace_all(words,fixed("\\["),"[") 
+ words= str_replace_all(words,fixed("\\]"),"]") 
+
+
+str_flatten(words," ")
+```
+
+
+I thought this would be a quick, cute thing, but I was SO wrong; it turned into a mess. But it finally works!!
+
+
+![](https://media.giphy.com/media/6T9Mh4GSWySVa/giphy.gif)
+
+#### Miscellaneous stringR Capabilities
+
+`toupper` and `tolower` have equivalents in stringR, but stringR also has a function to make things like a title. This can come in handy for example, when you need state names to start with a capital later for `facet_geo`.
+
+```{r}
+states<-c("pennsylvania","massachusetts","maryland","california")
+
+#str_to_upper ## toupper
+#str_to_lower ## tolower
+str_to_title(states) ## this format needed for geofacet
+```
+
+
+A period matches any character in a regular expression, but sometimes you want to search for acutal periods. You can use `fixed` in stringR functions to do this without having to remember escape characters. Apparently, base R string functions have a `fixed` parameter as well, but I wasn't aware of it before now.
+
+```{r}
+pattern<-"a.b" 
+strings<-c("abb","a.b")
+str_detect(strings,pattern)
+str_detect(strings,fixed(pattern)) 
+```
+
+
+Using `boundary` you can split on words and allow for inconsistent spacing.
+
+```{r}
+words<-c("These are   some words.")
+str_split(words,boundary("word"))[[1]] ## character, line_break, sentence, word
+
+```
+
+I always put the wrong argument first in `grep` and `grepl`, but the stringR packages have the order of parameters that fit my expectation.
+
+```{r,eval=F}
+str_detect(fruit,"a") ## grepl("a",fruit) 
+```
+
+I always forget how to concatenate a vector with a particular separation using `paste`.
+
+```{r}
+str_flatten(letters,"-") 
+paste(letters,collapse="-")
+```
+
+`glue` related functions seem handy. This could be a whole other post, so I'll save the details for later
+
+```{r}
+name <- "Fred"
+str_glue("My name is {name}, not {{name}}.")
+
+mtcars %>% str_glue_data("{rownames(.)} has {hp} hp") %>% head()
+```
+
+
+stringR has fancier trimming functions.
+
+```{r}
+str_trim(" test ",side="both") ## trimws
+str_squish("\n\nString with excess,  trailing and leading white  space\n\n")
+```
+
+ 
+**If you have any insight into my remaining mysteries, please let me know!**
+ 
+#### Feedback, questions, comments, etc. are welcome (@sastoudt). 
