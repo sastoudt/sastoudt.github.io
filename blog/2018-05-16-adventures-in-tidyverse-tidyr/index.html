@@ -69,12 +69,12 @@ require(ggplot2)</code></pre>
 grades=read.csv(&quot;gradesFake.csv&quot;)</code></pre>
 <p>Each row is a student. Each column is an assignment. The value in this table is the number of points earned.</p>
 <pre class="r"><code>head(grades,2) </code></pre>
-<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
-## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2 0.0
-## 2       B  1  1 1.0  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
-##   A19 A20 A21 A22 A23
-## 1 0.5 0.5   0   0 0.0
-## 2 1.0 1.0   1   1 0.5</code></pre>
+<pre><code>##   Student A1  A2  A3 A4  A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17
+## 1       A  1 0.5 0.5  1 1.0  1  1  1  1   2   3   2   3   2   2   2   2
+## 2       B  1 1.0 1.0  1 0.5  1  1  1  2   3   3   3   3   3   2   2   3
+##   A18 A19 A20 A21 A22 A23
+## 1 1.0   1 1.0   1   1 0.5
+## 2 0.5   1 0.5   1   1 1.0</code></pre>
 <div id="gather-use-when-your-column-names-are-actually-levels-of-a-particular-variable" class="section level4">
 <h4><code>gather</code>: use when your column names are actually levels of a particular variable</h4>
 <p>In the <code>gather</code> syntax, the first element (after piping in the dataframe) is the new key (the name of the new variable we want, refers to what the current column names are) and the second element is the value (associated with the key, refers to what values are currently in each column). The next arguments are the columns that are going to be turned into key-value pairs. By using the minus sign we can say we want to reshape every column except student.</p>
@@ -82,7 +82,7 @@ grades=read.csv(&quot;gradesFake.csv&quot;)</code></pre>
 
 head(gathered.grades,2)</code></pre>
 <pre><code>##   Student assignment grade
-## 1       A         A1     0
+## 1       A         A1     1
 ## 2       B         A1     1</code></pre>
 <p>This gathered format allows us to easily group by student or assignment and see how things are going. Is a particular student struggling? Is there an assignment that everyone is stuggling with?</p>
 <p><strong>Note:</strong> This example is oversimplifying things since we haven’t yet said how many points each assignment is worth, but we’ll get there.</p>
@@ -90,8 +90,8 @@ head(gathered.grades,2)</code></pre>
 <pre><code>## # A tibble: 2 x 3
 ##   Student meanPoints sdPoints
 ##   &lt;chr&gt;        &lt;dbl&gt;    &lt;dbl&gt;
-## 1 A            0.848    0.910
-## 2 B            1.52     0.832</code></pre>
+## 1 A             1.37    0.726
+## 2 B             1.59    0.949</code></pre>
 <pre class="r"><code>gathered.grades %&gt;% group_by(assignment) %&gt;% summarise(meanPoints=mean(grade),sdPoints=sd(grade))%&gt;% head(2)</code></pre>
 <pre><code>## # A tibble: 2 x 3
 ##   assignment meanPoints sdPoints
@@ -107,37 +107,37 @@ head(gathered.grades,2)</code></pre>
 byAssignment=gathered.grades %&gt;% spread(Student, grade) 
 
 head(byStudent,2) ## alphabetical weirdness</code></pre>
-<pre><code>##   Student A1 A10 A11 A12 A13 A14 A15 A16 A17 A18 A19 A2 A20 A21 A22 A23
-## 1       A  0   2   2   2   2   2   1   2   2 0.0 0.5  0 0.5   0   0 0.0
-## 2       B  1   2   3   2   3   2   2   3   3 0.5 1.0  1 1.0   1   1 0.5
-##    A3 A4 A5 A6 A7 A8 A9
-## 1 0.5  0  0  0  0  1  2
-## 2 1.0  1  1  1  1  1  2</code></pre>
+<pre><code>##   Student A1 A10 A11 A12 A13 A14 A15 A16 A17 A18 A19  A2 A20 A21 A22 A23
+## 1       A  1   2   3   2   3   2   2   2   2 1.0   1 0.5 1.0   1   1 0.5
+## 2       B  1   3   3   3   3   3   2   2   3 0.5   1 1.0 0.5   1   1 1.0
+##    A3 A4  A5 A6 A7 A8 A9
+## 1 0.5  1 1.0  1  1  1  1
+## 2 1.0  1 0.5  1  1  1  2</code></pre>
 <pre class="r"><code>head(byAssignment,2) ## alphabetical weirdness</code></pre>
 <pre><code>##   assignment A B C D E F G H I J K L M N O
-## 1         A1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1
-## 2        A10 2 2 3 3 2 3 3 2 2 2 2 2 3 3 3</code></pre>
+## 1         A1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1
+## 2        A10 2 3 3 3 2 2 2 2 3 2 3 2 3 2 3</code></pre>
 <p>But we can do a little hack and get things back to normal.</p>
 <pre class="r"><code>orderIwant=paste(&quot;A&quot;,1:(ncol(byStudent)-1),sep=&quot;&quot;)
 
 head(byStudent[,c(&quot;Student&quot;,orderIwant)],3)</code></pre>
-<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
-## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2 0.0
-## 2       B  1  1 1.0  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
-## 3       C  1  1 1.0  1  1  1  1  1  3   3   3   3   3   3   2   2   3 1.0
-##   A19 A20 A21 A22 A23
-## 1 0.5 0.5   0   0 0.0
-## 2 1.0 1.0   1   1 0.5
-## 3 1.0 1.0   1   1 1.0</code></pre>
+<pre><code>##   Student A1  A2  A3 A4  A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17
+## 1       A  1 0.5 0.5  1 1.0  1  1  1  1   2   3   2   3   2   2   2   2
+## 2       B  1 1.0 1.0  1 0.5  1  1  1  2   3   3   3   3   3   2   2   3
+## 3       C  1 1.0 1.0  1 1.0  1  1  1  3   3   3   3   3   3   2   3   3
+##   A18 A19 A20 A21 A22 A23
+## 1 1.0   1 1.0   1   1 0.5
+## 2 0.5   1 0.5   1   1 1.0
+## 3 1.0   1 1.0   1   1 1.0</code></pre>
 <pre class="r"><code>byAssignmentAdjust=byAssignment[unlist(lapply(orderIwant,function(x){which(pull(byAssignment,assignment)==x)})),]
 
 row.names(byAssignmentAdjust)=NULL
 
 head(byAssignmentAdjust,3)</code></pre>
-<pre><code>##   assignment   A B C D E F G   H   I J K L M N O
-## 1         A1 0.0 1 1 1 1 1 1 1.0 1.0 1 1 1 1 1 1
-## 2         A2 0.0 1 1 1 1 1 1 0.5 0.5 1 1 1 1 1 1
-## 3         A3 0.5 1 1 1 1 1 1 0.5 0.5 1 1 1 1 1 1</code></pre>
+<pre><code>##   assignment   A B C D   E   F G H I J K L M N O
+## 1         A1 1.0 1 1 1 1.0 0.0 1 1 1 1 1 1 1 1 1
+## 2         A2 0.5 1 1 1 0.5 0.0 1 1 1 1 1 1 1 1 1
+## 3         A3 0.5 1 1 1 0.5 0.5 1 1 1 1 1 1 1 1 1</code></pre>
 </div>
 <div id="calculate-grades" class="section level4">
 <h4>Calculate grades</h4>
@@ -146,25 +146,25 @@ head(byAssignmentAdjust,3)</code></pre>
 scores2=select(byAssignment,one_of(LETTERS[1:(ncol(byAssignment)-1)])) 
 
 head(scores1,2)</code></pre>
-<pre><code>##   A1 A10 A11 A12 A13 A14 A15 A16 A17 A18 A19 A2 A20 A21 A22 A23  A3 A4 A5
-## 1  0   2   2   2   2   2   1   2   2 0.0 0.5  0 0.5   0   0 0.0 0.5  0  0
-## 2  1   2   3   2   3   2   2   3   3 0.5 1.0  1 1.0   1   1 0.5 1.0  1  1
-##   A6 A7 A8 A9
-## 1  0  0  1  2
-## 2  1  1  1  2</code></pre>
+<pre><code>##   A1 A10 A11 A12 A13 A14 A15 A16 A17 A18 A19  A2 A20 A21 A22 A23  A3 A4
+## 1  1   2   3   2   3   2   2   2   2 1.0   1 0.5 1.0   1   1 0.5 0.5  1
+## 2  1   3   3   3   3   3   2   2   3 0.5   1 1.0 0.5   1   1 1.0 1.0  1
+##    A5 A6 A7 A8 A9
+## 1 1.0  1  1  1  1
+## 2 0.5  1  1  1  2</code></pre>
 <pre class="r"><code>head(scores2,2)</code></pre>
 <pre><code>##   A B C D E F G H I J K L M N O
-## 1 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1
-## 2 2 2 3 3 2 3 3 2 2 2 2 2 3 3 3</code></pre>
+## 1 1 1 1 1 1 0 1 1 1 1 1 1 1 1 1
+## 2 2 3 3 3 2 2 2 2 3 2 3 2 3 2 3</code></pre>
 <p>The use of purrr is coming in a future blog post (with <span class="citation">@kelliotto</span>) but for now I’m sticking to <code>apply</code>.</p>
 <pre class="r"><code>possiblePoints=sum(apply(scores1,2,max))
 pointsPerStudent=apply(scores1,1,sum)
 studentPercentages=pointsPerStudent/possiblePoints
 studentPercentages</code></pre>
 <pre><code>##         1         2         3         4         5         6         7 
-## 0.4756098 0.8536585 0.9512195 0.9512195 0.9756098 0.9756098 0.8902439 
+## 0.7682927 0.8902439 0.9756098 0.9512195 0.8414634 0.4756098 0.9756098 
 ##         8         9        10        11        12        13        14 
-## 0.8414634 0.7682927 0.9146341 0.9024390 0.9268293 0.9024390 0.8170732 
+## 0.9024390 0.8170732 0.9268293 0.9512195 0.9146341 0.9024390 0.8536585 
 ##        15 
 ## 0.9756098</code></pre>
 <pre class="r"><code>possiblePoints=sum(apply(scores2,1,max))
@@ -172,9 +172,9 @@ pointsPerStudent=apply(scores2,2,sum)
 studentPercentages=pointsPerStudent/possiblePoints
 studentPercentages</code></pre>
 <pre><code>##         A         B         C         D         E         F         G 
-## 0.4756098 0.8536585 0.9512195 0.9512195 0.9756098 0.9756098 0.8902439 
+## 0.7682927 0.8902439 0.9756098 0.9512195 0.8414634 0.4756098 0.9756098 
 ##         H         I         J         K         L         M         N 
-## 0.8414634 0.7682927 0.9146341 0.9024390 0.9268293 0.9024390 0.8170732 
+## 0.9024390 0.8170732 0.9268293 0.9512195 0.9146341 0.9024390 0.8536585 
 ##         O 
 ## 0.9756098</code></pre>
 </div>
@@ -188,34 +188,34 @@ dates=as.Date(&#39;2018/02/01&#39;) + sample(0:td, ncol(grades)-1)
 dates=dates[order(dates)]
 names(grades2)[2:ncol(grades2)]=paste(names(grades2)[2:ncol(grades2)],dates,sep=&quot;_&quot;)
 head(grades2,2)</code></pre>
-<pre><code>##   Student A1_2018-02-02 A2_2018-02-04 A3_2018-02-05 A4_2018-02-06
-## 1       A             0             0           0.5             0
-## 2       B             1             1           1.0             1
-##   A5_2018-02-07 A6_2018-02-09 A7_2018-02-17 A8_2018-02-21 A9_2018-02-26
-## 1             0             0             0             1             2
-## 2             1             1             1             1             2
-##   A10_2018-02-28 A11_2018-03-03 A12_2018-03-05 A13_2018-03-14
+<pre><code>##   Student A1_2018-02-01 A2_2018-02-08 A3_2018-02-10 A4_2018-02-13
+## 1       A             1           0.5           0.5             1
+## 2       B             1           1.0           1.0             1
+##   A5_2018-02-23 A6_2018-02-28 A7_2018-03-06 A8_2018-03-08 A9_2018-03-09
+## 1           1.0             1             1             1             1
+## 2           0.5             1             1             1             2
+##   A10_2018-03-13 A11_2018-03-15 A12_2018-03-16 A13_2018-03-17
+## 1              2              3              2              3
+## 2              3              3              3              3
+##   A14_2018-03-19 A15_2018-03-24 A16_2018-03-25 A17_2018-03-27
 ## 1              2              2              2              2
-## 2              2              3              2              3
-##   A14_2018-03-16 A15_2018-03-18 A16_2018-03-30 A17_2018-03-31
-## 1              2              1              2              2
-## 2              2              2              3              3
-##   A18_2018-04-01 A19_2018-04-13 A20_2018-04-16 A21_2018-04-18
-## 1            0.0            0.5            0.5              0
-## 2            0.5            1.0            1.0              1
-##   A22_2018-04-23 A23_2018-05-01
-## 1              0            0.0
-## 2              1            0.5</code></pre>
+## 2              3              2              2              3
+##   A18_2018-03-31 A19_2018-04-01 A20_2018-04-18 A21_2018-04-26
+## 1            1.0              1            1.0              1
+## 2            0.5              1            0.5              1
+##   A22_2018-04-30 A23_2018-05-01
+## 1              1            0.5
+## 2              1            1.0</code></pre>
 <pre class="r"><code>gathered.grades2=gather(grades2,assignment,grade,-Student)
 head(gathered.grades2,2)</code></pre>
 <pre><code>##   Student    assignment grade
-## 1       A A1_2018-02-02     0
-## 2       B A1_2018-02-02     1</code></pre>
+## 1       A A1_2018-02-01     1
+## 2       B A1_2018-02-01     1</code></pre>
 <pre class="r"><code>gathered.grades.dueDates=gathered.grades2 %&gt;% separate(assignment,c(&quot;assignment&quot;,&quot;year&quot;,&quot;month&quot;,&quot;day&quot;))
 head(gathered.grades.dueDates,2)</code></pre>
 <pre><code>##   Student assignment year month day grade
-## 1       A         A1 2018    02  02     0
-## 2       B         A1 2018    02  02     1</code></pre>
+## 1       A         A1 2018    02  01     1
+## 2       B         A1 2018    02  01     1</code></pre>
 <p>There is not a lot to go on here, but we could imagine breaking things down by week instead of month to get a better sense.</p>
 <pre class="r"><code>gathered.grades.dueDates=gathered.grades %&gt;% group_by(assignment)%&gt;%summarise(maxPoss=max(grade)) %&gt;%inner_join(gathered.grades.dueDates,by=c(&quot;assignment&quot;=&quot;assignment&quot;))
 
@@ -223,9 +223,9 @@ gathered.grades.dueDates %&gt;% group_by(month)%&gt;% summarise(avgGrade=mean(gr
 <pre><code>## # A tibble: 4 x 2
 ##   month avgGrade
 ##   &lt;chr&gt;    &lt;dbl&gt;
-## 1 02       0.888
-## 2 03       0.883
-## 3 04       0.873
+## 1 02       0.883
+## 2 03       0.871
+## 3 04       0.917
 ## 4 05       0.800</code></pre>
 <p>We could do something similar with <code>str_split</code> but it would take many more lines of code.</p>
 </div>
@@ -236,8 +236,8 @@ gathered.grades.dueDates %&gt;% group_by(month)%&gt;% summarise(avgGrade=mean(gr
 <pre><code>## # A tibble: 2 x 3
 ##   assignment      Student grade
 ##   &lt;chr&gt;           &lt;chr&gt;   &lt;dbl&gt;
-## 1 A1-1-2018-02-02 A          0.
-## 2 A1-1-2018-02-02 B          1.</code></pre>
+## 1 A1-1-2018-02-01 A          1.
+## 2 A1-1-2018-02-01 B          1.</code></pre>
 </div>
 <div id="replace_na-use-to-replace-missing-values-with-a-particular-value" class="section level4">
 <h4><code>replace_NA</code>: use to replace missing values with a particular value</h4>
@@ -259,12 +259,12 @@ head(myList,2)</code></pre>
 ## [1] 0</code></pre>
 <pre class="r"><code>grades=grades %&gt;% replace_na(myList)
 head(grades,2)</code></pre>
-<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
-## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2 0.0
-## 2       B  1  1 1.0  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
-##   A19 A20 A21 A22 A23
-## 1 0.5 0.5   0   0 0.0
-## 2 1.0 1.0   1   1 0.5</code></pre>
+<pre><code>##   Student A1  A2  A3 A4  A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17
+## 1       A  1 0.5 0.5  1 1.0  1  0  1  1   2   3   2   3   2   2   2   2
+## 2       B  1 1.0 1.0  1 0.5  1  1  1  2   3   3   3   3   3   2   2   3
+##   A18 A19 A20 A21 A22 A23
+## 1 1.0   1 1.0   1   1 0.5
+## 2 0.5   1 0.5   1   1 1.0</code></pre>
 </div>
 <div id="drop_na-use-when-you-want-to-remove-rows-with-missing-values-in-certain-columns" class="section level4">
 <h4><code>drop_na</code>: use when you want to remove rows with missing values in certain columns</h4>
@@ -326,35 +326,35 @@ grades3=cbind.data.frame(pull(grades,Student),adjGrades)
 names(grades3)=names(grades)
 
 head(grades3,2)</code></pre>
-<pre><code>##   Student  A1  A2    A3  A4  A5  A6  A7  A8  A9 A10 A11 A12 A13 A14 A15
-## 1       A 0/1 0/1 0.5/1 0/1 0/1 0/1 0/1 1/1 2/3 2/3 2/3 2/3 2/3 2/3 1/3
-## 2       B 1/1 1/1   1/1 1/1 1/1 1/1 1/1 1/1 2/3 2/3 3/3 2/3 3/3 2/3 2/3
-##   A16 A17   A18   A19   A20 A21 A22   A23
-## 1 2/3 2/3   0/1 0.5/1 0.5/1 0/1 0/1   0/1
-## 2 3/3 3/3 0.5/1   1/1   1/1 1/1 1/1 0.5/1</code></pre>
+<pre><code>##   Student  A1    A2    A3  A4    A5  A6  A7  A8  A9 A10 A11 A12 A13 A14
+## 1       A 1/1 0.5/1 0.5/1 1/1   1/1 1/1 0/1 1/1 1/3 2/3 3/3 2/3 3/3 2/3
+## 2       B 1/1   1/1   1/1 1/1 0.5/1 1/1 1/1 1/1 2/3 3/3 3/3 3/3 3/3 3/3
+##   A15 A16 A17   A18 A19   A20 A21 A22   A23
+## 1 2/3 2/3 2/3   1/1 1/1   1/1 1/1 1/1 0.5/1
+## 2 2/3 2/3 3/3 0.5/1 1/1 0.5/1 1/1 1/1   1/1</code></pre>
 <pre class="r"><code>separated.grades=grades3 %&gt;% separate_rows(-Student,sep=&quot;/&quot;)
 head(separated.grades,4)</code></pre>
-<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
-## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2   0
-## 2       A  1  1   1  1  1  1  1  1  3   3   3   3   3   3   3   3   3   1
-## 3       B  1  1   1  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
-## 4       B  1  1   1  1  1  1  1  1  3   3   3   3   3   3   3   3   3   1
-##   A19 A20 A21 A22 A23
-## 1 0.5 0.5   0   0   0
-## 2   1   1   1   1   1
-## 3   1   1   1   1 0.5
-## 4   1   1   1   1   1</code></pre>
+<pre><code>##   Student A1  A2  A3 A4  A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17
+## 1       A  1 0.5 0.5  1   1  1  0  1  1   2   3   2   3   2   2   2   2
+## 2       A  1   1   1  1   1  1  1  1  3   3   3   3   3   3   3   3   3
+## 3       B  1   1   1  1 0.5  1  1  1  2   3   3   3   3   3   2   2   3
+## 4       B  1   1   1  1   1  1  1  1  3   3   3   3   3   3   3   3   3
+##   A18 A19 A20 A21 A22 A23
+## 1   1   1   1   1   1 0.5
+## 2   1   1   1   1   1   1
+## 3 0.5   1 0.5   1   1   1
+## 4   1   1   1   1   1   1</code></pre>
 <pre class="r"><code>pointsEarned=separated.grades[seq(1,nrow(separated.grades),by=2),]
 pointsPossible=separated.grades[2,-1]
 row.names(pointsPossible)=NULL
 
 head(pointsEarned,2)</code></pre>
-<pre><code>##   Student A1 A2  A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18
-## 1       A  0  0 0.5  0  0  0  0  1  2   2   2   2   2   2   1   2   2   0
-## 3       B  1  1   1  1  1  1  1  1  2   2   3   2   3   2   2   3   3 0.5
-##   A19 A20 A21 A22 A23
-## 1 0.5 0.5   0   0   0
-## 3   1   1   1   1 0.5</code></pre>
+<pre><code>##   Student A1  A2  A3 A4  A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17
+## 1       A  1 0.5 0.5  1   1  1  0  1  1   2   3   2   3   2   2   2   2
+## 3       B  1   1   1  1 0.5  1  1  1  2   3   3   3   3   3   2   2   3
+##   A18 A19 A20 A21 A22 A23
+## 1   1   1   1   1   1 0.5
+## 3 0.5   1 0.5   1   1   1</code></pre>
 <pre class="r"><code>pointsPossible</code></pre>
 <pre><code>##   A1 A2 A3 A4 A5 A6 A7 A8 A9 A10 A11 A12 A13 A14 A15 A16 A17 A18 A19 A20
 ## 1  1  1  1  1  1  1  1  1  3   3   3   3   3   3   3   3   3   1   1   1
@@ -367,24 +367,37 @@ head(pointsEarned,2)</code></pre>
 <pre class="r"><code>byAssignmentGrade=gathered.grades%&gt;%nest(Student)
 head(byAssignmentGrade)</code></pre>
 <pre><code>##   assignment grade                                     data
-## 1         A1   0.0                                        A
-## 2         A1   1.0 B, C, D, E, F, G, H, I, J, K, L, M, N, O
-## 3         A2   0.0                                        A
-## 4         A2   1.0       B, C, D, E, F, G, J, K, L, M, N, O
-## 5         A2   0.5                                     H, I
-## 6         A3   0.5                                  A, H, I</code></pre>
+## 1         A1   1.0 A, B, C, D, E, G, H, I, J, K, L, M, N, O
+## 2         A1   0.0                                        F
+## 3         A2   0.5                                     A, E
+## 4         A2   1.0       B, C, D, G, H, I, J, K, L, M, N, O
+## 5         A2   0.0                                        F
+## 6         A3   0.5                                  A, E, F</code></pre>
 <pre class="r"><code>pull(byAssignmentGrade,data)[1]</code></pre>
 <pre><code>## [[1]]
-##   Student
-## 1       A</code></pre>
+##    Student
+## 1        A
+## 2        B
+## 3        C
+## 4        D
+## 5        E
+## 7        G
+## 8        H
+## 9        I
+## 10       J
+## 11       K
+## 12       L
+## 13       M
+## 14       N
+## 15       O</code></pre>
 <pre class="r"><code>unnest(byAssignmentGrade,data) %&gt;%head</code></pre>
 <pre><code>##   assignment grade Student
-## 1         A1     0       A
+## 1         A1     1       A
 ## 2         A1     1       B
 ## 3         A1     1       C
 ## 4         A1     1       D
 ## 5         A1     1       E
-## 6         A1     1       F</code></pre>
+## 6         A1     1       G</code></pre>
 <p>That covers most of the tidyr verbs. I suspect that I will still need to look up examples to remember how to use <code>gather</code> and <code>spread</code>, but I’m hoping this cheat sheet will help me remember when to use which without having to try both on a sample data set.</p>
 <p>The other verbs that I can see myself using frequently are <code>complete</code> and <code>spread</code>. I’m doing a project now where I use the <code>expand.grid</code> and <code>merge</code> trick way too often. I suspect it is a lot slower than <code>complete</code>, so I’m going to make this switch and see if it speeds things up.</p>
 <p>P.S. Just for the record: before posting this I searched for the dollar sign and rewrote the lines that involved it. Working on that guilty pleasure…</p>
