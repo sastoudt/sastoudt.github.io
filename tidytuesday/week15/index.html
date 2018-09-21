@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 15: Craft Beer USA</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON JUL 10, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <div id="week-15" class="section level1">
+<h1>Week 15</h1>
+<p><a href="https://github.com/rfordatascience/tidytuesday/tree/master/data">Craft Beer USA</a></p>
+<p><a href="https://data.world/">data.world</a></p>
+<p><a href="https://www.thrillist.com/news/nation/most-craft-breweries-by-state-united-states">thrillist.com</a></p>
+<pre class="r"><code>require(readxl)
+require(dplyr)
+require(ggplot2)
+require(stringr)</code></pre>
+<pre class="r"><code>setwd(&quot;~/Desktop/tidytuesday/data/2018-07-10&quot;)
+beers=read_excel(&quot;week15_beers.xlsx&quot;,sheet=1)
+brewer=read_excel(&quot;week15_beers.xlsx&quot;,sheet=2)
+beer=inner_join(beers,brewer,by =c(&quot;brewery_id&quot;=&quot;id&quot;))</code></pre>
+<pre class="r"><code>byState=beer %&gt;% group_by(state) %&gt;% summarise(numBrewer=length(unique(brewery_id)),count=n(),mabv=mean(abv,na.rm=T))
+counties= map_data(&quot;county&quot;)
+state=map_data(&quot;state&quot;)
+
+stateInfo=cbind.data.frame(abb=state.abb,name=tolower(state.name))
+
+state=inner_join(state,stateInfo,by=c(&quot;region&quot;=&quot;name&quot;))</code></pre>
+<pre><code>## Warning: Column `region`/`name` joining character vector and factor,
+## coercing into character vector</code></pre>
+<pre class="r"><code>all_state=inner_join(state,byState,by=c(&quot;abb&quot;=&quot;state&quot;))</code></pre>
+<pre><code>## Warning: Column `abb`/`state` joining factor and character vector, coercing
+## into character vector</code></pre>
+<p>This palette isn’t very visually appealing, but in the spirit of beer, I’ll use it anyway.</p>
+<pre class="r"><code>#https://www.reddit.com/r/beer/comments/4gd24e/the_hex_colour_palette_of_beer/
+beerPal=c(&quot;#F3F993&quot;,&quot;#F5F75C&quot;,&quot;#F6F513&quot;,&quot;#EAE615&quot;,&quot;#E0D01B&quot;,&quot;#D5BC26&quot;,&quot;#CDAA37&quot;,&quot;#C1963C&quot;,&quot;#BE8C3A&quot;,&quot;#BE823A&quot;,&quot;#C17A37&quot;,&quot;#BF7138&quot;,&quot;#BC6733&quot;,&quot;#B26033&quot;,&quot;#A85839&quot;,&quot;#985336&quot;,&quot;#8D4C32&quot;,&quot;#7C452D&quot;,&quot;#6B3A1E&quot;,&quot;#5D341A&quot;,&quot;#4E2A0C&quot;,&quot;#4A2727&quot;,&quot;#361F1B&quot;,&quot;#261716&quot;,&quot;#231716&quot;,&quot;#19100F&quot;,&quot;#16100F&quot;,&quot;#120D0C&quot;,&quot;#100B0A&quot;,&quot;#050B0A&quot;)  </code></pre>
+<div id="where-to-bar-crawl" class="section level2">
+<h2>Where to Bar Crawl?</h2>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=mabv),color=&quot;grey&quot;)+labs(fill=&quot;mabv&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;)+ggtitle(&quot;Where is the beer strongest?&quot;)</code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>A stark (and believable) difference between Nevada and Utah.</p>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+
+geom_polygon(data=all_state, aes(fill=numBrewer),color=&quot;grey&quot;)+labs(fill=&quot;numBrewer&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) +ggtitle(&quot;Where are the most breweries?&quot;)</code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>Colorado maintains it’s reputation.</p>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=count/numBrewer),color=&quot;grey&quot;)+labs(fill=&quot;beerPerBrewer&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+
+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;)+ggtitle(&quot;Where is the largest variety?&quot;)</code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>Surprisingly Kansas is where it is at!</p>
+<pre class="r"><code>beer %&gt;% group_by(city,state) %&gt;% summarise(count=n(),numBrewer=length(unique(brewery_id))) %&gt;% arrange(desc(count))</code></pre>
+<pre><code>## # A tibble: 401 x 4
+## # Groups:   city [384]
+##    city         state count numBrewer
+##    &lt;chr&gt;        &lt;chr&gt; &lt;int&gt;     &lt;int&gt;
+##  1 Grand Rapids MI       66         3
+##  2 Chicago      IL       55         9
+##  3 Portland     OR       52        11
+##  4 Indianapolis IN       43         4
+##  5 San Diego    CA       42         8
+##  6 Boulder      CO       41         9
+##  7 Denver       CO       40         8
+##  8 Brooklyn     NY       38         4
+##  9 Seattle      WA       35         9
+## 10 Longmont     CO       33         1
+## # ... with 391 more rows</code></pre>
+<pre class="r"><code>beer %&gt;% group_by(city,state) %&gt;% summarise(count=n(),numBrewer=length(unique(brewery_id))) %&gt;% arrange(desc(numBrewer))</code></pre>
+<pre><code>## # A tibble: 401 x 4
+## # Groups:   city [384]
+##    city          state count numBrewer
+##    &lt;chr&gt;         &lt;chr&gt; &lt;int&gt;     &lt;int&gt;
+##  1 Portland      OR       52        11
+##  2 Boulder       CO       41         9
+##  3 Chicago       IL       55         9
+##  4 Seattle       WA       35         9
+##  5 Austin        TX       25         8
+##  6 Denver        CO       40         8
+##  7 San Diego     CA       42         8
+##  8 Bend          OR       11         6
+##  9 Portland      ME       12         6
+## 10 San Francisco CA       32         5
+## # ... with 391 more rows</code></pre>
+<p>Somebody please tell me about the hidden gem of Grand Rapids. Apparently, it is <a href="https://www.experiencegr.com/things-to-do/beer-city/">Beer City, USA</a>.</p>
+</div>
+<div id="styles" class="section level2">
+<h2>Styles</h2>
+<p>There are too many styles, so I pick some major ones and investigate them.</p>
+<pre class="r"><code>stout=beer[str_detect(beer$style,&quot;Stout&quot;),] 
+american=beer[str_detect(beer$style,&quot;American&quot;),]
+ipa=beer[str_detect(beer$style,&quot;IPA&quot;),]</code></pre>
+<p><strong>True American?</strong></p>
+<pre class="r"><code>byStateA=american %&gt;% group_by(state) %&gt;% summarise(numBrewer=length(unique(brewery_id)),count=n(),mabv=mean(abv,na.rm=T))
+
+all_state=inner_join(state,byStateA,by=c(&quot;abb&quot;=&quot;state&quot;))</code></pre>
+<pre><code>## Warning: Column `abb`/`state` joining factor and character vector, coercing
+## into character vector</code></pre>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=numBrewer),color=&quot;grey&quot;)+labs(fill=&quot;numBrewer&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;)</code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=count/numBrewer),color=&quot;grey&quot;)+labs(fill=&quot;beerPerBrewer&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) </code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-10-2.png" width="672" /></p>
+<p>Mississippi: American Beer’s Hearland</p>
+<p><strong>Representing my namesake</strong></p>
+<pre class="r"><code>byStateS=stout %&gt;% group_by(state) %&gt;% summarise(numBrewer=length(unique(brewery_id)),count=n(),mabv=mean(abv,na.rm=T))
+  
+all_state=inner_join(state,byStateS,by=c(&quot;abb&quot;=&quot;state&quot;))</code></pre>
+<pre><code>## Warning: Column `abb`/`state` joining factor and character vector, coercing
+## into character vector</code></pre>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=numBrewer),color=&quot;grey&quot;)+labs(fill=&quot;numBrewer&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) </code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-11-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=count/numBrewer),color=&quot;grey&quot;)+labs(fill=&quot;beerPerBrewer&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) </code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-11-2.png" width="672" /></p>
+<p>What’s up with some states having no stouts?!</p>
+<p><strong>The controversial IPA</strong></p>
+<pre class="r"><code>byStateI=ipa %&gt;% group_by(state) %&gt;% summarise(numBrewer=length(unique(brewery_id)),count=n(),mabv=mean(abv,na.rm=T))
+  
+all_state=inner_join(state,byStateI,by=c(&quot;abb&quot;=&quot;state&quot;))</code></pre>
+<pre><code>## Warning: Column `abb`/`state` joining factor and character vector, coercing
+## into character vector</code></pre>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=numBrewer),color=&quot;grey&quot;)+labs(fill=&quot;numBrewer&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) </code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+
+geom_polygon(data=all_state, aes(fill=count/numBrewer),color=&quot;grey&quot;)+labs(fill=&quot;beerPerBrewer&quot;)+scale_fill_gradientn(colors=beerPal)+theme_void()+
+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) </code></pre>
+<p><img src="/tidytuesday/week15_files/figure-html/unnamed-chunk-12-2.png" width="672" /></p>
+<pre class="r"><code>## what&#39;s up with Utah?
+ut=beer[which(beer$state == &quot;UT&quot;),]
+ut[str_detect(ut$style, &quot;IPA&quot;),] ## double counting</code></pre>
+<pre><code>## # A tibble: 8 x 12
+##   count.x    abv   ibu    id name.x style brewery_id ounces count.y name.y
+##     &lt;dbl&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt;  &lt;chr&gt;      &lt;dbl&gt;  &lt;dbl&gt;   &lt;dbl&gt; &lt;chr&gt; 
+## 1   1382. 0.0400   NA   644. Johnn… Amer…       399.    16.    400. Moab …
+## 2   2254. 0.0400   42. 1925. Trade… Amer…       159.    12.    160. Uinta…
+## 3   2255. 0.0730   83. 1723. Hop N… Amer…       159.    12.    160. Uinta…
+## 4   2258. 0.0730   82. 1089. Hop N… Amer…       159.    12.    160. Uinta…
+## 5   2300. 0.0900   75. 1825. Squat… Amer…       302.    12.    303. Utah …
+## 6   2302. 0.0600   NA  1823. Wasat… Amer…       302.    12.    303. Utah …
+## 7   2303. 0.0600   NA  1682. Wasat… Amer…       302.    12.    303. Utah …
+## 8   2305. 0.0900   75. 1680. Squat… Amer…       302.    12.    303. Utah …
+## # ... with 2 more variables: city &lt;chr&gt;, state &lt;chr&gt;</code></pre>
+<p>West Virginia and Arkansas are not into IPAs.</p>
+<div id="variation-in-abv" class="section level3">
+<h3>Variation in ABV</h3>
+<p>Which styles have the most variation in alcohol content (of the top 20 most prevalent styles) given their average value?</p>
+<pre class="r"><code>beer %&gt;% group_by(style)%&gt;% summarise(count=n(),coeffVarabv=mean(abv,na.rm=T)/sd(abv,na.rm=T)) %&gt;% arrange(desc(count))  %&gt;% head(20) %&gt;% arrange(desc(coeffVarabv))</code></pre>
+<pre><code>## # A tibble: 20 x 3
+##    style                          count coeffVarabv
+##    &lt;chr&gt;                          &lt;int&gt;       &lt;dbl&gt;
+##  1 American Double / Imperial IPA   105       12.5 
+##  2 KÃ¶lsch                           42       11.4 
+##  3 American Amber / Red Lager        29       10.7 
+##  4 American Blonde Ale              108       10.0 
+##  5 MÃ¤rzen / Oktoberfest             30        9.72
+##  6 Hefeweizen                        40        9.44
+##  7 American Pale Ale (APA)          245        8.63
+##  8 Cider                             37        7.58
+##  9 American Pale Wheat Ale           97        7.55
+## 10 American IPA                     424        7.33
+## 11 American Stout                    39        7.17
+## 12 German Pilsener                   36        7.01
+## 13 American Porter                   68        6.96
+## 14 American Amber / Red Ale         133        6.62
+## 15 American Pale Lager               39        6.27
+## 16 American Brown Ale                70        5.97
+## 17 American Black Ale                36        5.49
+## 18 Fruit / Vegetable Beer            49        5.44
+## 19 Saison / Farmhouse Ale            52        5.41
+## 20 Witbier                           51        4.79</code></pre>
+<p>Fancy string matching for another time: match the beer style to the colors listed <a href="https://www.twobeerdudes.com/beer/srm">here</a>.</p>
+</div>
+</div>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week10/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week16/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

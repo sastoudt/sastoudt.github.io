@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 10: Biketown Bikeshare</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON JUN 5, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <pre class="r"><code>require(dplyr)
+require(readr)
+require(lubridate)
+require(ggplot2)</code></pre>
+<div id="tidy-the-raw-data." class="section level4">
+<h4>Tidy the Raw Data.</h4>
+<p>Luckily, each file has the same header, so we can easily stack them.</p>
+<pre class="r"><code>setwd(&quot;~/Desktop/tidytuesday/data/2018-06-05/PublicTripData&quot;)
+
+toRead=list.files()
+
+individ=lapply(toRead,read.csv)
+
+full=do.call(&quot;rbind&quot;,individ)
+head(full,1)</code></pre>
+<pre><code>##   RouteID PaymentPlan         StartHub StartLatitude StartLongitude
+## 1 1282087      Casual NE Sandy at 16th      45.52441      -122.6498
+##   StartDate StartTime EndHub EndLatitude EndLongitude   EndDate EndTime
+## 1 7/19/2016     10:22           45.53506    -122.6546 7/19/2016   10:48
+##   TripType BikeID      BikeName Distance_Miles Duration RentalAccessPath
+## 1            6083 0468 BIKETOWN           1.19  0:25:46           keypad
+##   MultipleRental
+## 1          FALSE</code></pre>
+<pre class="r"><code>rm(individ)</code></pre>
+</div>
+<div id="make-date-and-time-information-more-useful" class="section level4">
+<h4>Make Date and Time Information More Useful</h4>
+<pre class="r"><code>full$StartDate=parse_date(full$StartDate,format=&quot;%m/%d/%Y&quot;)
+full$StartTime=parse_time(full$StartTime)
+full$EndTime=parse_time(full$EndTime)
+full$durationHr=as.vector((full$EndTime-full$StartTime)/60) ## in minutes
+full$StartHour=hour(full$StartTime)</code></pre>
+</div>
+<div id="difference-by-payment-plan" class="section level4">
+<h4>Difference by Payment Plan</h4>
+<p><strong>Hypothesis</strong>: Subscribers will travel further because they will be bike enthusiasts.</p>
+<pre class="r"><code>full %&gt;% group_by(PaymentPlan)%&gt;% summarise(mDur=mean(durationHr,na.rm=T),mDist=mean(Distance_Miles),missDu=sum(is.na(durationHr)),missD=sum(is.na(Distance_Miles)),maxDur=max(durationHr,na.rm=T)) </code></pre>
+<pre><code>## Warning in max(durationHr, na.rm = T): no non-missing arguments to max;
+## returning -Inf</code></pre>
+<pre><code>## # A tibble: 3 x 6
+##   PaymentPlan   mDur mDist missDu missD maxDur
+##   &lt;fct&gt;        &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt; &lt;int&gt;  &lt;dbl&gt;
+## 1 Casual       20.2   2.54    138     0  1090.
+## 2 Subscriber    9.58  1.55    168     0  1071.
+## 3 &quot;&quot;          NaN    NA      4088  4088  -Inf</code></pre>
+<p>Negative duration? Weird! I just assumed the start and end date would be the same. They are, so we’re just going to throw out the negative duration values.</p>
+<pre class="r"><code>tocheck=full[which(full$durationHr&lt;0),]
+table(tocheck$StartDate==tocheck$EndDate)</code></pre>
+<pre><code>## Warning in table(tocheck$StartDate == tocheck$EndDate): Incompatible
+## methods (&quot;==.Date&quot;, &quot;Ops.factor&quot;) for &quot;==&quot;</code></pre>
+<pre><code>## 
+## FALSE 
+##  5034</code></pre>
+<pre class="r"><code>fullR=full[-which(full$durationHr&lt;0),]</code></pre>
+<p>I’m wrong! The casual users travel further on average than the subscribers.</p>
+<pre class="r"><code>fullR %&gt;% group_by(PaymentPlan)%&gt;% summarise(mDur=mean(durationHr,na.rm=T),mDist=mean(Distance_Miles),missDu=sum(is.na(durationHr)),missD=sum(is.na(Distance_Miles)),maxDur=max(durationHr,na.rm=T),sdDur=sd(durationHr,na.rm=T),sdDist=sd(Distance_Miles)) ## </code></pre>
+<pre><code>## Warning in max(durationHr, na.rm = T): no non-missing arguments to max;
+## returning -Inf</code></pre>
+<pre><code>## # A tibble: 3 x 8
+##   PaymentPlan  mDur mDist missDu missD maxDur sdDur sdDist
+##   &lt;fct&gt;       &lt;dbl&gt; &lt;dbl&gt;  &lt;int&gt; &lt;int&gt;  &lt;dbl&gt; &lt;dbl&gt;  &lt;dbl&gt;
+## 1 Casual       33.7  2.51    138     0  1090.  35.6   21.7
+## 2 Subscriber   15.8  1.54    168     0  1071.  25.2   25.0
+## 3 &quot;&quot;          NaN   NA      4088  4088  -Inf   NA     NA</code></pre>
+<p>Subscribers do not seem to be more “hardcore” in terms of resilience to bad weather. Both groups have peak usage in the warmer months.</p>
+<pre class="r"><code>fullR=fullR[-which(fullR$PaymentPlan==&quot;&quot;),]
+fullR$month=month(fullR$StartDate)
+
+toPlot=fullR %&gt;% group_by(PaymentPlan,month)%&gt;% summarise(mDur=mean(durationHr,na.rm=T),mDist=mean(Distance_Miles),count=n()) ## this seems surprising
+
+ggplot(toPlot,aes(x=month,y=mDur,col=PaymentPlan,group=PaymentPlan))+geom_point()+geom_line()+ggtitle(&quot;Seasonal Usage&quot;)</code></pre>
+<p><img src="/tidytuesday/week10_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(toPlot,aes(x=month,y=mDist,col=PaymentPlan,group=PaymentPlan))+geom_point()+geom_line()+ggtitle(&quot;Seasonal Usage&quot;)</code></pre>
+<p><img src="/tidytuesday/week10_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
+<pre class="r"><code>ggplot(toPlot,aes(x=month,y=count,col=PaymentPlan,group=PaymentPlan))+geom_point()+geom_line()+ggtitle(&quot;Seasonal Usage&quot;)</code></pre>
+<p><img src="/tidytuesday/week10_files/figure-html/unnamed-chunk-7-3.png" width="672" /></p>
+<p>Aha! It seems like subscribers are commuters. There are spikes in the morning and evening when people would be traveling to and from work. This makes sense now. Casual users may be biking around to explore while subscribers have a fixed and reasonable distance to work.</p>
+<pre class="r"><code>toPlot=fullR %&gt;% group_by(PaymentPlan,StartHour)%&gt;% summarise(mDur=mean(durationHr,na.rm=T),mDist=mean(Distance_Miles),count=n())
+
+ggplot(toPlot,aes(x=StartHour,y=mDur,col=PaymentPlan,group=PaymentPlan))+geom_point()+geom_line()+xlab(&quot;Start Hour&quot;)+ylab(&quot;Mean Duration (min.)&quot;)+ggtitle(&quot;Evidence for Commuting Behavior&quot;)</code></pre>
+<p><img src="/tidytuesday/week10_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(toPlot,aes(x=StartHour,y=mDist,col=PaymentPlan,group=PaymentPlan))+geom_point()+geom_line()+xlab(&quot;Start Hour&quot;)+ylab(&quot;Mean Distance&quot;)+ggtitle(&quot;Evidence for Commuting Behavior&quot;)</code></pre>
+<p><img src="/tidytuesday/week10_files/figure-html/unnamed-chunk-8-2.png" width="672" /></p>
+<pre class="r"><code>ggplot(toPlot,aes(x=StartHour,y=count,col=PaymentPlan,group=PaymentPlan))+geom_point()+geom_line()+xlab(&quot;Start Hour&quot;)+ylab(&quot;Cont&quot;)+ggtitle(&quot;Evidence for Commuting Behavior&quot;)</code></pre>
+<p><img src="/tidytuesday/week10_files/figure-html/unnamed-chunk-8-3.png" width="672" /></p>
+</div>
+<div id="ideas-for-future-exploration" class="section level4">
+<h4>Ideas for Future Exploration</h4>
+<p>If we had user ids we could test my commuter hypothesis to see if the same user was travelling the same distance every morning and evening. (I understand that having user IDs would be a bit creepy given the latitude/longitude information.) I suppose I could try to use the latitude and longitude to figure out “home” and “work”, but that seems tricky. Maybe for another time.</p>
+<p>It seems like the durations and distances are a bit higher in the morning. Some hypotheses:</p>
+<ul>
+<li>Duration: If there are hills it may be easier to go one way over the other.</li>
+<li>Duration: There could me more traffic in the morning.</li>
+<li>Duration and Distance: Users could stop somewhere on their way home (dinner, bar, gym, etc.) and then have two shorter rides.</li>
+</ul>
+<p>Again, we would need user ids or to do something clever with the lat/lons if they were precise enough.</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week9/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week15/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 5: ACS Census Data (2015)</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON APR 30, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <div id="setup" class="section level1">
+<h1>Setup</h1>
+<pre class="r"><code>require(ggplot2)
+require(maps)
+require(dplyr)
+require(plotly)
+require(spotifyr)</code></pre>
+</div>
+<div id="week-5---county-level-american-community-survey-5-year-estimates-2015" class="section level1">
+<h1>Week 5 - County-level American Community Survey (5-year estimates) 2015</h1>
+<p><a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/acs2015_county_data.csv">RAW DATA</a><br />
+<a href="https://factfinder.census.gov/faces/nav/jsf/pages/index.xhtml">DataSource: census.gov</a><br />
+<a href="https://www.kaggle.com/muonneutrino/us-census-demographic-data">Kaggle source</a></p>
+<p>This week I am taking inspiration from the Tidy Tuesday submissions of <span class="citation">@AidoBo</span> and <span class="citation">@jakekaupp</span>.</p>
+<p>I’m slightly tweaking <span class="citation">@AidoBo</span>’s function to plot continuous variables on a map to help me explore.</p>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+For <a href="https://twitter.com/hashtag/TidyTuesday?src=hash&amp;ref_src=twsrc%5Etfw">#TidyTuesday</a> I created simple function which allows you to plot any continuous variable in the data on a map <a href="https://twitter.com/hashtag/rstats?src=hash&amp;ref_src=twsrc%5Etfw">#rstats</a> <a href="https://twitter.com/hashtag/r4ds?src=hash&amp;ref_src=twsrc%5Etfw">#r4ds</a> <a href="https://t.co/6Q1I121VqI">pic.twitter.com/6Q1I121VqI</a>
+</p>
+— Aidan Boland (<span class="citation">@AidoBo</span>) <a href="https://twitter.com/AidoBo/status/991338257391804416?ref_src=twsrc%5Etfw">May 1, 2018</a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>And inspired by <span class="citation">@jakekaupp</span>’s work showing commute time in terms of number of Despacito listens</p>
+<blockquote class="twitter-tweet" data-lang="en">
+<p lang="en" dir="ltr">
+A blog post catching up on week 4 and week 5 of <a href="https://twitter.com/hashtag/TidyTuesday?src=hash&amp;ref_src=twsrc%5Etfw">#TidyTuesday</a> <a href="https://t.co/AoXuNI5s0j">https://t.co/AoXuNI5s0j</a> Code available at <a href="https://t.co/kuJdBQG4pn">https://t.co/kuJdBQG4pn</a> <a href="https://twitter.com/hashtag/rstats?src=hash&amp;ref_src=twsrc%5Etfw">#rstats</a> <a href="https://twitter.com/hashtag/r4ds?src=hash&amp;ref_src=twsrc%5Etfw">#r4ds</a> <a href="https://t.co/IXjONQ0LXs">pic.twitter.com/IXjONQ0LXs</a>
+</p>
+— Jake Kaupp (<span class="citation">@jakekaupp</span>) <a href="https://twitter.com/jakekaupp/status/992128540396138496?ref_src=twsrc%5Etfw">May 3, 2018</a>
+</blockquote>
+<script async src="https://platform.twitter.com/widgets.js" charset="utf-8"></script>
+<p>I wanted to adapt the function from above (thanks <span class="citation">@AidoBo</span>) to make a commuting map for any song. We can use the spotifyr package to access the length of a given song.</p>
+<pre class="r"><code>counties= map_data(&quot;county&quot;)
+state=map_data(&quot;state&quot;)
+
+  county_plot &lt;-function(x){
+  ## adapted from
+  
+  ##https://twitter.com/AidoBo/status/991338257391804416
+  
+  all_county$x&lt;-all_county[,x] ## a different fix for this? something like aes_string?
+  
+  ggplot(data=counties,mapping=aes(x=long,y=lat,group=group))+
+    geom_polygon(data=all_county, aes(fill=x),color=&quot;grey&quot;)+labs(fill=x)+scale_fill_distiller(palette=&quot;Spectral&quot;)+theme_void()+
+    geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) ## add state boundaries
+  
+}</code></pre>
+<pre class="r"><code>setwd(&quot;~/Desktop/tidytuesday/data/2018-04-30&quot;)
+acs&lt;-read.csv(&quot;week5_acs2015_county_data.csv&quot;)
+
+head(acs)</code></pre>
+<pre><code>##   CensusId   State  County TotalPop   Men Women Hispanic White Black
+## 1     1001 Alabama Autauga    55221 26745 28476      2.6  75.8  18.5
+## 2     1003 Alabama Baldwin   195121 95314 99807      4.5  83.1   9.5
+## 3     1005 Alabama Barbour    26932 14497 12435      4.6  46.2  46.7
+## 4     1007 Alabama    Bibb    22604 12073 10531      2.2  74.5  21.4
+## 5     1009 Alabama  Blount    57710 28512 29198      8.6  87.9   1.5
+## 6     1011 Alabama Bullock    10678  5660  5018      4.4  22.2  70.7
+##   Native Asian Pacific Citizen Income IncomeErr IncomePerCap
+## 1    0.4   1.0       0   40725  51281      2391        24974
+## 2    0.6   0.7       0  147695  50254      1263        27317
+## 3    0.2   0.4       0   20714  32964      2973        16824
+## 4    0.4   0.1       0   17495  38678      3995        18431
+## 5    0.3   0.1       0   42345  45813      3141        20532
+## 6    1.2   0.2       0    8057  31938      5884        17580
+##   IncomePerCapErr Poverty ChildPoverty Professional Service Office
+## 1            1080    12.9         18.6         33.2    17.0   24.2
+## 2             711    13.4         19.2         33.1    17.7   27.1
+## 3             798    26.7         45.3         26.8    16.1   23.1
+## 4            1618    16.8         27.9         21.5    17.9   17.8
+## 5             708    16.7         27.2         28.5    14.1   23.9
+## 6            2055    24.6         38.4         18.8    15.0   19.7
+##   Construction Production Drive Carpool Transit Walk OtherTransp
+## 1          8.6       17.1  87.5     8.8     0.1  0.5         1.3
+## 2         10.8       11.2  84.7     8.8     0.1  1.0         1.4
+## 3         10.8       23.1  83.8    10.9     0.4  1.8         1.5
+## 4         19.0       23.7  83.2    13.5     0.5  0.6         1.5
+## 5         13.5       19.9  84.9    11.2     0.4  0.9         0.4
+## 6         20.1       26.4  74.9    14.9     0.7  5.0         1.7
+##   WorkAtHome MeanCommute Employed PrivateWork PublicWork SelfEmployed
+## 1        1.8        26.5    23986        73.6       20.9          5.5
+## 2        3.9        26.4    85953        81.5       12.3          5.8
+## 3        1.6        24.1     8597        71.8       20.8          7.3
+## 4        0.7        28.8     8294        76.8       16.1          6.7
+## 5        2.3        34.9    22189        82.0       13.5          4.2
+## 6        2.8        27.5     3865        79.5       15.1          5.4
+##   FamilyWork Unemployment
+## 1        0.0          7.6
+## 2        0.4          7.5
+## 3        0.1         17.6
+## 4        0.4          8.3
+## 5        0.4          7.7
+## 6        0.0         18.0</code></pre>
+<pre class="r"><code>names(acs)</code></pre>
+<pre><code>##  [1] &quot;CensusId&quot;        &quot;State&quot;           &quot;County&quot;         
+##  [4] &quot;TotalPop&quot;        &quot;Men&quot;             &quot;Women&quot;          
+##  [7] &quot;Hispanic&quot;        &quot;White&quot;           &quot;Black&quot;          
+## [10] &quot;Native&quot;          &quot;Asian&quot;           &quot;Pacific&quot;        
+## [13] &quot;Citizen&quot;         &quot;Income&quot;          &quot;IncomeErr&quot;      
+## [16] &quot;IncomePerCap&quot;    &quot;IncomePerCapErr&quot; &quot;Poverty&quot;        
+## [19] &quot;ChildPoverty&quot;    &quot;Professional&quot;    &quot;Service&quot;        
+## [22] &quot;Office&quot;          &quot;Construction&quot;    &quot;Production&quot;     
+## [25] &quot;Drive&quot;           &quot;Carpool&quot;         &quot;Transit&quot;        
+## [28] &quot;Walk&quot;            &quot;OtherTransp&quot;     &quot;WorkAtHome&quot;     
+## [31] &quot;MeanCommute&quot;     &quot;Employed&quot;        &quot;PrivateWork&quot;    
+## [34] &quot;PublicWork&quot;      &quot;SelfEmployed&quot;    &quot;FamilyWork&quot;     
+## [37] &quot;Unemployment&quot;</code></pre>
+<pre class="r"><code>## from @AidoBo too
+all_county&lt;-inner_join(counties,acs %&gt;% mutate(County=tolower(County),State=tolower(State)),by=c(&quot;subregion&quot;=&quot;County&quot;,&quot;region&quot;=&quot;State&quot;))</code></pre>
+<p>Get your own Client ID and Client Secret <a href="https://beta.developer.spotify.com/documentation/web-api/">here</a>.</p>
+<pre class="r"><code>spotify_client_id=&quot;&quot; ## put yours here
+spotify_client_secret=&quot;&quot; ## put yours here
+access_token &lt;- get_spotify_access_token(client_id=spotify_client_id,client_secret=spoitfy_client_secret)</code></pre>
+<pre class="r"><code>county_commute_plot_tunes &lt;-function(artist,song,access_token){
+  
+  artists &lt;- get_artists(artist,access_token=access_token)
+  albums &lt;- get_albums(artists$artist_uri[1],access_token=access_token)
+  tracks&lt;-get_album_tracks(albums,access_token=access_token)
+  
+
+  track= tracks[which(grepl(song,tracks$track_name)),][1,&quot;track_uri&quot;]
+  
+  audio_features &lt;- get_track_audio_features(track,access_token=access_token)
+  
+  songLength=audio_features$duration_ms/1000/60
+  
+  all_county$commuteTune=all_county$MeanCommute/songLength
+  
+  ggplot(data=counties,mapping=aes(x=long,y=lat,group=group))+
+    geom_polygon(data=all_county, aes(fill=commuteTune),color=&quot;grey&quot;)+labs(fill=paste(&quot;Song Plays Per \n Average Commute&quot;))+scale_fill_distiller(palette=&quot;Spectral&quot;)+theme_void()+ggtitle(paste(artist,song,sep=&quot; - &quot;))+
+    geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) ## add state boundaries
+  
+}</code></pre>
+</div>
+<div id="commuting" class="section level1">
+<h1>Commuting</h1>
+<p>What are these hot spots?</p>
+<pre class="r"><code>p=county_plot(&quot;MeanCommute&quot;) 
+p</code></pre>
+<p><img src="/tidytuesday/week5_files/figure-html/unnamed-chunk-7-1.png" width="1152" /></p>
+<p>We can use <code>ggplotly</code> to use hover information to identify counties of interest.</p>
+<pre class="r"><code>county_plotly &lt;-function(x){
+  ## adapted from
+  
+  ##https://twitter.com/AidoBo/status/991338257391804416
+  
+  all_county$x&lt;-all_county[,x] ## a different fix for this? something like aes_string?
+  
+  ggplot(data=counties,mapping=aes(x=long,y=lat,group=group))+
+    geom_polygon(data=all_county, aes(fill=x,region=region,subregion=subregion),color=&quot;grey&quot;)+labs(fill=x)+scale_fill_distiller(palette=&quot;Spectral&quot;)+theme_void()+
+    geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) ## add state boundaries
+  
+}
+
+test=county_plotly(&quot;MeanCommute&quot;)
+ggplotly(test,tooltip=c(&quot;region&quot;,&quot;subregion&quot;))</code></pre>
+<p><strong>Must be the money?</strong></p>
+<pre class="r"><code>county_commute_plot_tunes(&quot;Nelly&quot;,&quot;Ride Wit Me&quot;,access_token)</code></pre>
+<p><img src="/tidytuesday/week5_files/figure-html/unnamed-chunk-9-1.png" width="1152" /></p>
+<p><strong>Where can commuting make you make more money?</strong></p>
+<p>Caveat: I’m not <em>really</em> answering this question because we don’t have the data at the individual level, but as an exploratory exercise…</p>
+<pre class="r"><code>p &lt;- ggplot(acs, aes(x = MeanCommute, y = IncomePerCap, text =paste(County,State,sep=&quot;-&quot;))) +
+  geom_point() +xlab(&quot;mean commute&quot;)+
+  ylab(&quot;income per cap&quot;)+ggtitle(&quot;Where Does/Doesn&#39;t Commuting Pay Off?&quot;)
+p ## static for GitHub</code></pre>
+<p><img src="/tidytuesday/week5_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>#ggplotly(p)</code></pre>
+<p>Can we get a rough idea of where it does and doesn’t pay to commute on a map instead of relying on hovering?</p>
+<pre class="r"><code>## which counties have above average income and below average commute time per state (averages within a state)
+averagesByState=group_by(acs,State)%&gt;% summarize(avgMeanCommute=mean(MeanCommute),avgIncomePerCap=mean(IncomePerCap))
+
+
+acsM=merge(acs,averagesByState,by.x=&quot;State&quot;,by.y=&quot;State&quot;,all.x=T)
+
+acs$goodCommuteIncomeLevels=rep(0, nrow(acs))
+acs$goodCommuteIncomeLevels[which(acsM$IncomePerCap&gt;acsM$avgIncomePerCap &amp; acsM$MeanCommute &lt; acsM$avgMeanCommute)]=1
+acs$goodCommuteIncomeLevels=as.factor(acs$goodCommuteIncomeLevels)
+
+all_county&lt;-inner_join(counties,acs %&gt;% mutate(County=tolower(County),State=tolower(State)),by=c(&quot;subregion&quot;=&quot;County&quot;,&quot;region&quot;=&quot;State&quot;))
+
+## need a discrete version of the map
+ggplot(data=counties,mapping=aes(x=long,y=lat,group=group))+
+    geom_polygon(data=all_county, aes(fill=goodCommuteIncomeLevels),color=&quot;grey&quot;)+labs(fill=&quot;Good Commuter Given Income&quot;)+scale_fill_discrete()+theme_void()+
+    geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;) ## add state boundaries</code></pre>
+<p><img src="/tidytuesday/week5_files/figure-html/unnamed-chunk-11-1.png" width="1152" /></p>
+</div>
+<div id="work-at-home" class="section level1">
+<h1>Work At Home</h1>
+<pre class="r"><code>p=county_plot(&quot;WorkAtHome&quot;) 
+p</code></pre>
+<p><img src="/tidytuesday/week5_files/figure-html/unnamed-chunk-12-1.png" width="1152" /></p>
+<p>Again we could use <code>ggplotly</code> to identify hot spots?</p>
+<pre class="r"><code>test=county_plotly(&quot;WorkAtHome&quot;)
+ggplotly(test,tooltip=c(&quot;region&quot;,&quot;subregion&quot;))</code></pre>
+<p>A lot could be going on here, so again I don’t want to read too much into this plot. Since we don’t have income per person we don’t know if those working from home make more or less than those in other jobs within their county. However, there are some interesting patterns here that it would be interesting to look into with data at the individual level.</p>
+<pre class="r"><code>ggplot(acs,aes(x=WorkAtHome,y=acs$IncomePerCap))+geom_point() +xlab(&quot;percentage working from home&quot;)+
+  ylab(&quot;income per cap&quot;)+ggtitle(&quot;Does Working From Home Pay?&quot;)</code></pre>
+<p><img src="/tidytuesday/week5_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<pre class="r"><code>county_commute_plot_tunes(&quot;Fifth Harmony&quot;,&quot;Work from Home&quot;,access_token)</code></pre>
+<p><img src="/tidytuesday/week5_files/figure-html/unnamed-chunk-15-1.png" width="1152" /></p>
+<p>Note: My <code>county_commute_plot_tunes</code> is not robust to capitalization. There was some trial and error involved.</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week4/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week6/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

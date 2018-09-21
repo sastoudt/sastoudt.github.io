@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 20: Russian Troll Tweets</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON AUG 14, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <pre class="r"><code>require(purrr)
+require(dplyr)
+require(ggplot2)
+require(gridExtra)
+require(stringr)
+require(readr)
+require(lubridate)
+require(data.table)
+require(tidyr)</code></pre>
+<p>This week’s Tidy Tuesday uses data from <a href="https://github.com/fivethirtyeight/russian-troll-tweets">538</a> that shows tweets from Russian trolls. Read more about the data <a href="https://fivethirtyeight.com/features/why-were-sharing-3-million-russian-troll-tweets/">here</a>.</p>
+<pre class="r"><code>setwd(&quot;~/Desktop/russian-troll-tweets&quot;)
+
+files &lt;- list.files()
+files &lt;- files[grepl(&quot;.csv&quot;, files)]
+
+getData &lt;- lapply(files,fread)
+
+tweet &lt;- do.call(&quot;rbind&quot;,getData)</code></pre>
+<p>This analysis was inspired by Jennifer Golbeck’s <a href="http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0135169">“Benford’s Law Applies to Online Social Networks”</a>. Benford’s Law provides the expected frequency (non-uniform) of numbers’ first digits. In this paper she finds that both the number of followers and the number of following per user on Twitter follow Benford’s Law. She mentions that many accounts that deviate strongly from this pattern were engaged in unusual behavior. <strong>Does this subset of Russian troll accounts deviate from the expected pattern of Benford’s law? Could this help us identify trolls in the future?</strong></p>
+<pre class="r"><code>benford = function(d) {
+  
+  log(1+1/d,base = 10)
+  
+}
+
+expectedFreq &lt;- benford(1:9)
+
+
+cbind.data.frame(1:9, expectedFreq)</code></pre>
+<pre><code>##   1:9 expectedFreq
+## 1   1   0.30103000
+## 2   2   0.17609126
+## 3   3   0.12493874
+## 4   4   0.09691001
+## 5   5   0.07918125
+## 6   6   0.06694679
+## 7   7   0.05799195
+## 8   8   0.05115252
+## 9   9   0.04575749</code></pre>
+<div id="overall-snapshot-of-accounts-at-any-time" class="section level2">
+<h2>Overall: Snapshot of Accounts at Any Time</h2>
+<p>First I just aggregate all tweets across the whole time period in the dataset and check the distribution of the first digit for both the followers and following.</p>
+<p>This is an oversimplification because accounts that tweet more frequently will contribute more to the overall distribution, and the following and follower numbers per account change over time.</p>
+<pre class="r"><code>d1Following &lt;- parse_number(str_sub(tweet$following, 1, 1)) ## get first digit
+d1Followers &lt;- parse_number(str_sub(tweet$followers, 1, 1)) ## get first digit
+
+
+following1D &lt;- as.vector(unname(table(d1Following[which(d1Following!=0)])/length(which(d1Following!=0))))
+followers1D &lt;- as.vector(unname(table(d1Followers[which(d1Followers!=0)])/length(which(d1Followers!=0))))
+
+toP &lt;- cbind.data.frame(expectedFreq, following1D, followers1D, firstDigit = as.factor(1:9))
+
+
+g1 &lt;- ggplot(toP, aes(expectedFreq, following1D, col = firstDigit)) + geom_point(size = 3) + geom_abline(intercept = 0, slope = 1) + xlab(&quot;Expected Frequency \n Benford&#39;s Law&quot;) + ylab(&quot;Empirical Frequency \n of First Digit&quot;) + ggtitle(&quot;Number of Following&quot;)
+
+g2 &lt;- ggplot(toP, aes(expectedFreq, followers1D, col = firstDigit)) + geom_point(size = 3) + geom_abline(intercept = 0, slope = 1) + xlab(&quot;Expected Frequency \n Benford&#39;s Law&quot;)+ylab(&quot;Empirical Frequency \n of First Digit&quot;) + ggtitle(&quot;Number of Followers&quot;)
+
+
+grid.arrange(g1, g2, ncol = 2)</code></pre>
+<p><img src="/tidytuesday/week20_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p><strong>The distribution of following (under the account owner’s control) follows the expected distribuiton of first digits fairly well. However, the distribution of followers (which is less easily manipulated by the acocunt owner) shows that smaller numbers of followers (e.g. first digit equal to one) are overrepresented while larger numbers of followers are underrepresented.</strong></p>
+</div>
+<div id="change-over-time-per-account" class="section level2">
+<h2>Change Over Time Per Account</h2>
+<p>Now I break up the tweets by month-year chunks and get an average number of followers and following per account in each. I’m curious if accounts get closer to what we expect over time.</p>
+<pre class="r"><code>tweet &lt;- tweet %&gt;% separate(publish_date,c(&quot;date&quot;,&quot;time&quot;),sep=&quot; &quot;)
+tweet$date &lt;- parse_date(tweet$date,format=&quot;%m/%d/%Y&quot;)
+tweet$month &lt;- month(tweet$date)
+tweet$year &lt;- year(tweet$date)
+
+tweet2 &lt;- subset(tweet,year&gt;=2015 &amp; year&lt;2018) ## beyond this time period, the bins are too sparse
+
+## still variation within this time period per author
+toP = tweet2 %&gt;% group_by(year, month, author) %&gt;% summarise(mFollowing = mean(following), mFollower = mean(followers), sdFollowing = sd(following), sdFollower = sd(followers)) #%&gt;% 
+
+toP$ym &lt;- paste(toP$year,toP$month,sep=&quot;_&quot;)  
+  
+byChunk &lt;- split(toP,toP$ym)  
+
+helper &lt;- function(x) {
+  test &lt;- parse_number(str_sub(x, 1, 1))
+  as.vector(unname(table(test[which(test!=0)])/length(which(test!=0))))
+} ## get distribution of first digits for a vector x
+
+
+## per chunk
+followingD &lt;- map(map(byChunk, ~.x$mFollowing), helper)
+followerD &lt;- map(map(byChunk, ~.x$mFollower), helper)</code></pre>
+</div>
+<div id="difference-between-expected-and-observed-distribution-of-first-digits" class="section level2">
+<h2>Difference Between Expected and Observed Distribution of First Digits</h2>
+<pre class="r"><code>## last two months of 2017 are missing a bin
+diffFollowing &lt;- map(followingD[1:26], ~.x-expectedFreq)
+
+
+diffFollowingD &lt;- do.call(&quot;rbind&quot;, diffFollowing)
+diffFollowingD &lt;- as.data.frame(diffFollowingD)
+diffFollowingD$ym &lt;- names(diffFollowing)
+
+
+toP &lt;- diffFollowingD %&gt;% gather(digit,diff,-ym) %&gt;% separate(ym,c(&quot;year&quot;,&quot;month&quot;),sep=&quot;_&quot;) %&gt;% mutate(digit = parse_number(digit)) %&gt;% mutate(date = as.Date(paste(year, month, &quot;01&quot;, sep = &quot;-&quot;)))</code></pre>
+<pre class="r"><code>## last two months of 2017 are missing a bin
+diffFollower &lt;- map(followerD[1:26], ~.x-expectedFreq)
+
+diffFollowerD &lt;- do.call(&quot;rbind&quot;, diffFollower)
+diffFollowerD &lt;- as.data.frame(diffFollowerD)
+diffFollowerD$ym &lt;- names(diffFollower)
+
+
+toP2 &lt;- diffFollowerD %&gt;% gather(digit,diff,-ym) %&gt;% separate(ym,c(&quot;year&quot;,&quot;month&quot;),sep=&quot;_&quot;) %&gt;% mutate(digit = parse_number(digit)) %&gt;% mutate(date = as.Date(paste(year, month, &quot;01&quot;, sep = &quot;-&quot;)))</code></pre>
+</div>
+<div id="assessing-how-weird-is-actually-weird" class="section level2">
+<h2>Assessing How Weird is Actually Weird</h2>
+<p>Before I plot the differences, I want to know how big a difference would actually be surprising since I expect variation even if Benford’s Law does apply. I draw samples from the distribution expected by Benford’s law (with sample size equal to the number of unique accounts in the data set). The dashed lines in the plots show the 97% empirical intervals from this simulated data. This is where we would expect differences to lie if the data actually follow Benford’s Law.</p>
+<pre class="r"><code>sampleSize=length(unique(tweet2$author))
+
+simD=rerun(1000,table(sample(1:9,sampleSize,prob = expectedFreq,replace=T))/sampleSize)
+
+diffSim=map(simD,~.x-expectedFreq)
+
+toAdd=cbind.data.frame(m=apply(do.call(&quot;rbind&quot;,diffSim),2,mean),q25=apply(do.call(&quot;rbind&quot;,diffSim),2,quantile,.025),q75=apply(do.call(&quot;rbind&quot;,diffSim),2,quantile,.975),digit=1:9)
+
+
+toP1b=merge(toP,toAdd,by.x=&quot;digit&quot;,by.y=&quot;digit&quot;)
+toP2b=merge(toP2,toAdd,by.x=&quot;digit&quot;,by.y=&quot;digit&quot;)</code></pre>
+<pre class="r"><code>ggplot(toP1b,aes(date,diff))+geom_point()+geom_line()+geom_hline(data=toP1b,aes(yintercept=q25),lty=2)+geom_hline(data=toP1b,aes(yintercept=q75),lty=2)+facet_wrap(~digit)+xlab(&quot;&quot;)+ylab(&quot;Observed Proportion - Expected Proportion&quot;)+ggtitle(&quot;Following: Differences by Digit&quot;)</code></pre>
+<p><img src="/tidytuesday/week20_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(toP2b,aes(date,diff))+geom_point()+geom_line()+geom_hline(data=toP2b,aes(yintercept=q25),lty=2)+geom_hline(data=toP2b,aes(yintercept=q75),lty=2)+facet_wrap(~digit)+xlab(&quot;&quot;)+ylab(&quot;Observed Proportion - Expected Proportion&quot;)+ggtitle(&quot;Follower: Differences by Digit&quot;)</code></pre>
+<p><img src="/tidytuesday/week20_files/figure-html/unnamed-chunk-9-2.png" width="672" /></p>
+<p><strong>For both the following and follower distributions we see much larger deviations than we would expect due to chance, especially for 1, 2, and 3. There does seem to be some fluctuation over time.</strong></p>
+</div>
+<div id="take-aways" class="section level2">
+<h2>Take-Aways</h2>
+<p>The Russian troll accounts do not follow Benford’s Law in either their follower or following numbers. This could be a way to help identify trolls in the future. The following distribution could be manipulated to better match what we expect, but it would be harder to tamper with the follower distribution.</p>
+</div>
+<div id="ideas-for-next-steps" class="section level2">
+<h2>Ideas for Next Steps</h2>
+<ul>
+<li>Look into the similar laws for beyond the first digit.</li>
+<li>Compare to a sample of “normal” tweets from the same time period (make sure the differences we see here actually are bigger).</li>
+<li>Dig into specific time periods when important events happened in the election season.</li>
+</ul>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+</div>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week16/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week23/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

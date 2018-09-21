@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 9: Comic Book Characters</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAY 29, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>Data: <a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/week9_comic_characters.csv">Comic book characters</a></p>
+<p>Data Source: <a href="https://github.com/rudeboybert/fivethirtyeight">FiveThirtyEight package</a></p>
+<p>Article: <a href="https://fivethirtyeight.com/features/women-in-comic-books/">FiveThirtyEight.com</a></p>
+<pre class="r"><code>require(dplyr)
+require(ggplot2)
+require(tidyr)
+
+setwd(&quot;~/Desktop/tidytuesday/data/2018-05-29/&quot;)
+cb=read.csv(&quot;week9_comic_characters.csv&quot;)</code></pre>
+<div id="names-boy-v.-man-girl-v.-woman" class="section level4">
+<h4>Names: Boy v. Man, Girl v. Woman</h4>
+<pre class="r"><code>cb$isBoy=unlist(lapply(cb$name,function(x){grepl(&quot;boy\\&gt;&quot;,x,ignore.case=T)})) ## nothing after boy
+
+cb$isGirl=unlist(lapply(cb$name,function(x){grepl(&quot;girl&quot;,x,ignore.case=T)}))## 
+
+cb$isMan=unlist(lapply(cb$name,function(x){grepl(&quot;man\\&gt;&quot;,x,ignore.case=T)})) ## nothing after man
+
+cb$isWoman=unlist(lapply(cb$name,function(x){grepl(&quot;woman&quot;,x,ignore.case=T)}))## 
+
+cb$isMan[which(cb$isMan==1 &amp; cb$isWoman==1)]=0 ## don&#39;t want to double count woman
+
+byYear=cb %&gt;% group_by(year)%&gt;%summarise(isGirl=sum(isGirl),count=n(),isWoman=sum(isWoman),isBoy=sum(isBoy),isMan=sum(isMan)) %&gt;% mutate(percentG=isGirl/count,percentW=isWoman/count)</code></pre>
+<p><strong>Tangent</strong>: Just for the record: characters identified as another’s girlfriend exist, but no boyfriends.</p>
+<pre class="r"><code>gf=cb[which(unlist(lapply(cb$name,function(x){grepl(&quot;girlfriend&quot;,x,ignore.case=T)}))==T),]
+gf$name</code></pre>
+<pre><code>## [1] Ruby (Thug&#39;s girlfriend) (Earth-616)     
+## [2] Annie (Noh-Varr&#39;s Girlfriend) (Earth-616)
+## [3] Karen (Hijack&#39;s girlfriend) (Earth-616)  
+## 23272 Levels: &#39;Spinner (Earth-616) ...</code></pre>
+<pre class="r"><code>bf=cb[which(unlist(lapply(cb$name,function(x){grepl(&quot;boyfriend&quot;,x,ignore.case=T)}))==T),]
+nrow(bf)</code></pre>
+<pre><code>## [1] 0</code></pre>
+<pre class="r"><code>sub=byYear[,c(&quot;year&quot;,&quot;isGirl&quot;,&quot;isWoman&quot;)]
+toPlotUpdated=sub %&gt;%gather(name, value, -year)
+
+ggplot(toPlotUpdated,aes(x=year,y=value,col=name))+geom_point()+geom_segment(aes(x=year,y=0,xend=year,yend=value,col=name))+ylab(&quot;number of characters introduced with \n particular name&quot;)+ggtitle(&quot;Where my girls at?&quot;)+geom_text(aes(x=1940.1,y=1.2,label=&quot;Wonder\n Woman&quot;))</code></pre>
+<p><img src="/tidytuesday/week9_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<pre class="r"><code>sub=byYear[,c(&quot;year&quot;,&quot;isBoy&quot;,&quot;isMan&quot;)]
+toPlotUpdated=sub %&gt;%gather(name, value, -year)
+
+ggplot(toPlotUpdated,aes(x=year,y=value,col=name))+geom_point()+geom_segment(aes(x=year,y=0,xend=year,yend=value,col=name))+ylab(&quot;number of characters introduced with \n particular name&quot;)+ggtitle(&quot;It&#39;s a man&#39;s (super) world&quot;)+geom_text(aes(x=1986,y=15,label=&quot;Superman&quot;))</code></pre>
+<p><img src="/tidytuesday/week9_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p><strong>Take-Away</strong>: There are way more “men” than “boys” but “girl” is pervasive even after the Wonder Woman precedent.</p>
+</div>
+<div id="good-v.-bad" class="section level4">
+<h4>Good v. Bad</h4>
+<pre class="r"><code>toPlot2=cb %&gt;% group_by(year)%&gt;% summarise(bad=length(which(align==&quot;Bad Characters&quot;)),good=length(which(align==&quot;Good Characters&quot;)))
+
+toPlot2Update=gather(toPlot2,align,count,-year)
+
+ggplot(toPlot2Update,aes(x=year,y=count,col=align,group=align))+geom_point()+geom_line()+ylab(&quot;number of characters introduced&quot;)</code></pre>
+<p><img src="/tidytuesday/week9_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(toPlot2,aes(x=year,y=bad/good))+geom_point()+geom_hline(yintercept=1)+geom_text(aes(x=1943,y=10,label=&quot;WWII&quot;))+ggtitle(&quot;A hero(ine) can punch above their weight&quot;)</code></pre>
+<p><img src="/tidytuesday/week9_files/figure-html/unnamed-chunk-6-2.png" width="672" /></p>
+<p><strong>Take-Away</strong>: More bad than good characters are introduced over time fairly consistently. Interestingly, there is a peak in bad characters during World War II. Overall, it looks like each hero can handle more than one villain.</p>
+</div>
+<div id="appearance-variability" class="section level4">
+<h4>Appearance Variability</h4>
+<pre class="r"><code>toPlot=cb %&gt;%group_by(year,sex)%&gt;% summarise(count=n(),uniqueEye=length(unique(eye))/n(),uniqueHair=length(unique(hair))/n())%&gt;%filter(!is.na(sex)) %&gt;% filter(sex %in% c(&quot;Male Characters&quot;,&quot;Female Characters&quot;))
+
+ggplot(toPlot,aes(x=year,y=uniqueEye,col=sex,group=sex))+geom_point()+geom_line()+ylab(&quot;number of unique eye color \n normalized by number of introductions&quot;)</code></pre>
+<p><img src="/tidytuesday/week9_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(toPlot,aes(x=year,y=uniqueHair,col=sex,group=sex))+geom_point()+geom_line()+ylab(&quot;number of unique hair color \n normalized by number of introductions&quot;)</code></pre>
+<p><img src="/tidytuesday/week9_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
+<pre class="r"><code>ggplot(toPlot,aes(x=year,y=count,col=sex,group=sex))+geom_point()+geom_line()+ylab(&quot;number of introductions&quot;)</code></pre>
+<p><img src="/tidytuesday/week9_files/figure-html/unnamed-chunk-7-3.png" width="672" /></p>
+<p><strong>Take-Away:</strong> There is (proportionally) more variability in hair and eye color for female characters. There is a decline in variability in hair and eye color over time, but at least part of this is due to the rise in new characters (and a limit on the number of hair/eye colors).</p>
+</div>
+<div id="identity-by-sex" class="section level4">
+<h4>Identity by Sex</h4>
+<pre class="r"><code>bySex=cb %&gt;%group_by(sex)%&gt;% summarise(count=n())
+
+bySexID=cb %&gt;% group_by(sex,id)%&gt;% summarise(count=n()) %&gt;%inner_join(bySex,by=c(&quot;sex&quot;=&quot;sex&quot;))%&gt;% mutate(percent=count.x/count.y)
+
+toPlot=bySexID %&gt;% filter(id %in% c(&quot;Public Identity&quot;,&quot;Secret Identity&quot;,&quot;No Dual Identity&quot;))%&gt;% filter(!is.na(sex))
+
+toPlot2=as.data.frame(toPlot%&gt;%arrange(sex))
+
+ggplot(toPlot2,aes(id,y=percent,fill=sex))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))</code></pre>
+<p><img src="/tidytuesday/week9_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p><strong>Take-Away</strong>: There doesn’t seem to be any real difference between female and men in terms of identity. I am reluctant to make any claims about the other categories because of their small sample size.</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week8/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week10/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

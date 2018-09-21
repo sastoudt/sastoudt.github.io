@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 16: Exercise USA</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON JUL 17, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <div id="week-16" class="section level1">
+<h1>Week 16</h1>
+<p><a href="https://www.cdc.gov/">CDC</a></p>
+<p><a href="https://www.cdc.gov/nchs/data/nhsr/nhsr112.pdf">CDC - National Health Statistics Reports</a>|</p>
+<pre class="r"><code>require(readxl)
+require(dplyr)
+require(ggplot2)
+require(stringr)
+require(tidyr)
+require(geofacet)
+require(viridis)</code></pre>
+<pre class="r"><code>setwd(&quot;~/Desktop/tidytuesday/data/2018-07-17&quot;)
+exercise=read_excel(&quot;week16_exercise.xlsx&quot;,sheet=1)
+
+exercise=exercise[,-1] ## remove count
+exercise=exercise[-1,] ## remove &quot;all states&quot;&quot;
+
+exerciseT=exercise %&gt;% gather(type, value,-state)
+exerciseT$value=as.numeric(exerciseT$value)</code></pre>
+<pre><code>## Warning: NAs introduced by coercion</code></pre>
+<div id="you-better-work" class="section level2">
+<h2>You Better Work</h2>
+<p>I expected that working men and women would have less time to exercise, but it looks like those who work meet the federal guidelines for exercise more across the US.</p>
+<p>Some potential reasons:</p>
+<ul>
+<li>physical and financial access to gyms for workers</li>
+<li>caretaking responsibilities for those “non-workers” prevent exercise</li>
+<li>jobs that involve physical labor count as exercise? nope, CDC says “leisure-time physical activity”</li>
+<li>seeing coworkers on a daily basis motivates you to exercise</li>
+</ul>
+<pre class="r"><code>ggplot(subset(exerciseT,type %in% c(&quot;men_nonworking&quot;,&quot;men_working&quot;,&quot;women_nonworking&quot;,&quot;women_working&quot;)),aes(x=type,y=value,fill=type))+ geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+facet_geo(~state)+ theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())</code></pre>
+<p><img src="/tidytuesday/week16_files/figure-html/unnamed-chunk-3-1.png" width="1344" /></p>
+</div>
+<div id="where-are-the-largestsmallest-disparities" class="section level2">
+<h2>Where are the largest/smallest disparities?</h2>
+<p>In honor of the theme of sweating, I mean exercise, I’m switching to the inferno palette.</p>
+<pre class="r"><code>exercise[2:ncol(exercise)]=apply(exercise[2:ncol(exercise)],2,function(x){as.numeric(x)})
+
+counties= map_data(&quot;county&quot;)
+state=map_data(&quot;state&quot;)
+
+exercise$state=tolower(exercise$state)
+
+all_state=inner_join(state,exercise,by=c(&quot;region&quot;=&quot;state&quot;))</code></pre>
+<p>What’s striking here is that there is only one negative value. Only in New Hampshire do women meet the guidelines more than men. In DC, the difference between genders is largest, while Montana has the smallest difference.</p>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=men-women),color=&quot;grey&quot;)+labs(fill=&quot;men - women&quot;)+scale_fill_viridis(option=&quot;inferno&quot;)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;)+ggtitle(&quot;Battle of the Sexes&quot;)</code></pre>
+<p><img src="/tidytuesday/week16_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>exercise$state[which(exercise$men-exercise$women&lt;0)]</code></pre>
+<pre><code>## [1] &quot;new hampshire&quot;</code></pre>
+<pre class="r"><code>exercise$state[which.max(abs(exercise$men-exercise$women))] </code></pre>
+<pre><code>## [1] &quot;district of columbia&quot;</code></pre>
+<pre class="r"><code>exercise$state[which.min(abs(exercise$men-exercise$women))] </code></pre>
+<pre><code>## [1] &quot;montana&quot;</code></pre>
+<p>In South Dakota and Nebraska nonworking men meet the guidelines more than working men. Vermont has the biggest disparity while Iowa has the smallest.</p>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=men_working-men_nonworking),color=&quot;grey&quot;)+labs(fill=&quot;menWork-menNonwork&quot;)+scale_fill_viridis(option=&quot;inferno&quot;)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;)+ggtitle(&quot;Working(?) Men&quot;)</code></pre>
+<p><img src="/tidytuesday/week16_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<pre class="r"><code>exercise$state[which.max(abs(exercise$men_working-exercise$men_nonworking))] </code></pre>
+<pre><code>## [1] &quot;vermont&quot;</code></pre>
+<pre class="r"><code>exercise$state[which.min(abs(exercise$men_working-exercise$men_nonworking))] </code></pre>
+<pre><code>## [1] &quot;iowa&quot;</code></pre>
+<p>In Idaho and Utah nonworking women meet the guidelines more than working women. Wyoming has the biggest disparity while Oklahoma has the smallest.</p>
+<pre class="r"><code>ggplot(data=state,mapping=aes(x=long,y=lat,group=group))+geom_polygon(data=all_state, aes(fill=women_working-women_nonworking),color=&quot;grey&quot;)+labs(fill=&quot;womenWork-womenNonwork&quot;)+scale_fill_viridis(option=&quot;inferno&quot;)+theme_void()+geom_path(data=state, aes(x=long,y=lat,group=group),color=&quot;black&quot;)+ggtitle(&quot;Working(?) Women&quot;)</code></pre>
+<p><img src="/tidytuesday/week16_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>exercise$state[which(exercise$women_working-exercise$women_nonworking&lt;0)]</code></pre>
+<pre><code>## [1] &quot;idaho&quot; &quot;utah&quot;</code></pre>
+<pre class="r"><code>exercise$state[which.max(abs(exercise$women_working-exercise$women_nonworking))] </code></pre>
+<pre><code>## [1] &quot;wyoming&quot;</code></pre>
+<pre class="r"><code>exercise$state[which.min(abs(exercise$women_working-exercise$women_nonworking))] </code></pre>
+<pre><code>## [1] &quot;oklahoma&quot;</code></pre>
+</div>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week15/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week20/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 7: Star Wars Survey</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAY 14, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <div id="week-7---star-wars-survey-2014" class="section level3">
+<h3>Week 7 - Star Wars Survey (2014)</h3>
+<p><a href="https://github.com/fivethirtyeight/data/blob/master/star-wars-survey/StarWars.csv">RAW DATA</a><br />
+<a href="https://fivethirtyeight.com/features/americas-favorite-star-wars-movies-and-least-favorite-characters/">Article</a><br />
+<a href="https://github.com/rudeboybert/fivethirtyeight">DataSource fivethirtyeight (fivethirtyeight package)</a></p>
+</div>
+<div id="how-do-perceptions-of-female-star-wars-characters-differ-across-age-and-gender" class="section level3">
+<h3>How do perceptions of female Star Wars characters differ across age and gender?</h3>
+<pre class="r"><code>require(data.table)
+require(dplyr)
+require(ggplot2)
+setwd(&quot;~/Desktop/tidytuesday/data/2018-05-14&quot;)
+sw=fread(&quot;week7_starwars.csv&quot;)
+## read.csv didn&#39;t work for me</code></pre>
+<p>Brute force manipulation.</p>
+<pre class="r"><code>realHeader=sw[1,]
+sw=sw[-1,]
+
+names(sw)[c(36,38)]=c(&quot;householdIncome&quot;,&quot;location&quot;)
+names(sw)[2]=&quot;seenStarWars&quot;</code></pre>
+<p>Let’s focus on those who have actually seen Star Wars.</p>
+<pre class="r"><code>swYes=subset(sw,seenStarWars==&quot;Yes&quot;)</code></pre>
+<div id="padme" class="section level4">
+<h4>Padme</h4>
+<pre class="r"><code>## complete data only
+toPlot=swYes[-which(swYes$Gender==&quot;&quot;),c(&quot;V28&quot;,&quot;Gender&quot;,&quot;Age&quot;)]
+toPlot=toPlot[-which(toPlot$V28==&quot;&quot;),] 
+
+toPlot$V28=factor(toPlot$V28)
+toPlot$V28=factor(toPlot$V28,levels=levels(toPlot$V28)[c(4,6,3,1,2,5)]) ## GROSS!
+
+byCatGen=toPlot%&gt;%group_by(V28,Gender)%&gt;%summarise(count=n())
+
+byGen=toPlot%&gt;%group_by(Gender)%&gt;%summarise(count=n())
+
+toPlot=byCatGen%&gt;% inner_join(byGen,by=c(&quot;Gender&quot;=&quot;Gender&quot;))%&gt;%mutate(percent=count.x/count.y)</code></pre>
+<pre class="r"><code>ggplot(toPlot,aes(V28,y=percent,fill=Gender))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Padme?&quot;)</code></pre>
+<p><img src="/tidytuesday/week7_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<pre class="r"><code>## complete data only
+toPlot=swYes[,c(&quot;V28&quot;,&quot;Gender&quot;,&quot;Age&quot;)] 
+toPlot=swYes[-which(swYes$Gender==&quot;&quot;),c(&quot;V28&quot;,&quot;Gender&quot;,&quot;Age&quot;)]
+toPlot=toPlot[-which(toPlot$V28==&quot;&quot;),]
+
+## relevel
+toPlot$V28=factor(toPlot$V28)
+levels(toPlot$V28)</code></pre>
+<pre><code>## [1] &quot;Neither favorably nor unfavorably (neutral)&quot;
+## [2] &quot;Somewhat favorably&quot;                         
+## [3] &quot;Somewhat unfavorably&quot;                       
+## [4] &quot;Unfamiliar (N/A)&quot;                           
+## [5] &quot;Very favorably&quot;                             
+## [6] &quot;Very unfavorably&quot;</code></pre>
+<pre class="r"><code>toPlot$V28=factor(toPlot$V28,levels=levels(toPlot$V28)[c(4,6,3,1,2,5)]) ## GROSS!
+
+
+
+byCatGenAge=toPlot %&gt;%group_by(Gender,Age,V28)%&gt;%summarise(count=n())
+
+byGenAge=toPlot %&gt;%group_by(Gender,Age)%&gt;%summarise(count=n())
+
+toPlot=byCatGenAge %&gt;% inner_join(byGenAge,by=c(&quot;Gender&quot;=&quot;Gender&quot;,&quot;Age&quot;=&quot;Age&quot;)) %&gt;% mutate(percent=count.x/count.y)
+
+## get combo
+toPlot$genderAge=paste(toPlot$Gender,toPlot$Age) ## is there a less hacky way to do this?
+toPlot$genderAge=as.factor(toPlot$genderAge)
+
+## relevel
+levels(toPlot$genderAge)</code></pre>
+<pre><code>## [1] &quot;Female &gt; 60&quot;  &quot;Female 18-29&quot; &quot;Female 30-44&quot; &quot;Female 45-60&quot;
+## [5] &quot;Male &gt; 60&quot;    &quot;Male 18-29&quot;   &quot;Male 30-44&quot;   &quot;Male 45-60&quot;</code></pre>
+<pre class="r"><code>toPlot$genderAge=factor(toPlot$genderAge,levels=levels(toPlot$genderAge)[c(2,6,3,7,4,8,1,5)]) ## GROSS!</code></pre>
+<p><strong>Thanks for the help!!</strong></p>
+<p>From <span class="citation">@ibddoctor</span>: <a href="https://t.co/193sOToMJB" class="uri">https://t.co/193sOToMJB</a></p>
+<pre class="r"><code>levels(toPlot$genderAge)</code></pre>
+<pre><code>## [1] &quot;Female 18-29&quot; &quot;Male 18-29&quot;   &quot;Female 30-44&quot; &quot;Male 30-44&quot;  
+## [5] &quot;Female 45-60&quot; &quot;Male 45-60&quot;   &quot;Female &gt; 60&quot;  &quot;Male &gt; 60&quot;</code></pre>
+<pre class="r"><code>ggplot(toPlot,aes(V28,y=percent,fill=genderAge,order=genderAge))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Padme?&quot;)+scale_fill_manual(&quot;legend&quot;,values=c(&quot;Female 18-29&quot;=&quot;indianred&quot;,&quot;Male 18-29&quot;=&quot;red&quot;,&quot;Female 30-44&quot;=&quot;dodgerblue&quot;,&quot;Male 30-44&quot; =&quot;blue&quot;,&quot;Female 45-60&quot;=&quot;green&quot;, &quot;Male 45-60&quot;=&quot;forestgreen&quot;,&quot;Female &gt; 60&quot; =&quot;grey&quot;,&quot;Male &gt; 60&quot; =&quot;black&quot;))</code></pre>
+<p><img src="/tidytuesday/week7_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>## NOPE, but this would be ideal</code></pre>
+<p>From <span class="citation">@hadleywickham</span>: try arrange()ing</p>
+<pre class="r"><code>toPlot$Gender=as.factor(toPlot$Gender)
+toPlot$Age=as.factor(toPlot$Age)
+
+
+levels(toPlot$genderAge) ## fine</code></pre>
+<pre><code>## [1] &quot;Female 18-29&quot; &quot;Male 18-29&quot;   &quot;Female 30-44&quot; &quot;Male 30-44&quot;  
+## [5] &quot;Female 45-60&quot; &quot;Male 45-60&quot;   &quot;Female &gt; 60&quot;  &quot;Male &gt; 60&quot;</code></pre>
+<pre class="r"><code>levels(toPlot$Age) ## need to relevel</code></pre>
+<pre><code>## [1] &quot;&gt; 60&quot;  &quot;18-29&quot; &quot;30-44&quot; &quot;45-60&quot;</code></pre>
+<pre class="r"><code>toPlot$Age=factor(toPlot$Age,levels=levels(toPlot$Age)[c(2,3,4,1)]) ## GROSS!
+
+
+#toPlot$genderAge=factor(toPlot$genderAge,levels=levels(toPlot$genderAge)[c(2,6,3,7,4,8,1,5)]) ## GROSS!
+
+
+## if it plots one level of V28 at a time, this would make sense
+test=toPlot%&gt;%arrange(Age,V28)
+head(test)</code></pre>
+<pre><code>## # A tibble: 6 x 7
+## # Groups:   Gender, Age [2]
+##   Gender Age   V28                  count.x count.y percent genderAge   
+##   &lt;fct&gt;  &lt;fct&gt; &lt;fct&gt;                  &lt;int&gt;   &lt;int&gt;   &lt;dbl&gt; &lt;fct&gt;       
+## 1 Female 18-29 Unfamiliar (N/A)          10      85  0.118  Female 18-29
+## 2 Male   18-29 Unfamiliar (N/A)           5      93  0.0538 Male 18-29  
+## 3 Female 18-29 Very unfavorably           3      85  0.0353 Female 18-29
+## 4 Male   18-29 Very unfavorably           8      93  0.0860 Male 18-29  
+## 5 Female 18-29 Somewhat unfavorably       6      85  0.0706 Female 18-29
+## 6 Male   18-29 Somewhat unfavorably      12      93  0.129  Male 18-29</code></pre>
+<pre class="r"><code>ggplot(test,aes(V28,y=percent,fill=genderAge))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Padme?&quot;)+scale_fill_manual(&quot;legend&quot;,values=c(&quot;Female 18-29&quot;=&quot;indianred&quot;,&quot;Male 18-29&quot;=&quot;red&quot;,&quot;Female 30-44&quot;=&quot;dodgerblue&quot;,&quot;Male 30-44&quot; =&quot;blue&quot;,&quot;Female 45-60&quot;=&quot;green&quot;, &quot;Male 45-60&quot;=&quot;forestgreen&quot;,&quot;Female &gt; 60&quot; =&quot;grey&quot;,&quot;Male &gt; 60&quot; =&quot;black&quot;))</code></pre>
+<p><img src="/tidytuesday/week7_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<pre class="r"><code>## NOPE but closer, now all the females are together</code></pre>
+<p><strong>THIS IS THE ONE</strong></p>
+<div class="figure">
+<img src="https://media.giphy.com/media/pvDp7Ewpzt0o8/giphy.gif" />
+
+</div>
+<p>Members of the older female generation are not (proportionally) Padme fans.</p>
+<pre class="r"><code>test=as.data.frame(toPlot%&gt;%arrange(Age,V28))
+head(test)</code></pre>
+<pre><code>##   Gender   Age                  V28 count.x count.y    percent
+## 1 Female 18-29     Unfamiliar (N/A)      10      85 0.11764706
+## 2   Male 18-29     Unfamiliar (N/A)       5      93 0.05376344
+## 3 Female 18-29     Very unfavorably       3      85 0.03529412
+## 4   Male 18-29     Very unfavorably       8      93 0.08602151
+## 5 Female 18-29 Somewhat unfavorably       6      85 0.07058824
+## 6   Male 18-29 Somewhat unfavorably      12      93 0.12903226
+##      genderAge
+## 1 Female 18-29
+## 2   Male 18-29
+## 3 Female 18-29
+## 4   Male 18-29
+## 5 Female 18-29
+## 6   Male 18-29</code></pre>
+<pre class="r"><code>ggplot(test,aes(V28,y=percent,fill=genderAge))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Padme?&quot;)+scale_fill_manual(&quot;legend&quot;,values=c(&quot;Female 18-29&quot;=&quot;indianred&quot;,&quot;Male 18-29&quot;=&quot;red&quot;,&quot;Female 30-44&quot;=&quot;dodgerblue&quot;,&quot;Male 30-44&quot; =&quot;blue&quot;,&quot;Female 45-60&quot;=&quot;green&quot;, &quot;Male 45-60&quot;=&quot;forestgreen&quot;,&quot;Female &gt; 60&quot; =&quot;grey&quot;,&quot;Male &gt; 60&quot; =&quot;black&quot;))</code></pre>
+<p><img src="/tidytuesday/week7_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>## MAGICALLY WORKS</code></pre>
+<p><strong>Mystery:</strong> Why is <code>as.data.frame</code> needed?</p>
+</div>
+<div id="leia" class="section level4">
+<h4>Leia</h4>
+<p>Everyone loves Leia.</p>
+<pre class="r"><code>## complete data only
+toPlot=swYes[-which(swYes$Gender==&quot;&quot;),c(&quot;V18&quot;,&quot;Gender&quot;,&quot;Age&quot;)]
+toPlot=toPlot[-which(toPlot$V18==&quot;&quot;),]
+
+## relevel
+toPlot$V18=factor(toPlot$V18)
+toPlot$V18=factor(toPlot$V18,levels=levels(toPlot$V18)[c(4,6,3,1,2,5)]) ## GROSS!
+
+byCatGen=toPlot%&gt;%group_by(V18,Gender)%&gt;%summarise(count=n())
+
+byGen=toPlot%&gt;%group_by(Gender)%&gt;%summarise(count=n())
+
+toPlot=byCatGen%&gt;% inner_join(byGen,by=c(&quot;Gender&quot;=&quot;Gender&quot;))%&gt;%mutate(percent=count.x/count.y)</code></pre>
+<pre class="r"><code>ggplot(toPlot,aes(V18,y=percent,fill=Gender))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Leia?&quot;)</code></pre>
+<p><img src="/tidytuesday/week7_files/figure-html/unnamed-chunk-12-1.png" width="672" /></p>
+<pre class="r"><code>## complete data only
+toPlot=swYes[,c(&quot;V18&quot;,&quot;Gender&quot;,&quot;Age&quot;)] 
+toPlot=swYes[-which(swYes$Gender==&quot;&quot;),c(&quot;V18&quot;,&quot;Gender&quot;,&quot;Age&quot;)]
+toPlot=toPlot[-which(toPlot$V18==&quot;&quot;),]
+
+byCatGenAge=toPlot %&gt;%group_by(Gender,Age,V18)%&gt;%summarise(count=n())
+
+byGenAge=toPlot %&gt;%group_by(Gender,Age)%&gt;%summarise(count=n())
+
+toPlot=byCatGenAge %&gt;% inner_join(byGenAge,by=c(&quot;Gender&quot;=&quot;Gender&quot;,&quot;Age&quot;=&quot;Age&quot;)) %&gt;% mutate(percent=count.x/count.y)
+
+## get combo
+toPlot$genderAge=paste(toPlot$Gender,toPlot$Age) ## is there a less hacky way to do this?
+toPlot$genderAge=as.factor(toPlot$genderAge)
+
+## relevel
+levels(toPlot$genderAge)</code></pre>
+<pre><code>## [1] &quot;Female &gt; 60&quot;  &quot;Female 18-29&quot; &quot;Female 30-44&quot; &quot;Female 45-60&quot;
+## [5] &quot;Male &gt; 60&quot;    &quot;Male 18-29&quot;   &quot;Male 30-44&quot;   &quot;Male 45-60&quot;</code></pre>
+<pre class="r"><code>toPlot$genderAge=factor(toPlot$genderAge,levels=levels(toPlot$genderAge)[c(2,6,3,7,4,8,1,5)]) ## GROSS!
+#toPlot$genderAge=ordered(toPlot$genderAge,levels=levels(toPlot$genderAge)[c(2,6,3,7,4,8,1,5)]) ## GROSS!
+toPlot$V18=as.factor(toPlot$V18)
+toPlot$V18=factor(toPlot$V18,levels=levels(toPlot$V18)[c(4,6,3,1,2,5)]) ## GROSS!</code></pre>
+<p>What’s up with the female youths here?!</p>
+<pre class="r"><code>toPlot$Gender=as.factor(toPlot$Gender)
+toPlot$Age=as.factor(toPlot$Age)
+
+
+levels(toPlot$genderAge) ## fine</code></pre>
+<pre><code>## [1] &quot;Female 18-29&quot; &quot;Male 18-29&quot;   &quot;Female 30-44&quot; &quot;Male 30-44&quot;  
+## [5] &quot;Female 45-60&quot; &quot;Male 45-60&quot;   &quot;Female &gt; 60&quot;  &quot;Male &gt; 60&quot;</code></pre>
+<pre class="r"><code>levels(toPlot$Age) ## need to relevel</code></pre>
+<pre><code>## [1] &quot;&gt; 60&quot;  &quot;18-29&quot; &quot;30-44&quot; &quot;45-60&quot;</code></pre>
+<pre class="r"><code>toPlot$Age=factor(toPlot$Age,levels=levels(toPlot$Age)[c(2,3,4,1)]) ## GROSS!
+
+
+## if it plots one level of V18 at a time, this would make sense
+test=as.data.frame(toPlot%&gt;%arrange(Age,V18))
+
+
+
+ggplot(test,aes(V18,y=percent,fill=genderAge))+geom_bar(stat=&quot;identity&quot;,position = position_dodge2(preserve = &quot;total&quot;))+theme(axis.text.x=element_text(angle=45,hjust=1))+xlab(&quot;&quot;)+ggtitle(&quot;How do you feel about Leia?&quot;)+scale_fill_manual(&quot;legend&quot;,values=c(&quot;Female 18-29&quot;=&quot;indianred&quot;,&quot;Male 18-29&quot;=&quot;red&quot;,&quot;Female 30-44&quot;=&quot;dodgerblue&quot;,&quot;Male 30-44&quot; =&quot;blue&quot;,&quot;Female 45-60&quot;=&quot;green&quot;, &quot;Male 45-60&quot;=&quot;forestgreen&quot;,&quot;Female &gt; 60&quot; =&quot;grey&quot;,&quot;Male &gt; 60&quot; =&quot;black&quot;))</code></pre>
+<p><img src="/tidytuesday/week7_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<pre class="r"><code>## make colors more informative (light and dark of a color for male and female same age), rearrange levels so easier to compare</code></pre>
+</div>
+<div id="challenges" class="section level4">
+<h4>Challenges</h4>
+<ol style="list-style-type: decimal">
+<li><p>Side by side instead of stacked (<code>geom_bar</code> documentation)</p></li>
+<li><p><a href="https://stackoverflow.com/questions/38788357/change-bar-plot-colour-in-geom-bar-with-ggplot2-in-r">Change barchart colors.</a></p></li>
+<li><p><a href="https://stackoverflow.com/questions/1330989/rotating-and-spacing-axis-labels-in-ggplot2">Rotate axis labels.</a></p></li>
+<li><p>Releveling. In haste, I did not do this well. Read <a href="https://www.tandfonline.com/doi/abs/10.1080/00031305.2017.1356375">this</a> to see why I’m wrong and how I could do better.</p></li>
+<li><p>Normalizing by the number per category. Letting <code>stat=&quot;count&quot;</code> was a red herring. It would be nice if there was a way to input values to normalize the fill variable by, but instead I ended up manually calculating the percentages and using <code>stat=&quot;identity&quot;</code>.</p></li>
+<li><p><a href="https://github.com/tidyverse/ggplot2/issues/1472">Correct and consistent ordering of colors (to match the legend)</a> Thanks for the pointers <span class="citation">@ibddoctor</span> and <span class="citation">@hadleywickham</span>!</p></li>
+</ol>
+</div>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week6/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week8/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

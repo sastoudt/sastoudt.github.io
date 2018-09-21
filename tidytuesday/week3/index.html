@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 3: Global Mortality</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON APR 16, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <div id="setup" class="section level1">
+<h1>Setup</h1>
+<pre class="r"><code>require(readxl)
+require(dplyr)
+require(ggplot2)
+require(gridExtra)
+require(tidyr)
+require(RColorBrewer)</code></pre>
+</div>
+<div id="week-3---global-causes-of-mortality" class="section level1">
+<h1>Week 3 - Global causes of mortality</h1>
+<p><a href="https://github.com/rfordatascience/tidytuesday/blob/master/data/global_mortality.xlsx">RAW DATA</a><br />
+<a href="https://ourworldindata.org/what-does-the-world-die-from">Article</a><br />
+<a href="https://ourworldindata.org/">DatSource: ourworldindata.org</a><br />
+<a href="https://ourworldindata.org/what-does-the-world-die-from">Original Graphic</a></p>
+</div>
+<div id="read-and-clean-data" class="section level1">
+<h1>Read and Clean Data</h1>
+<pre class="r"><code>setwd(&quot;~/Desktop/tidytuesday/data/2018-04-16&quot;)
+gm=read_excel(&quot;global_mortality.xlsx&quot;)
+
+gm.gathered=gather(gm,cause,percent,-country,-country_code,-year) ## want a single column for cause of death
+gm.gathered$cause=as.vector(gsub(&quot; \\(\\%\\)&quot;,&quot;&quot;,gm.gathered$cause)) ## remove (%) in causes of death</code></pre>
+</div>
+<div id="get-colors-ready" class="section level1">
+<h1>Get Colors Ready</h1>
+<p>I will want the color per cause to be the same across plots.</p>
+<p>The colors I use are still not perfectly distinguishable. Any suggestions?</p>
+<pre class="r"><code>colorOrder=colorRampPalette( c(&quot;red&quot;,&quot;orange&quot;,&quot;yellow&quot;,&quot;green&quot;,&quot;blue&quot;,&quot;purple&quot;))(length(unique(gm.gathered$cause)))
+colorOrderShuffle=colorOrder[sample(1:length(colorOrder),length(colorOrder))]
+## don&#39;t want causes close in alphabetical order to be near the same color mainly because of prevalence of
+## cancer and cardiovascular diseases
+
+
+colorMap=cbind.data.frame(colorOrderShuffle,
+                          unique(gm.gathered$cause))
+names(colorMap)=c(&quot;color&quot;,&quot;cause&quot;)</code></pre>
+</div>
+<div id="plot-function" class="section level1">
+<h1>Plot Function</h1>
+<p>Here is a function to, given a country, plot the causes of death that have the top N highest average percentage and coefficients of variation across the time span.</p>
+<pre class="r"><code>makePlotTopN=function(data, Country,N){
+  
+  dataToUse=subset(data,country==Country) ## get country of interest
+  
+  
+  byCause=group_by(dataToUse,cause)%&gt;%summarise(avgPercent=mean(percent),sdPercent=sd(percent),sdPercentNorm=sd(percent)/avgPercent) 
+  ## find average and standard deviation of percentages of causes of death across the time frame
+  
+  byCauseM= byCause%&gt;%arrange(desc(avgPercent))
+  byCauseSD=byCause%&gt;%arrange(desc(sdPercentNorm))
+  
+  toPlotM=subset(dataToUse,cause%in%byCauseM$cause[1:N]) ## get top N average
+  toPlotSD=subset(dataToUse,cause%in%byCauseSD$cause[1:N]) ## get top N variability
+  
+  
+  ## want colors to be the same across plots
+  ## is there an easier way?
+  toPlotM$cause=as.factor(toPlotM$cause)
+  toPlotSD$cause=as.factor(toPlotSD$cause)
+  
+  toMergeM=as.data.frame(toPlotM$cause)
+  toMergeSD=as.data.frame(toPlotSD$cause)
+  names(toMergeM)=names(toMergeSD)=&quot;cause&quot;
+  
+  col1=unique(merge(toMergeM,colorMap,by.x=&quot;cause&quot;,by.y=&quot;cause&quot;))
+  col2=unique(merge(toMergeSD,colorMap,by.x=&quot;cause&quot;,by.y=&quot;cause&quot;))
+  
+  ## plots
+  g1=  ggplot(toPlotM,aes(x=year,y=percent,color=cause))+geom_line(size=2)+
+    ggtitle(paste(Country,&quot;: Top &quot;,N,&quot; Highest Average Cause of Death&quot;))+
+    ylab(&quot;Percentage of Deaths&quot;)+xlab(&quot;Year&quot;)+scale_colour_manual(values=as.character(col1$color))
+  
+  g2=ggplot(toPlotSD,aes(x=year,y=percent,color=cause))+geom_line(size=2)+
+    ggtitle(paste(Country,&quot;: Top &quot;,N,&quot; Highest Coeff of Var Cause of Death&quot;))+
+    ylab(&quot;Percentage of Deaths&quot;)+xlab(&quot;Year&quot;)+scale_colour_manual(values=as.character(col2$color))
+  
+  
+  grid.arrange(g1,g2,ncol=2)
+  
+
+  
+}</code></pre>
+<p>Following the article to choose sample countries.</p>
+<pre class="r"><code>makePlotTopN(gm.gathered,&quot;United States&quot;,10)</code></pre>
+<p><img src="/tidytuesday/week3_files/figure-html/unnamed-chunk-5-1.png" width="1344" /></p>
+<pre class="r"><code>makePlotTopN(gm.gathered,&quot;Germany&quot;,10)</code></pre>
+<p><img src="/tidytuesday/week3_files/figure-html/unnamed-chunk-6-1.png" width="1344" /></p>
+<pre class="r"><code>makePlotTopN(gm.gathered,&quot;Brazil&quot;,10)</code></pre>
+<p><img src="/tidytuesday/week3_files/figure-html/unnamed-chunk-7-1.png" width="1344" /></p>
+<pre class="r"><code>makePlotTopN(gm.gathered,&quot;South Africa&quot;,10)</code></pre>
+<p><img src="/tidytuesday/week3_files/figure-html/unnamed-chunk-8-1.png" width="1344" /></p>
+<pre class="r"><code>makePlotTopN(gm.gathered,&quot;Kenya&quot;,10)</code></pre>
+<p><img src="/tidytuesday/week3_files/figure-html/unnamed-chunk-9-1.png" width="1344" /></p>
+<pre class="r"><code>makePlotTopN(gm.gathered,&quot;Iraq&quot;,10)</code></pre>
+<p><img src="/tidytuesday/week3_files/figure-html/unnamed-chunk-10-1.png" width="1344" /></p>
+<p>Note: I wondered how <span class="citation">@dpseidel</span> had her Tidy Tuesday plots displayed on Github and discovered <a href="https://rmarkdown.rstudio.com/github_document_format.html">this</a>.</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week4/"> | next &gt;</a></span>
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+
