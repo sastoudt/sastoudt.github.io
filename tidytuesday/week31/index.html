@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 31: R and R package downloads</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON OCT 30, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <style>
+  .superbigimage{
+      overflow-x:scroll;
+      white-space: nowrap;
+  }
+
+  .superbigimage img{
+     max-width: none;
+  }
+
+/* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/
+</style>
+<pre class="r"><code>library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(forcats)
+library(cranlogs)
+
+setwd(&quot;~/Desktop/tidytuesday/data/2018-10-30&quot;)
+rd=read.csv(&quot;r_downloads_year.csv&quot;)
+rd$date=as.Date(as.character(rd$date))</code></pre>
+<div id="first-download-of-each-r-version" class="section level3">
+<h3>First download of each R version</h3>
+<div class="superbigimage">
+<pre class="r"><code>rd %&gt;% drop_na(os) %&gt;% group_by(version,os) %&gt;% summarise(first=min(date)) %&gt;% ggplot(.,aes(fct_rev(version),as.Date(first),col=os))+ geom_point()+coord_flip()+xlab(&quot;date of first download&quot;)+ylab(&quot;R version&quot;)</code></pre>
+<p><img src="/tidytuesday/week31_files/figure-html/unnamed-chunk-2-1.png" width="768" /></p>
+</div>
+<p><strong>Take-Aways</strong></p>
+<ul>
+<li>Windows often lags.</li>
+<li>I suspect “devel” and “latest” are relative to the current version since they appear early on.</li>
+</ul>
+</div>
+<div id="tidyverse-and-its-components" class="section level3">
+<h3>Tidyverse and its components</h3>
+<pre class="r"><code>tidyverse=cran_downloads(package=&quot;tidyverse&quot;,from=min(rd$date),to=max(rd$date))
+ggpl=cran_downloads(package=&quot;ggplot2&quot;,from=min(rd$date),to=max(rd$date))
+dp=cran_downloads(package=&quot;dplyr&quot;,from=min(rd$date),to=max(rd$date))
+tid=cran_downloads(package=&quot;tidyr&quot;,from=min(rd$date),to=max(rd$date))
+re=cran_downloads(package=&quot;readr&quot;,from=min(rd$date),to=max(rd$date))
+pr=cran_downloads(package=&quot;purrr&quot;,from=min(rd$date),to=max(rd$date))
+tib=cran_downloads(package=&quot;tibble&quot;,from=min(rd$date),to=max(rd$date))
+st=cran_downloads(package=&quot;stringr&quot;,from=min(rd$date),to=max(rd$date))
+fc=cran_downloads(package=&quot;forcats&quot;,from=min(rd$date),to=max(rd$date))
+
+
+
+
+allTy=rbind.data.frame(tidyverse,ggpl,dp,tid,re,pr,tib,st,fc)
+
+## add a horizontal line representing mean, help us pick out different colors
+orderV=allTy %&gt;% group_by(package) %&gt;% summarise(mV=mean(count)) %&gt;% arrange(mV)</code></pre>
+<div class="superbigimage">
+<pre class="r"><code>ggplot(allTy,aes(date,count,col=package))+geom_point(size=2,alpha=.75)+geom_hline(data=orderV,aes(yintercept=mV,col=package),lwd=2,lty=c(rep(1,7),2,1))+geom_vline(aes(xintercept=as.Date(&quot;2017-12-25&quot;)))</code></pre>
+<p><img src="/tidytuesday/week31_files/figure-html/unnamed-chunk-4-1.png" width="960" /></p>
+</div>
+<p>Note: <code>stringr</code> and <code>tibble</code> are on top of one another.</p>
+<p><strong>Take-Aways</strong></p>
+<ul>
+<li><p>The average number of downloads of <code>tidyverse</code> is less than the average number of downloads for all of its components. This makes sense because we can either download all packages at once via <code>tidyverse</code> or download the components separately.</p></li>
+<li><p><code>ggplot2</code> has the highest average number of downloads.</p></li>
+<li><p><code>stringr</code> and <code>tibble</code> have similar average number of downloads.</p></li>
+<li><p>There is some evidence of a bit of work life balance as there is a noticable drop off in downloads on Christmas.</p></li>
+</ul>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week23/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

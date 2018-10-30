@@ -6,10 +6,20 @@
     <description>Recent content on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Tue, 04 Sep 2018 10:42:13 -0700</lastBuildDate>
+    <lastBuildDate>Tue, 30 Oct 2018 10:42:13 -0700</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Week 31: R and R package downloads</title>
+      <link>/tidytuesday/week31/</link>
+      <pubDate>Tue, 30 Oct 2018 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/week31/</guid>
+      <description>.superbigimage{ overflow-x:scroll; white-space: nowrap; } .superbigimage img{ max-width: none; } /* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/  library(ggplot2) library(dplyr) library(tidyr) library(forcats) library(cranlogs) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-10-30&amp;quot;) rd=read.csv(&amp;quot;r_downloads_year.csv&amp;quot;) rd$date=as.Date(as.character(rd$date)) First download of each R version rd %&amp;gt;% drop_na(os) %&amp;gt;% group_by(version,os) %&amp;gt;% summarise(first=min(date)) %&amp;gt;% ggplot(.,aes(fct_rev(version),as.Date(first),col=os))+ geom_point()+coord_flip()+xlab(&amp;quot;date of first download&amp;quot;)+ylab(&amp;quot;R version&amp;quot;)  Take-Aways
+ Windows often lags. I suspect “devel” and “latest” are relative to the current version since they appear early on.   Tidyverse and its components tidyverse=cran_downloads(package=&amp;quot;tidyverse&amp;quot;,from=min(rd$date),to=max(rd$date)) ggpl=cran_downloads(package=&amp;quot;ggplot2&amp;quot;,from=min(rd$date),to=max(rd$date)) dp=cran_downloads(package=&amp;quot;dplyr&amp;quot;,from=min(rd$date),to=max(rd$date)) tid=cran_downloads(package=&amp;quot;tidyr&amp;quot;,from=min(rd$date),to=max(rd$date)) re=cran_downloads(package=&amp;quot;readr&amp;quot;,from=min(rd$date),to=max(rd$date)) pr=cran_downloads(package=&amp;quot;purrr&amp;quot;,from=min(rd$date),to=max(rd$date)) tib=cran_downloads(package=&amp;quot;tibble&amp;quot;,from=min(rd$date),to=max(rd$date)) st=cran_downloads(package=&amp;quot;stringr&amp;quot;,from=min(rd$date),to=max(rd$date)) fc=cran_downloads(package=&amp;quot;forcats&amp;quot;,from=min(rd$date),to=max(rd$date)) allTy=rbind.</description>
+    </item>
     
     <item>
       <title>Week 23: Fast Food Calories</title>

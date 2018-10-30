@@ -3,6 +3,11 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/tidytuesday/week31/</loc>
+    <lastmod>2018-10-30T10:42:13-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/tidytuesday/week23/</loc>
     <lastmod>2018-09-04T10:42:13-07:00</lastmod>
   </url>
@@ -202,7 +207,7 @@
   
   <url>
     <loc>/</loc>
-    <lastmod>2018-09-04T10:42:13-07:00</lastmod>
+    <lastmod>2018-10-30T10:42:13-07:00</lastmod>
     <priority>0</priority>
   </url>
   
@@ -226,7 +231,7 @@
   
   <url>
     <loc>/tidytuesday/</loc>
-    <lastmod>2018-09-04T10:42:13-07:00</lastmod>
+    <lastmod>2018-10-30T10:42:13-07:00</lastmod>
     <priority>0</priority>
   </url>
   
