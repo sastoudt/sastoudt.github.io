@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 32: US Wind Farm Locations</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON NOV 12, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <style>
+  .superbigimage{
+      overflow-x:scroll;
+      white-space: nowrap;
+  }
+
+  .superbigimage img{
+     max-width: none;
+  }
+
+/* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/
+</style>
+<p>Tardy as usual…</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/67Hx105rN5gRy/giphy.gif" />
+
+</div>
+<pre class="r"><code>library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(geofacet)
+library(RColorBrewer)
+setwd(&quot;~/Desktop/tidytuesday/data/2018-11-06&quot;)
+wind= read.csv(&quot;us_wind.csv&quot;)</code></pre>
+<p><strong>Deal with the missing data</strong>: I used <code>na_if</code> for the first time here.</p>
+<pre class="r"><code>wind=wind %&gt;% mutate(faa_ors=na_if(faa_ors,&quot;missing&quot;),faa_asn=na_if(faa_asn,&quot;missing&quot;),usgs_pr_id=na_if(usgs_pr_id,-9999), t_state=na_if(t_state,&quot;missing&quot;),t_county=na_if(t_county,&quot;missing&quot;),t_fips=na_if(t_fips,&quot;missing&quot;),p_name=na_if(p_name,&quot;missing&quot;),p_year=na_if(p_year,-9999), p_tnum=na_if(p_tnum,-9999), p_cap=na_if(p_cap,-9999), t_manu=na_if(t_manu,&quot;missing&quot;), t_model=na_if(t_model,&quot;missing&quot;), t_cap=na_if(t_cap,-9999),t_hh=na_if(t_hh,-9999), t_rd=na_if(t_rd,-9999), t_rsa=na_if(t_rsa,-9999),t_ttlh=na_if(t_ttlh,-9999),t_img_date=na_if(t_img_date,&quot;missing&quot;), t_img_srce=na_if(t_img_srce,&quot;missing&quot;))</code></pre>
+<p><strong>When windmills became operational by state over time</strong>:</p>
+<pre class="r"><code>toP=wind %&gt;% group_by(t_state,p_year) %&gt;% summarise(count=n())
+ggplot(toP,aes(p_year,count))+geom_point()+geom_line()+facet_geo(~t_state) </code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-3-1.png" width="1152" /></p>
+<p>It’s too hard to see what is going on because of big windmill states like CA. Let’s try letting the y-axes be different per state.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/xPGkiZ4jPaeZ2/giphy.gif" />
+
+</div>
+<pre class="r"><code>ggplot(toP,aes(p_year,count))+geom_point()+geom_line()+facet_geo(~t_state,scales=&quot;free_y&quot;)</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-4-1.png" width="1344" /></p>
+<p>It’s still hard to see what is going on here. Let’s simplify the question.</p>
+<p><strong>total number of windmills per state</strong></p>
+<p><em>Using the version of <code>statebins</code> on CRAN…</em></p>
+<pre class="r"><code>toP2=toP %&gt;% group_by(t_state) %&gt;% summarise(total=sum(count))
+toP2=as.data.frame(toP2)
+toP2$t_state=as.character(toP2$t_state)
+
+library(statebins)
+statebins_continuous(toP2,state_col=&quot;t_state&quot;, value_col=&quot;total&quot;,brewer_pal=&quot;YlOrRd&quot;,legend_title=&quot;total wind turbines&quot;)+guides(fill=guide_colorbar(label.theme=element_text(angle=45,size=10,hjust=1))) </code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>The nice thing about this being built in <code>ggplot</code> is that it was easy to add a <code>guides</code> statement to rotate the legend labels. I originally took the source code and modified it (in the call to <code>scale_fill_gradientn</code>) to create a new function that rotates the legend text. Then I found <a href="https://rstudio-pubs-static.s3.amazonaws.com/322415_c6c9085b68ee4305b4b185326449e68f.html">this</a> that I used below and realized I could just add on to the output of <code>statebins_continuous</code> instead of creating a whole new function.</p>
+<p>Skewness makes it hard to see what is really going on. How about a transform?</p>
+<pre class="r"><code>toP2$logTotal=log(toP2$total)
+statebins_continuous(toP2,state_col=&quot;t_state&quot;, value_col=&quot;logTotal&quot;,brewer_pal=&quot;YlOrRd&quot;,legend_title=&quot;log(total wind turbines)&quot;)+guides(fill=guide_colorbar(label.theme=element_text(angle=45,size=10,hjust=1))) </code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p><strong>What year did each state gain the most windmills?</strong></p>
+<pre class="r"><code>toP3=toP %&gt;% group_by(t_state) %&gt;% summarise(maxYear=p_year[which.max(p_year)])
+toP3=as.data.frame(toP3)
+toP3$t_state=as.character(toP3$t_state)</code></pre>
+<p>We can’t do the following because we are only allowed up to 9 different categories.</p>
+<pre class="r"><code>statebins(toP3,state_col=&quot;t_state&quot;, value_col=&quot;maxYear&quot;,brewer_pal=&quot;YlOrRd&quot;,legend_title=&quot;year w/ most new \n wind turbines&quot;,breaks=length(unique(toP3$maxYear))) </code></pre>
+<p>We can use the manual version, but first we have to fix a bug in <code>statebins_manual</code> where it assumes <code>color_col=&quot;color&quot;</code> even though it allows us to pass in something else.</p>
+<pre class="r"><code>colors=c(brewer.pal(9,&quot;YlOrRd&quot;),&quot;black&quot;)
+
+key=cbind.data.frame(year=sort(unique(toP3$maxYear)),colz=colors)
+
+toP3=merge(toP3,key,by.x=&quot;maxYear&quot;,by.y=&quot;year&quot;)
+toP3$colz=as.character(toP3$colz)</code></pre>
+<p>Note: we can’t call the variable for color <code>col</code> because in the <code>statebins_manual</code> function there is a merge to the state/abbreviation key that has a column named <code>col</code>. This results in a dataframe with <code>col.x</code> and <code>col.y</code> as columns, and then when we look to grab color from <code>col</code>, we no longer have a column with that name.</p>
+<pre class="r"><code>## get some source files for helper functions
+setwd(&quot;~/Desktop/statebins/R&quot;)
+source(&quot;aaa.R&quot;)
+source(&quot;util.R&quot;)
+
+statebins_manualFix=function(state_data, state_col=&quot;state&quot;, color_col=&quot;color&quot;,
+         text_color=&quot;black&quot;, font_size=3,
+         state_border_col=&quot;white&quot;, labels=NULL,
+         legend_title=&quot;Legend&quot;, legend_position=&quot;top&quot;,
+         plot_title=&quot;&quot;, title_position=&quot;bottom&quot;) {
+  
+  if (!title_position %in% c(&quot;&quot;, &quot;top&quot;, &quot;bottom&quot;)) {
+    stop(&quot;&#39;title_position&#39; must be either blank, &#39;top&#39; or &#39;bottom&#39;&quot;)
+  }
+  
+  state_data &lt;- data.frame(state_data, stringsAsFactors=FALSE)
+  
+  if (max(nchar(state_data[,state_col])) == 2) {
+    merge.x &lt;- &quot;abbrev&quot;
+  } else {
+    merge.x &lt;- &quot;state&quot;
+  }
+  
+  state_data &lt;- validate_states(state_data, state_col, merge.x)
+  
+  st.dat &lt;- merge(state_coords, state_data, by.x=merge.x, by.y=state_col, all.y=TRUE)
+  gg &lt;- ggplot(st.dat, aes_string(x=&quot;col&quot;, y=&quot;row&quot;, label=&quot;abbrev&quot;))
+  gg &lt;- gg + geom_tile(aes_string(fill=color_col)) ## fixed from fill=&quot;color&quot;
+  gg &lt;- gg + geom_tile(color=state_border_col, aes_string(fill=color_col), size=2, show_guide=FALSE) ## fixed from fill=&quot;color&quot;
+  
+  ## allows for a switch to white if block is black and text color is black
+  if(text_color==&quot;black&quot;){
+ text_color2=ifelse(st.dat[,color_col]==&quot;black&quot;,&quot;white&quot;,&quot;black&quot;)
+   gg &lt;- gg + geom_text(color=text_color2, size=rep(font_size,nrow(st.dat)))
+
+  }else{
+      gg &lt;- gg + geom_text(color=text_color, size=font_size)
+
+  }
+  gg &lt;- gg + scale_y_reverse()
+  if (is.null(labels)) {
+    gg &lt;- gg + scale_fill_manual(values=unique(st.dat[,color_col]))
+    legend_position = &quot;none&quot;
+  } else {
+    gg &lt;- gg + scale_fill_manual(values=unique(state_data[,color_col]), labels=labels, name=legend_title) 
+    ## switch to unique values from original data set so it matches the order of labels
+  }
+  gg &lt;- gg + coord_equal()
+  gg &lt;- gg + labs(x=NULL, y=NULL, title=NULL)
+  gg &lt;- gg + theme_bw()
+  gg &lt;- gg + theme(legend.position=legend_position)
+  gg &lt;- gg + theme(panel.border=element_blank())
+  gg &lt;- gg + theme(panel.grid=element_blank())
+  gg &lt;- gg + theme(panel.background=element_blank())
+  gg &lt;- gg + theme(axis.ticks=element_blank())
+  gg &lt;- gg + theme(axis.text=element_blank())
+  
+  if (plot_title != &quot;&quot;) {
+    
+    if (title_position == &quot;bottom&quot;) {
+      gg &lt;- arrangeGrob(gg, sub=textGrob(plot_title, gp=gpar(cex=1)))
+    } else {
+      gg &lt;- gg + ggtitle(plot_title)
+    }
+    
+  }
+  
+  return(gg)
+  
+}
+
+statebins_manualFix(toP3,state_col=&quot;t_state&quot;,color_col=&quot;colz&quot;,legend_title = &quot;year w/ most new \n wind turbines&quot;,legend_position = &quot;top&quot;,labels=key$year,text_color=&quot;grey&quot;,font_size=5)</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+<pre class="r"><code>## black text unless block is black, then white
+statebins_manualFix(toP3,state_col=&quot;t_state&quot;,color_col=&quot;colz&quot;,legend_title = &quot;year w/ most new \n wind turbines&quot;,legend_position = &quot;top&quot;,labels=key$year,text_color=&quot;black&quot;,font_size=5)</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-10-2.png" width="672" /></p>
+<p><em>If we use the updated version that is on GitHub…</em></p>
+<p>First I tried to install both versions and switch between them using <a href="https://stackoverflow.com/questions/2988559/how-do-you-use-multiple-versions-of-the-same-r-package">this</a> advice, but it didn’t seem to update the <code>statebins</code> function.</p>
+<pre class="r"><code>devtools::install_github(&quot;hrbrmstr/statebins&quot;,lib=&quot;/Library/Frameworks/R.framework/Versions/3.5/Resources/library/bonus&quot;)
+library(statebins, lib.loc=&quot;/Library/Frameworks/R.framework/Versions/3.5/Resources/library/bonus&quot;)</code></pre>
+<p>So I did a hack.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/XIqCQx02E1U9W/giphy.gif" />
+
+</div>
+<pre class="r"><code>setwd(&quot;~/Desktop/statebins/R&quot;)
+source(&quot;statebins.R&quot;)
+source(&quot;theme-statebin.R&quot;)
+source(&quot;geom-statebins.r&quot;)</code></pre>
+<pre class="r"><code>toP3$maxYear=as.factor(toP3$maxYear)
+#https://stackoverflow.com/questions/6919025/how-to-assign-colors-to-categorical-variables-in-ggplot2-that-have-stable-mappin
+names(colors)= levels(toP3$maxYear)
+
+toP3 %&gt;% statebins(state_col=&quot;t_state&quot;,
+    value_col = &quot;maxYear&quot;,
+    dark_label = &quot;white&quot;, light_label = &quot;black&quot;, ## this is built in now
+    ggplot2_scale_function = scale_fill_manual,
+    values=colors,name = &quot;year w/ most new \n wind turbines&quot;,font_size=5)+ theme_statebins()</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-13-1.png" width="672" /></p>
+<pre class="r"><code>toP2 %&gt;% statebins(state_col=&quot;t_state&quot;,value_col=&quot;total&quot;,palette=&quot;YlOrRd&quot;,name = &quot;log(total wind turbines)&quot;)+ theme_statebins() + guides(fill=guide_colorbar(label.theme=element_text(angle=45,size=10,hjust=1))) </code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-13-2.png" width="672" /></p>
+<p>My next challenge is to <strong>plot points on the map</strong>. Because there are wind turbines in Hawaii and Alaska, typical maps in ggplot are incomplete.</p>
+<p>If we wanted to create a chloropleth, the <code>fiftystater</code> package makes this easy.</p>
+<pre class="r"><code>#devtools::install_github(&quot;wmurphyrd/fiftystater&quot;)
+## couldn&#39;t get from CRAN with my R version (3.5.1)
+
+library(fiftystater)
+
+byState &lt;- wind %&gt;% group_by(t_state) %&gt;% summarise(total=n()) %&gt;% mutate(logTotal=log(total))
+
+## Need map_id to be lowercase names
+toMatch=cbind.data.frame(abb=state.abb,name=state.name)
+byState2=merge(byState,toMatch,by.x=&quot;t_state&quot;,by.y=&quot;abb&quot;,all.x=T,all.y=T)
+byState2$name=tolower(byState2$name)
+
+ ggplot(byState2, aes(map_id = name)) + 
+  geom_map(aes(fill = logTotal), map = fifty_states) + 
+  expand_limits(x = fifty_states$long, y = fifty_states$lat) +
+  coord_map() +
+  scale_x_continuous(breaks = NULL) + 
+  scale_y_continuous(breaks = NULL) +
+  labs(x = &quot;&quot;, y = &quot;&quot;) +
+  theme(legend.position = &quot;bottom&quot;, 
+        panel.background = element_blank())+guides(fill=guide_colorbar(label.theme=element_text(angle=45,size=10,hjust=1))) </code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-14-1.png" width="672" /></p>
+<p>```</p>
+<p>However, if we want to plot points, the scaling for Alaska and Hawaii distorts the rest of the US.</p>
+<pre class="r"><code>library(maps)
+all_states &lt;- map_data(&quot;state&quot;)
+p &lt;- ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour=&quot;black&quot;, fill=&quot;white&quot; )
+
+p+ geom_point(data=wind,aes(x=xlong,y=ylat))+coord_map(xlim=c(-180,-60), ylim=c(10,70))</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>To get something that looks like the chloropleth but with points, we need to transform the Alaska and Hawaii data.</p>
+<pre class="r"><code>library(maptools)
+#https://stackoverflow.com/questions/28421353/how-to-add-hawaii-and-alaska-to-spatial-polygons-in-r
+tmp_dl &lt;- tempfile()
+download.file(&quot;http://www2.census.gov/geo/tiger/GENZ2013/cb_2013_us_state_20m.zip&quot;, tmp_dl)
+unzip(tmp_dl, exdir=tempdir())
+library(rgdal)
+ST &lt;- readOGR(tempdir(), &quot;cb_2013_us_state_20m&quot;,verbose=F)
+
+
+#https://stackoverflow.com/questions/11052544/convert-map-data-to-data-frame-using-fortify-ggplot2-for-spatial-objects-in-r
+us_aea &lt;- spTransform(ST, CRS(&quot;+proj=laea +lat_0=45 +lon_0=-100 +x_0=0 +y_0=0 +a=6370997 +b=6370997 +units=m +no_defs&quot;))
+us_aea@data$id &lt;- rownames(us_aea@data)
+
+# extract, then rotate, shrink &amp; move alaska (and reset projection)
+# need to use state IDs via # https://www.census.gov/geo/reference/ansi_statetables.html
+alaska &lt;- us_aea[us_aea$STATEFP==&quot;02&quot;,]
+alaska &lt;- elide(alaska, rotate=-50)
+scaleSave = max(apply(bbox(alaska), 1, diff)) / 2.3
+alaska &lt;- elide(alaska, scale=scaleSave)
+alaska &lt;- elide(alaska, shift=c(-2100000, -2500000))
+proj4string(alaska) &lt;- proj4string(us_aea)
+
+# extract, then rotate &amp; shift hawaii
+hawaii &lt;- us_aea[us_aea$STATEFP==&quot;15&quot;,]
+hawaii &lt;- elide(hawaii, rotate=-35)
+hawaii &lt;- elide(hawaii, shift=c(5400000, -1400000))
+proj4string(hawaii) &lt;- proj4string(us_aea)
+
+# remove old states and put new ones back in; note the different order
+# we&#39;re also removing puerto rico in this example but you can move it
+# between texas and florida via similar methods to the ones we just used
+us_aea &lt;- us_aea[!us_aea$STATEFP %in% c(&quot;02&quot;, &quot;15&quot;, &quot;72&quot;),]
+us_aea &lt;- rbind(us_aea, alaska, hawaii)
+us50 &lt;- fortify(us_aea, region=&quot;STUSPS&quot;)
+
+ggplot(data=us50) + geom_map(map=us50, aes(x=long, y=lat, map_id=id, group=group), ,fill=&quot;white&quot;, color=&quot;dark grey&quot;, size=0.15) </code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>Now need to transform the data to add to this plot.</p>
+<pre class="r"><code>windT=wind
+coordinates(windT) &lt;- ~ xlong + ylat
+proj4string(windT) &lt;-CRS(proj4string(ST)) ## this assumes the original
+
+trf=spTransform(windT,CRS(proj4string(us_aea)))
+
+
+trfRest=subset(trf,!(t_state %in% c(&quot;HI&quot;,&quot;AK&quot;) ))
+proj4string(trfRest) &lt;- proj4string(trfRest)
+hi=subset(trf,t_state ==&quot;HI&quot;)
+ak=subset(trf,t_state==&quot;AK&quot;)
+
+## adjust hawaii and alaska
+ak &lt;- elide(ak, rotate=-50)
+ak &lt;- elide(ak, scale=scaleSave)
+ak  &lt;- elide(ak, shift=c(-2100000, -2500000))
+proj4string(ak) &lt;- proj4string(us_aea)
+
+# extract, then rotate &amp; shift hawaii
+hi &lt;- elide(hi, rotate=-35)
+hi &lt;- elide(hi, shift=c(5400000, -1400000))
+proj4string(hi) &lt;- proj4string(us_aea)
+
+transformed &lt;- rbind(trfRest, ak, hi)
+
+windT &lt;- as.data.frame(transformed)
+  
+ggplot(data=us50) + 
+  geom_map(map=us50, aes(x=long, y=lat, map_id=id, group=group), ,fill=&quot;white&quot;, color=&quot;dark grey&quot;, size=0.15) +
+  geom_point(data=windT,aes(x=xlong,y=ylat))+ylim(-2.5e6, 1e6)+xlim(-2.5e6,3e6)</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<p>Are the wind turbines supposed to be in the ocean around Alaska, or did something go wrong when we were moving Alaska around?</p>
+<p>Common sense check: are some wind turbines in the ocean for other states?</p>
+<pre class="r"><code>ca=subset(windT,t_state==&quot;CA&quot;)
+
+## after transform
+ggplot(data=us50) + 
+  geom_map(map=us50, aes(x=long, y=lat, map_id=id, group=group), ,fill=&quot;white&quot;, color=&quot;dark grey&quot;, size=0.15) +
+  geom_point(data=ca,aes(x=xlong,y=ylat))+ylim(-2.5e6, 1e6)+xlim(-2.5e6,3e6)</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<pre class="r"><code>## before transform
+ggplot()+ geom_polygon( data=all_states, aes(x=long, y=lat, group = group),colour=&quot;black&quot;, fill=&quot;white&quot; )+ geom_point(data=wind,aes(x=xlong,y=ylat))+coord_map(xlim=c(-180,-60), ylim=c(10,70))</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-18-2.png" width="672" /></p>
+<p>Yup, one off the coast of California in both the original and transformed data.</p>
+<p>But I’m still not sure if Alaska is right. Base map to the rescue! It looks like Alaska’s wind turbines are definitely on the coast, but not as far away from Alaska as the <code>ggplot</code> version makes it look. Hm….</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/ddMYl9xCSnOmY/giphy.gif" />
+
+</div>
+<pre class="r"><code>library(maps)
+map(&quot;world&quot;, c(&quot;USA&quot;,&quot;hawaii&quot;), xlim=c(-180,-65), ylim=c(19,72),interior = FALSE)
+points(wind$xlong,wind$ylat)</code></pre>
+<p><img src="/tidytuesday/week32_files/figure-html/unnamed-chunk-19-1.png" width="672" /></p>
+<p>Did I assume the wrong original projection for the data? Nope!</p>
+<pre class="r"><code>## Original shapefile
+## https://eerscmap.usgs.gov/uswtdb/data/
+setwd(&quot;~/Desktop/tidytuesday/data/2018-11-06/uswtdbSHP&quot;)
+og &lt;- readOGR(&quot;.&quot;,&quot;uswtdb_v1_2_20181001&quot;,verbose=F)
+proj4string(og)</code></pre>
+<pre><code>## [1] &quot;+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0&quot;</code></pre>
+<pre class="r"><code>proj4string(ST) ## matches what I assumed the wind data was</code></pre>
+<pre><code>## [1] &quot;+proj=longlat +datum=NAD83 +no_defs +ellps=GRS80 +towgs84=0,0,0&quot;</code></pre>
+<p>This remains a mystery for now. <strong>If anyone has any advice, please let me know <span class="citation">[@sastoudt]</span>.</strong></p>
+<p>Even if this would have worked, there is a lot of processing to just get a nice map of the full US with points on it. <strong>Has anyone pre-packaged all of this to be available in <code>ggplot</code> like <code>fiftystater</code> does for chloropleths?</strong></p>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week31/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

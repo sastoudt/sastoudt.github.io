@@ -6,10 +6,22 @@
     <description>Recent content on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Tue, 30 Oct 2018 10:42:13 -0700</lastBuildDate>
+    <lastBuildDate>Mon, 12 Nov 2018 10:42:13 -0700</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Week 32: US Wind Farm Locations</title>
+      <link>/tidytuesday/week32/</link>
+      <pubDate>Mon, 12 Nov 2018 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/week32/</guid>
+      <description>.superbigimage{ overflow-x:scroll; white-space: nowrap; } .superbigimage img{ max-width: none; } /* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/  Tardy as usual…
+ library(tidyr) library(dplyr) library(ggplot2) library(geofacet) library(RColorBrewer) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-11-06&amp;quot;) wind= read.csv(&amp;quot;us_wind.csv&amp;quot;) Deal with the missing data: I used na_if for the first time here.
+wind=wind %&amp;gt;% mutate(faa_ors=na_if(faa_ors,&amp;quot;missing&amp;quot;),faa_asn=na_if(faa_asn,&amp;quot;missing&amp;quot;),usgs_pr_id=na_if(usgs_pr_id,-9999), t_state=na_if(t_state,&amp;quot;missing&amp;quot;),t_county=na_if(t_county,&amp;quot;missing&amp;quot;),t_fips=na_if(t_fips,&amp;quot;missing&amp;quot;),p_name=na_if(p_name,&amp;quot;missing&amp;quot;),p_year=na_if(p_year,-9999), p_tnum=na_if(p_tnum,-9999), p_cap=na_if(p_cap,-9999), t_manu=na_if(t_manu,&amp;quot;missing&amp;quot;), t_model=na_if(t_model,&amp;quot;missing&amp;quot;), t_cap=na_if(t_cap,-9999),t_hh=na_if(t_hh,-9999), t_rd=na_if(t_rd,-9999), t_rsa=na_if(t_rsa,-9999),t_ttlh=na_if(t_ttlh,-9999),t_img_date=na_if(t_img_date,&amp;quot;missing&amp;quot;), t_img_srce=na_if(t_img_srce,&amp;quot;missing&amp;quot;)) When windmills became operational by state over time:
+toP=wind %&amp;gt;% group_by(t_state,p_year) %&amp;gt;% summarise(count=n()) ggplot(toP,aes(p_year,count))+geom_point()+geom_line()+facet_geo(~t_state)  It’s too hard to see what is going on because of big windmill states like CA.</description>
+    </item>
     
     <item>
       <title>Week 31: R and R package downloads</title>
