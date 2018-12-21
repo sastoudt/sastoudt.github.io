@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 34: Thanksgiving Dinner</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON DEC 30, 2018 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <style>
+  .superbigimage{
+      overflow-x:scroll;
+      white-space: nowrap;
+  }
+
+  .superbigimage img{
+     max-width: none;
+  }
+
+/* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/
+</style>
+<p>This is super tardy for Thanksgiving, but since Christmas is around the corner, and often there is a similar food vibe, here we go anyway…</p>
+<pre class="r"><code>library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+library(tidyr)
+
+setwd(&quot;~/Desktop/tidytuesday/data/2018-11-20&quot;)
+tg= read.csv(&quot;thanksgiving_meals.csv&quot;)</code></pre>
+<p><strong>Who travels most?</strong></p>
+<p>Trying to break down by community type, age, and gender, leaves bins too sparse.</p>
+<pre class="r"><code>look = tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by(travel, community_type,age,gender) %&gt;% summarise(count=n())
+
+summary(look$count) ## too sparse</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   1.000   4.500   8.000   9.899  13.000  38.000</code></pre>
+<p>Let’s first just look at travel by community type.</p>
+<pre class="r"><code>travelCommunity=tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by(travel, community_type) %&gt;% summarise(count=n()) %&gt;% filter(!is.na(community_type) &amp;!is.na(travel)) %&gt;% left_join(.,tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by(community_type) %&gt;% summarise(total=n())) %&gt;% mutate(percent=count/total)
+
+ggplot(data=travelCommunity, aes(x=travel, y=percent, fill=community_type)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge()) +coord_flip()</code></pre>
+<p><img src="/tidytuesday/week34_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>Ah, labels are a mess! Luckily, there is a natural breakpoint (—).</p>
+<pre class="r"><code>travelCommunity$travel2=unlist(lapply(strsplit(as.character(travelCommunity$travel),&quot;--&quot;),function(x){paste(x[1],&quot;\n&quot;,x[2],collapse=&quot;&quot;)}))
+
+ggplot(data=travelCommunity, aes(x=travel2, y=percent, fill=community_type)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge()) +coord_flip()+xlab(&quot;&quot;)</code></pre>
+<p><img src="/tidytuesday/week34_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Having to specify the <code>xlab</code> as empty instead of the <code>ylab</code> that it ends up with due to the <code>coord_flip</code> was unexpected.</p>
+<p>Now let’s look at travel by age.</p>
+<pre class="r"><code>travelAge=tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by(travel, age) %&gt;% summarise(count=n()) %&gt;% filter(!is.na(age) &amp;!is.na(travel)) %&gt;% left_join(.,tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by( age) %&gt;% summarise(total=n())) %&gt;% mutate(percent=count/total)
+
+travelAge$travel2=unlist(lapply(strsplit(as.character(travelAge$travel),&quot;--&quot;),function(x){paste(x[1],&quot;\n&quot;,x[2],collapse=&quot;&quot;)})) ## similarly break up label</code></pre>
+<p>Here we need to reverse the order of age because of the <code>coord_flip</code>.</p>
+<pre class="r"><code>ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge())+coord_flip() ## need to reverse order of age</code></pre>
+<p><img src="/tidytuesday/week34_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>All the things that don’t work.</p>
+<pre class="r"><code>ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge())+coord_flip() +scale_x_discrete(limits = rev(levels(travelAge$age))) ## nope
+
+ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge())+coord_flip() +scale_y_discrete(limits = rev(levels(travelAge$age))) ## nope
+
+## set limits before flipping?
+ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge())+scale_y_discrete(limits = rev(levels(travelAge$age)))+coord_flip() ## nope
+
+ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge())+scale_x_discrete(limits = rev(levels(travelAge$age)))+coord_flip()  ## nope</code></pre>
+<p>Finally, the winner!</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/p0KXTozbXjktO/giphy.gif" />
+
+</div>
+<pre class="r"><code>ggplot(data=travelAge %&gt;% mutate(age=fct_rev(age)), aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge())+coord_flip()+scale_fill_discrete(  guide = guide_legend(reverse = TRUE))</code></pre>
+<p><img src="/tidytuesday/week34_files/figure-html/unnamed-chunk-8-1.png" width="672" /></p>
+<p>How about travel by gender?</p>
+<pre class="r"><code>travelGender=tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by(travel,gender ) %&gt;% summarise(count=n()) %&gt;% filter(!is.na(gender) &amp;!is.na(travel)) %&gt;% left_join(.,tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by( gender) %&gt;% summarise(total=n())) %&gt;% mutate(percent=count/total)
+
+travelGender$travel2=unlist(lapply(strsplit(as.character(travelGender$travel),&quot;--&quot;),function(x){paste(x[1],&quot;\n&quot;,x[2],collapse=&quot;&quot;)})) ## similarly break up label
+
+ggplot(data=travelGender, aes(x=travel2, y=percent, fill=gender)) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge()) +coord_flip()+xlab(&quot;&quot;)</code></pre>
+<p><img src="/tidytuesday/week34_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<p><strong>Who is shopping and who is working on Black Friday?</strong></p>
+<p>There is a small sample size here, so I’m just going to report some simple summary tables.</p>
+<pre class="r"><code>income = tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by(family_income) %&gt;% summarise(work=length(which(work_retail==&quot;Yes&quot;)), shop=length(which(black_friday==&quot;Yes&quot;))) %&gt;% left_join(.,tg %&gt;% filter(celebrate==&quot;Yes&quot;) %&gt;% group_by(family_income) %&gt;% summarise(total=n())) %&gt;% mutate(propW=work/total,propS=shop/total) %&gt;% filter(!is.na(family_income))</code></pre>
+<pre><code>## Joining, by = &quot;family_income&quot;</code></pre>
+<pre class="r"><code>tg %&gt;% filter(work_retail==&quot;Yes&quot;) %&gt;% group_by(work_black_friday) %&gt;% summarise(count=n())</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   work_black_friday count
+##   &lt;fct&gt;             &lt;int&gt;
+## 1 Doesn&#39;t apply         7
+## 2 No                   20
+## 3 Yes                  43</code></pre>
+<pre class="r"><code>## small sample size, can&#39;t do much
+
+tg %&gt;% filter(work_retail==&quot;Yes&quot;) %&gt;% group_by(gender) %&gt;% summarise(count=n())</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   gender count
+##   &lt;fct&gt;  &lt;int&gt;
+## 1 Female    31
+## 2 Male      38
+## 3 &lt;NA&gt;       1</code></pre>
+<pre class="r"><code>tg %&gt;% filter(work_retail==&quot;Yes&quot;) %&gt;% group_by(age) %&gt;% summarise(count=n())</code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   age     count
+##   &lt;fct&gt;   &lt;int&gt;
+## 1 18 - 29    26
+## 2 30 - 44    21
+## 3 45 - 59    15
+## 4 60+         7
+## 5 &lt;NA&gt;        1</code></pre>
+<pre class="r"><code>tg %&gt;% filter(work_retail==&quot;Yes&quot;) %&gt;% group_by(work_black_friday) %&gt;% summarise(count=n())</code></pre>
+<pre><code>## # A tibble: 3 x 2
+##   work_black_friday count
+##   &lt;fct&gt;             &lt;int&gt;
+## 1 Doesn&#39;t apply         7
+## 2 No                   20
+## 3 Yes                  43</code></pre>
+<pre class="r"><code>byIncome = tg %&gt;% filter(work_retail==&quot;Yes&quot;) %&gt;% group_by(family_income) %&gt;% summarise(count=n())</code></pre>
+<p>I want to reorder based on money not alphabetical order.</p>
+<pre class="r"><code>levels(income$family_income) ## want to reorder</code></pre>
+<pre><code>##  [1] &quot;$0 to $9,999&quot;         &quot;$10,000 to $24,999&quot;   &quot;$100,000 to $124,999&quot;
+##  [4] &quot;$125,000 to $149,999&quot; &quot;$150,000 to $174,999&quot; &quot;$175,000 to $199,999&quot;
+##  [7] &quot;$200,000 and up&quot;      &quot;$25,000 to $49,999&quot;   &quot;$50,000 to $74,999&quot;  
+## [10] &quot;$75,000 to $99,999&quot;   &quot;Prefer not to answer&quot;</code></pre>
+<pre class="r"><code>intstep=levels(income$family_income)[order(nchar(levels(income$family_income)))]
+intstep ## by number of characters, works except for and up</code></pre>
+<pre><code>##  [1] &quot;$0 to $9,999&quot;         &quot;$200,000 and up&quot;      &quot;$10,000 to $24,999&quot;  
+##  [4] &quot;$25,000 to $49,999&quot;   &quot;$50,000 to $74,999&quot;   &quot;$75,000 to $99,999&quot;  
+##  [7] &quot;$100,000 to $124,999&quot; &quot;$125,000 to $149,999&quot; &quot;$150,000 to $174,999&quot;
+## [10] &quot;$175,000 to $199,999&quot; &quot;Prefer not to answer&quot;</code></pre>
+<pre class="r"><code>test=fct_relevel(income$family_income,c(intstep[1],intstep[3:10],intstep[2],intstep[11]))
+levels(test)</code></pre>
+<pre><code>##  [1] &quot;$0 to $9,999&quot;         &quot;$10,000 to $24,999&quot;   &quot;$25,000 to $49,999&quot;  
+##  [4] &quot;$50,000 to $74,999&quot;   &quot;$75,000 to $99,999&quot;   &quot;$100,000 to $124,999&quot;
+##  [7] &quot;$125,000 to $149,999&quot; &quot;$150,000 to $174,999&quot; &quot;$175,000 to $199,999&quot;
+## [10] &quot;$200,000 and up&quot;      &quot;Prefer not to answer&quot;</code></pre>
+<pre class="r"><code>income$family_income=fct_relevel(income$family_income,c(intstep[1],intstep[3:10],intstep[2],intstep[11]))
+levels(test)</code></pre>
+<pre><code>##  [1] &quot;$0 to $9,999&quot;         &quot;$10,000 to $24,999&quot;   &quot;$25,000 to $49,999&quot;  
+##  [4] &quot;$50,000 to $74,999&quot;   &quot;$75,000 to $99,999&quot;   &quot;$100,000 to $124,999&quot;
+##  [7] &quot;$125,000 to $149,999&quot; &quot;$150,000 to $174,999&quot; &quot;$175,000 to $199,999&quot;
+## [10] &quot;$200,000 and up&quot;      &quot;Prefer not to answer&quot;</code></pre>
+<pre class="r"><code>byIncome$family_income=fct_relevel(byIncome$family_income,c(intstep[1],intstep[3:10],intstep[2],intstep[11]))
+byIncome</code></pre>
+<pre><code>## # A tibble: 12 x 2
+##    family_income        count
+##    &lt;fct&gt;                &lt;int&gt;
+##  1 $0 to $9,999            10
+##  2 $10,000 to $24,999       8
+##  3 $100,000 to $124,999     4
+##  4 $125,000 to $149,999     1
+##  5 $150,000 to $174,999     2
+##  6 $175,000 to $199,999     1
+##  7 $200,000 and up          5
+##  8 $25,000 to $49,999      17
+##  9 $50,000 to $74,999       5
+## 10 $75,000 to $99,999       9
+## 11 Prefer not to answer     7
+## 12 &lt;NA&gt;                     1</code></pre>
+<p><strong>Pie!</strong></p>
+<div class="figure">
+<img src="https://media.giphy.com/media/26BRQXyqJR1cqSaI0/giphy.gif" />
+
+</div>
+<p>The question asks “Which type of pie is typically served at your Thanksgiving dinner? Please select all that apply.” Each column represents a type of pie.</p>
+<pre class="r"><code>head(tg %&gt;% select(contains(&quot;pie&quot;)))</code></pre>
+<pre><code>##    pie1 pie2   pie3      pie4 pie5 pie6  pie7  pie8    pie9        pie10
+## 1 Apple &lt;NA&gt;   &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt; &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;    &lt;NA&gt;         &lt;NA&gt;
+## 2 Apple &lt;NA&gt;   &lt;NA&gt; Chocolate &lt;NA&gt; &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; Pumpkin         &lt;NA&gt;
+## 3 Apple &lt;NA&gt; Cherry      &lt;NA&gt; &lt;NA&gt; &lt;NA&gt; Peach Pecan Pumpkin Sweet Potato
+## 4  &lt;NA&gt; &lt;NA&gt;   &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt; &lt;NA&gt;  &lt;NA&gt; Pecan Pumpkin         &lt;NA&gt;
+## 5 Apple &lt;NA&gt;   &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt; &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt; Pumpkin         &lt;NA&gt;
+## 6  &lt;NA&gt; &lt;NA&gt;   &lt;NA&gt;      &lt;NA&gt; &lt;NA&gt; &lt;NA&gt;  &lt;NA&gt;  &lt;NA&gt;    &lt;NA&gt; Sweet Potato
+##   pie11                  pie12                 pie13
+## 1  &lt;NA&gt;                   &lt;NA&gt;                  &lt;NA&gt;
+## 2  &lt;NA&gt; Other (please specify) Derby, Japanese fruit
+## 3  &lt;NA&gt;                   &lt;NA&gt;                  &lt;NA&gt;
+## 4  &lt;NA&gt;                   &lt;NA&gt;                  &lt;NA&gt;
+## 5  &lt;NA&gt;                   &lt;NA&gt;                  &lt;NA&gt;
+## 6  &lt;NA&gt; Other (please specify)         Blueberry pie</code></pre>
+<pre class="r"><code>cbind.data.frame(type=(tg %&gt;% select(contains(&quot;pie&quot;)) %&gt;% apply(.,2,function(x){x[which(!is.na(x))[1]]})),
+count=(tg %&gt;% select(contains(&quot;pie&quot;)) %&gt;% apply(.,2,function(x){length(which(!is.na(x)))}) )) %&gt;% arrange(desc(count))</code></pre>
+<pre><code>##                      type count
+## 1                 Pumpkin   729
+## 2                   Apple   514
+## 3                   Pecan   342
+## 4            Sweet Potato   152
+## 5               Chocolate   133
+## 6                  Cherry   113
+## 7  Other (please specify)    71
+## 8   Derby, Japanese fruit    71
+## 9                    None    40
+## 10               Key lime    39
+## 11          Coconut cream    36
+## 12             Buttermilk    35
+## 13                  Peach    34</code></pre>
+<p>Since “Other (please specify)” has the same count as “Derby, Japanese fruit”, I’m going to assume this type of pie is where they specified. This will impact the count of pies per household.</p>
+<pre class="r"><code> tg %&gt;% select(contains(&quot;pie&quot;)) %&gt;% mutate(numPies=apply(.,1,function(x){length(which(!is.na(x)))})) %&gt;% mutate(isOther=apply(.,1,function(x){as.numeric(!is.na(x[12]))})) %&gt;% mutate(numPiesAdj=numPies-isOther) %&gt;% ggplot(.,aes(numPiesAdj))+geom_histogram(binwidth=1,col=&quot;black&quot;,fill=&quot;white&quot;)</code></pre>
+<p><img src="/tidytuesday/week34_files/figure-html/unnamed-chunk-15-1.png" width="672" /></p>
+<p>Please invite me to the households that serve over five different types of pie per holiday (but perhaps people rotate among types of pies each year and don’t actually have them all at one time).</p>
+<p><strong>Veggies</strong></p>
+<div class="figure">
+<img src="https://media.giphy.com/media/mnnJUiakh7qrS/giphy.gif" />
+
+</div>
+<p>Sides are reported similarly to pie. How do veggies fare in the side dish line up?</p>
+<pre class="r"><code>sideNum = tg %&gt;% select(contains(&quot;side&quot;)) %&gt;% apply(.,2,function(x){length(which(!is.na(x)))}) %&gt;% as.data.frame() %&gt;% t() %&gt;% as.data.frame()
+ 
+sideNames= tg %&gt;% select(contains(&quot;side&quot;)) %&gt;% apply(.,2,function(x){x[which(!is.na(x))[1]]}) %&gt;% as.data.frame() 
+
+names(sideNum)=sideNames[,1]
+ 
+sideNames[,1]</code></pre>
+<pre><code>##  [1] Brussel sprouts                  Carrots                         
+##  [3] Cauliflower                      Corn                            
+##  [5] Cornbread                        Fruit salad                     
+##  [7] Green beans/green bean casserole Macaroni and cheese             
+##  [9] Mashed potatoes                  Rolls/biscuits                  
+## [11] Squash                           Vegetable salad                 
+## [13] Yams/sweet potato casserole      Other (please specify)          
+## [15] Asian vinagrette salad          
+## 15 Levels: Asian vinagrette salad Brussel sprouts Carrots ... Yams/sweet potato casserole</code></pre>
+<pre class="r"><code>veggie=c(1:4,7,11,12,13,14)
+
+sideNum = sideNum %&gt;% gather(side,num) %&gt;% filter(side !=&quot;Other (please specify)&quot;)  %&gt;% mutate(isVeggie=rep(0,nrow(.)))
+## other is same as asian vinagrette salad
+
+sideNum$isVeggie[veggie]=rep(1,length(veggie))</code></pre>
+<pre class="r"><code>ggplot(data=sideNum, aes(x=reorder(side,-num), y=num, fill=as.factor(isVeggie))) +
+  geom_bar(stat=&quot;identity&quot;, position=position_dodge()) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + ylab(&quot;number&quot;) + xlab(&quot;side&quot;) + scale_fill_manual(values=c(&quot;yellow&quot;, &quot;green&quot;), name=&quot;is veggie?&quot; )</code></pre>
+<p><img src="/tidytuesday/week34_files/figure-html/unnamed-chunk-17-1.png" width="672" /></p>
+<pre class="r"><code>#https://stackoverflow.com/questions/25664007/reorder-bars-in-geom-bar-ggplot2</code></pre>
+<p>Who can compete with potatoes and carbs?</p>
+<p><strong>And the most controversial topic: the kids’ table</strong></p>
+<p>Yes, I’m a little salty for being at the kids’ table too many times.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/3o6Zt6Jdnh4pbBqUUM/giphy.gif" />
+
+</div>
+<p>Here the question answered was “What’s the age cutoff at your”kids’ table&quot; at Thanksgiving?“. It appears that there is a non-neglible number of people who have a 21+ rule for the kids’ table.</p>
+<pre class="r"><code>levels(tg$kids_table_age)</code></pre>
+<pre><code>##  [1] &quot;10 or younger&quot; &quot;11&quot;            &quot;12&quot;            &quot;13&quot;           
+##  [5] &quot;14&quot;            &quot;15&quot;            &quot;16&quot;            &quot;17&quot;           
+##  [9] &quot;18&quot;            &quot;19&quot;            &quot;20&quot;            &quot;21 or older&quot;</code></pre>
+<pre class="r"><code>tg$kids_table_age=as.numeric(str_replace_all(as.character(tg$kids_table_age),&quot;or .*&quot;,&quot;&quot;))
+
+ggplot(tg,aes(kids_table_age))+geom_histogram(binwidth=1,col=&quot;black&quot;,fill=&quot;white&quot;)+annotate(&quot;text&quot;, x = 21, y = 200, label = &quot;Why?!&quot;,col=&quot;red&quot;,size=5)</code></pre>
+<p><img src="/tidytuesday/week34_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>Happy Holidays!</p>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week32/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

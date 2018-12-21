@@ -1,0 +1,233 @@
+---
+title: 'Week 34: Thanksgiving Dinner'
+draft: yes
+date: '2018-12-30T10:42:13-07:00'
+geometry: margin=.1in
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<style>
+  .superbigimage{
+      overflow-x:scroll;
+      white-space: nowrap;
+  }
+
+  .superbigimage img{
+     max-width: none;
+  }
+
+/* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/
+</style>
+
+This is super tardy for Thanksgiving, but since Christmas is around the corner, and often there is a similar food vibe, here we go anyway...
+
+```{r,warning=F,message=F}
+library(dplyr)
+library(ggplot2)
+library(forcats)
+library(stringr)
+library(tidyr)
+
+setwd("~/Desktop/tidytuesday/data/2018-11-20")
+tg= read.csv("thanksgiving_meals.csv")
+
+```
+
+**Who travels most?**
+
+Trying to break down by community type, age, and gender, leaves bins too sparse.
+
+```{r,warning=F,message=F}
+look = tg %>% filter(celebrate=="Yes") %>% group_by(travel, community_type,age,gender) %>% summarise(count=n())
+
+summary(look$count) ## too sparse
+```
+
+Let's first just look at travel by community type.
+
+```{r,warning=F,message=F}
+travelCommunity=tg %>% filter(celebrate=="Yes") %>% group_by(travel, community_type) %>% summarise(count=n()) %>% filter(!is.na(community_type) &!is.na(travel)) %>% left_join(.,tg %>% filter(celebrate=="Yes") %>% group_by(community_type) %>% summarise(total=n())) %>% mutate(percent=count/total)
+
+ggplot(data=travelCommunity, aes(x=travel, y=percent, fill=community_type)) +
+  geom_bar(stat="identity", position=position_dodge()) +coord_flip()
+```
+
+Ah, labels are a mess! Luckily, there is a natural breakpoint (---).
+
+```{r,warning=F,message=F}
+travelCommunity$travel2=unlist(lapply(strsplit(as.character(travelCommunity$travel),"--"),function(x){paste(x[1],"\n",x[2],collapse="")}))
+
+ggplot(data=travelCommunity, aes(x=travel2, y=percent, fill=community_type)) +
+  geom_bar(stat="identity", position=position_dodge()) +coord_flip()+xlab("")
+```
+
+Having to specify the `xlab` as empty instead of the `ylab` that it ends up with due to the `coord_flip` was unexpected.
+
+Now let's look at travel by age.
+
+```{r,warning=F,message=F}
+travelAge=tg %>% filter(celebrate=="Yes") %>% group_by(travel, age) %>% summarise(count=n()) %>% filter(!is.na(age) &!is.na(travel)) %>% left_join(.,tg %>% filter(celebrate=="Yes") %>% group_by( age) %>% summarise(total=n())) %>% mutate(percent=count/total)
+
+travelAge$travel2=unlist(lapply(strsplit(as.character(travelAge$travel),"--"),function(x){paste(x[1],"\n",x[2],collapse="")})) ## similarly break up label
+```
+
+Here we need to reverse the order of age because of the `coord_flip`.
+
+```{r,warning=F,message=F}
+ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat="identity", position=position_dodge())+coord_flip() ## need to reverse order of age
+```
+
+All the things that don't work.
+
+```{r,eval=F}
+ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat="identity", position=position_dodge())+coord_flip() +scale_x_discrete(limits = rev(levels(travelAge$age))) ## nope
+
+ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat="identity", position=position_dodge())+coord_flip() +scale_y_discrete(limits = rev(levels(travelAge$age))) ## nope
+
+## set limits before flipping?
+ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat="identity", position=position_dodge())+scale_y_discrete(limits = rev(levels(travelAge$age)))+coord_flip() ## nope
+
+ggplot(data=travelAge, aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat="identity", position=position_dodge())+scale_x_discrete(limits = rev(levels(travelAge$age)))+coord_flip()  ## nope
+```
+
+Finally, the winner!
+
+![](https://media.giphy.com/media/p0KXTozbXjktO/giphy.gif)
+
+```{r,warning=F,message=F}
+ggplot(data=travelAge %>% mutate(age=fct_rev(age)), aes(x=travel2, y=percent, fill=age)) +
+  geom_bar(stat="identity", position=position_dodge())+coord_flip()+scale_fill_discrete(  guide = guide_legend(reverse = TRUE))
+```
+
+How about travel by gender?
+
+```{r,warning=F,message=F}
+travelGender=tg %>% filter(celebrate=="Yes") %>% group_by(travel,gender ) %>% summarise(count=n()) %>% filter(!is.na(gender) &!is.na(travel)) %>% left_join(.,tg %>% filter(celebrate=="Yes") %>% group_by( gender) %>% summarise(total=n())) %>% mutate(percent=count/total)
+
+travelGender$travel2=unlist(lapply(strsplit(as.character(travelGender$travel),"--"),function(x){paste(x[1],"\n",x[2],collapse="")})) ## similarly break up label
+
+ggplot(data=travelGender, aes(x=travel2, y=percent, fill=gender)) +
+  geom_bar(stat="identity", position=position_dodge()) +coord_flip()+xlab("")
+```
+
+
+**Who is shopping and who is working on Black Friday?**
+
+There is a small sample size here, so I'm just going to report some simple summary tables.
+
+```{r}
+income = tg %>% filter(celebrate=="Yes") %>% group_by(family_income) %>% summarise(work=length(which(work_retail=="Yes")), shop=length(which(black_friday=="Yes"))) %>% left_join(.,tg %>% filter(celebrate=="Yes") %>% group_by(family_income) %>% summarise(total=n())) %>% mutate(propW=work/total,propS=shop/total) %>% filter(!is.na(family_income))
+```
+
+```{r}
+tg %>% filter(work_retail=="Yes") %>% group_by(work_black_friday) %>% summarise(count=n())
+## small sample size, can't do much
+
+tg %>% filter(work_retail=="Yes") %>% group_by(gender) %>% summarise(count=n())
+tg %>% filter(work_retail=="Yes") %>% group_by(age) %>% summarise(count=n())
+tg %>% filter(work_retail=="Yes") %>% group_by(work_black_friday) %>% summarise(count=n())
+
+
+byIncome = tg %>% filter(work_retail=="Yes") %>% group_by(family_income) %>% summarise(count=n())
+```
+
+I want to reorder based on money not alphabetical order.
+
+```{r}
+levels(income$family_income) ## want to reorder
+
+intstep=levels(income$family_income)[order(nchar(levels(income$family_income)))]
+intstep ## by number of characters, works except for and up
+
+test=fct_relevel(income$family_income,c(intstep[1],intstep[3:10],intstep[2],intstep[11]))
+levels(test)
+
+income$family_income=fct_relevel(income$family_income,c(intstep[1],intstep[3:10],intstep[2],intstep[11]))
+levels(test)
+```
+
+```{r}
+byIncome$family_income=fct_relevel(byIncome$family_income,c(intstep[1],intstep[3:10],intstep[2],intstep[11]))
+byIncome
+```
+
+**Pie!**
+
+![](https://media.giphy.com/media/26BRQXyqJR1cqSaI0/giphy.gif)
+
+The question asks "Which type of pie is typically served at your Thanksgiving dinner? Please select all that apply." Each column represents a type of pie.
+
+```{r,warning=F,message=F}
+head(tg %>% select(contains("pie")))
+
+cbind.data.frame(type=(tg %>% select(contains("pie")) %>% apply(.,2,function(x){x[which(!is.na(x))[1]]})),
+count=(tg %>% select(contains("pie")) %>% apply(.,2,function(x){length(which(!is.na(x)))}) )) %>% arrange(desc(count))
+```
+
+Since "Other (please specify)" has the same count as "Derby, Japanese fruit", I'm going to assume this type of pie is where they specified. This will impact the count of pies per household.
+
+```{r,warning=F,message=F}
+ tg %>% select(contains("pie")) %>% mutate(numPies=apply(.,1,function(x){length(which(!is.na(x)))})) %>% mutate(isOther=apply(.,1,function(x){as.numeric(!is.na(x[12]))})) %>% mutate(numPiesAdj=numPies-isOther) %>% ggplot(.,aes(numPiesAdj))+geom_histogram(binwidth=1,col="black",fill="white")
+```
+
+
+Please invite me to the households that serve over five different types of pie per holiday (but perhaps people rotate among types of pies each year and don't actually have them all at one time). 
+
+
+**Veggies**
+
+![](https://media.giphy.com/media/mnnJUiakh7qrS/giphy.gif)
+
+Sides are reported similarly to pie. How do veggies fare in the side dish line up?
+
+```{r,warning=F,message=F}
+
+sideNum = tg %>% select(contains("side")) %>% apply(.,2,function(x){length(which(!is.na(x)))}) %>% as.data.frame() %>% t() %>% as.data.frame()
+ 
+sideNames= tg %>% select(contains("side")) %>% apply(.,2,function(x){x[which(!is.na(x))[1]]}) %>% as.data.frame() 
+
+names(sideNum)=sideNames[,1]
+ 
+sideNames[,1]
+
+veggie=c(1:4,7,11,12,13,14)
+
+sideNum = sideNum %>% gather(side,num) %>% filter(side !="Other (please specify)")  %>% mutate(isVeggie=rep(0,nrow(.)))
+## other is same as asian vinagrette salad
+
+sideNum$isVeggie[veggie]=rep(1,length(veggie))
+```
+
+```{r}
+ggplot(data=sideNum, aes(x=reorder(side,-num), y=num, fill=as.factor(isVeggie))) +
+  geom_bar(stat="identity", position=position_dodge()) + theme(axis.text.x = element_text(angle = 45, hjust = 1)) + ylab("number") + xlab("side") + scale_fill_manual(values=c("yellow", "green"), name="is veggie?" )
+
+#https://stackoverflow.com/questions/25664007/reorder-bars-in-geom-bar-ggplot2
+```
+
+Who can compete with potatoes and carbs?
+
+**And the most controversial topic: the kids' table**
+
+Yes, I'm a little salty for being at the kids' table too many times.
+
+![](https://media.giphy.com/media/3o6Zt6Jdnh4pbBqUUM/giphy.gif)
+
+Here the question answered was "What's the age cutoff at your "kids' table" at Thanksgiving?". It appears that there is a non-neglible number of people who have a 21+ rule for the kids' table. 
+
+```{r,warning=F,message=F}
+levels(tg$kids_table_age)
+tg$kids_table_age=as.numeric(str_replace_all(as.character(tg$kids_table_age),"or .*",""))
+
+ggplot(tg,aes(kids_table_age))+geom_histogram(binwidth=1,col="black",fill="white")+annotate("text", x = 21, y = 200, label = "Why?!",col="red",size=5)
+```
+
+Happy Holidays!
