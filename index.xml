@@ -364,7 +364,7 @@ My research focus is on ecological applications of statistics, and I am advised 
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
       <guid>/research/</guid>
-      <description>Graduate Research (ongoing) Clarifying the Identifiability Controversy in Species Distribution Modeling  Advisors: Will Fithian and Perry de Valpine  We are interested in tracking plants and animals over time and space and understanding how their prevalence (proportion of area where they are found) and abundance (quantity) change. Collecting data is expensive, so it is important to know what data collection protocols we need to use in order to have enough information to estimate these quantities of interest.</description>
+      <description>Graduate Research (ongoing) Clarifying the Identifiability Controversy in Species Distribution Modeling  Advisors: Will Fithian and Perry de Valpine  Ecologists commonly make strong parametric assumptions when formulating statistical models. Such assumptions have sparked repeated debates in the literature about statistical identifiability of species distribution and abundance models, among others. At issue is whether the assumption of a particular parametric form serves to impose artificial statistical identifiability that should not be relied upon or instead whether such an assumption is part and parcel of statistical modeling.</description>
     </item>
     
     <item>
