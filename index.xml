@@ -6,10 +6,19 @@
     <description>Recent content on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Mon, 31 Dec 2018 16:20:51 -0700</lastBuildDate>
+    <lastBuildDate>Mon, 18 Mar 2019 16:20:51 -0700</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>The Making of the Wealth Tax App: Shiny Lessons Learned</title>
+      <link>/blog/making-of-wealth-tax-app/</link>
+      <pubDate>Mon, 18 Mar 2019 16:20:51 -0700</pubDate>
+      
+      <guid>/blog/making-of-wealth-tax-app/</guid>
+      <description>UC Berkeley economists Emmanuel Saez and Gabriel Zucman analyzed Senator Elizabeth Warren’s proposal for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis (OPA). I got involved because they needed someone to make an interactive visualization that would allow users to explore different wealth tax proposals. Check it out here.</description>
+    </item>
     
     <item>
       <title>2018 Highlights, 2019 Goals</title>

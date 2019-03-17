@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">The Making of the Wealth Tax App: Shiny Lessons Learned</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAR 18, 2019 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <p>UC Berkeley economists <a href="https://eml.berkeley.edu/~saez/">Emmanuel Saez</a> and <a href="http://gabriel-zucman.eu/">Gabriel Zucman</a> analyzed Senator Elizabeth Warren’s <a href="https://www.warren.senate.gov/newsroom/press-releases/senator-warren-unveils-proposal-to-tax-wealth-of-ultra-rich-americans?mod=article_inline">proposal</a> for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis <a href="https://www.bitss.org/opa/">(OPA)</a>. I got involved because they needed someone to make an interactive visualization that would allow users to explore different wealth tax proposals. Check it out <a href="http://wealthtaxsimulator.org/simulator_app/">here</a>.</p>
+<p>I learned a lot from the experience and wanted to share some lessons learned.</p>
+<div id="making-a-shiny-app-for-use-by-the-public" class="section level2">
+<h2>Making a Shiny app for use by the public</h2>
+<p>Up until this point I had only made Shiny apps for my individual use or for the use of a few collaborators who were carefully “trained” on the expected inputs. These apps were functional, but brittle. If a user provided unexpected input, the app had no capability to save face; the app would just crash. The apps were also were run locally, or on the free version of <a href="https://www.shinyapps.io/">shinyapps.io</a> with no real worries about heavy traffic. Making a Shiny app that was going to be more publically facing came with its own set of challenges.</p>
+<p><strong>Unexpected User Behavior</strong></p>
+<p>It was fairly straightforward to create an app that had the desired functionality as long as users behaved as expected. However what if the tax brackets were entered in the wrong order? What if there were duplicates in the brackets? What if nonsensical values were entered such as a tax evasion rate below zero or above 100 or a tax rate below zero? It’s not ideal for the app to crash if given unexpected input while giving users no feedback about what went wrong.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/BxWTWalKTUAdq/giphy.gif" />
+
+</div>
+<p>My first instinct was just to throw a bunch of checks into every main function (LOTS of <code>if</code>, <code>else if</code>, <code>else</code> chunks). However this strategy at one point led to a visible lag in the app’s reactivity. For the final version of the app, we saved time by allowing the user to enter whatever they wanted and postpone dealing with issues until we needed to update the plot and calculations (signaled by a click of a button). At this point we reordered the brackets, broke ties in bracket values, and updated tax rates and evasion to be within the realm of plausibility when the user clicks “update”. We also updated the displayed values to match our fixes, so the user sees that the calculated values and plots are made under conditions different from what they entered.</p>
+<p>There are some unexpected user behaviors that we still don’t react to. We allow users to enter non-monotonic tax rates, and the plot and calculations respect this (even though in practice, this would be a weird proposed tax scheme). The app does not immediately crash if you enter a non-numeric entry, but if you don’t catch your mistake before clicking the “update” button, the app will crash. This was mainly a decision based on time constraints rather than being something truly un-fixable.</p>
+<p><strong>Deployment</strong></p>
+<p>I didn’t do much on the actual deployment side. Katie Donnelly Moran, Clancy Green, and Akcan Balkir worked to make this happen through the use of AWS to allow for some control in the case of high traffic to the app. <a href="https://www.charlesbordet.com/en/shiny-aws-1/#">This</a> guide was helpful. However, this was the first time I used <a href="https://mybinder.readthedocs.io/en/latest/">Binder</a>. Binder “allows you to create custom computing environments that can be shared and used by many remote users” and can handle moderate traffic. For the purposes of this project, this means that a user can go straight to the Shiny app or step through the dynamic document without installing R and RStudio on their own computers. This was much easier to set up than I anticipated. I just followed <a href="https://github.com/binder-examples/r">this</a> example. Also, shout out to <a href="https://lindseyjh.ca/">Lindsey Heagy</a> who gave me a crash course in how Binder, BinderHub, and JupyterHub work together behind the scenes.</p>
+</div>
+<div id="testing-and-breaking-things" class="section level2">
+<h2>Testing and breaking things</h2>
+<p>Because I built the app and knew the internal structure, I would, without thinking, avoid doing things that would cause the app to crash, thereby making my testing ineffectual. However, Katie, Emmanuel, and Gabriel were great at finding bugs. I cannot count the number of times that I thought the app was ready and then they would within ten minutes have a list of things that needed to be fixed.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/Ma0a16sQSXlvy/giphy.gif" />
+
+</div>
+<p>Some of these fixes involved logical errors on my part that they were able to easily identify by using their domain knowledge. I was learning the economics on the fly, and sometimes I misinterpreted how certian values should be calculated.</p>
+<p>Most fixes involved anticipating and being resilient to unexpected user behavior. Sometimes unexpected user behavior would crash the app, but other times, unexpected user behavior would violate the assumptions I was making in order to make the required calculations. Nothing would officially crash, but the returned calculations would not be accurate. These errors were more pernicious and harder for me to detect since my expectations for what the output would look like were not appropriately tailored to the underlying economics. A number that would surprise Katie, would not jump out at me as obviously wrong.</p>
+<p>Another change that I would not necessarily have thought of on my own was making the switch from using sliders to text boxes. Sliders allow more control of the inputs (users can only pick from allowable options), so I started with those to make my life easier. However, it became clear in testing that the sliders can get annoying if you have a very specific and detailed wealth tax plan in mind to test out. Text boxes allow for more freedom.</p>
+<p>Major take-away: It takes a village to really put a Shiny app through its paces.</p>
+</div>
+<div id="reactivity-is-a-double-edged-sword" class="section level2">
+<h2>Reactivity is a double-edged sword</h2>
+<p>And now for some technical bits…</p>
+<p>Even though reactivity is often what you want in an interactive visualization, there were times where reactivity caused some headaches.</p>
+<p><strong>When the reactivity is too fast</strong></p>
+<p>Suppose a user is typing in a value: “.” on their way to “.5” or “50” on their way to “500”. If the app tried to start calculating right away, it could run into issues with “.” not having a numeric interpretation or “50” being tied with another bracket. Even if there were reactive fixes to ties, this could be a problem. We might bump “50” up to “60” to break a tie, but the user really just wants to be allowed to finish typing to “500”. As users typed it was also distracting to see the plot keep jumping around, recalculating after every keystroke. Requiring a button click before starting calculations and plots (<code>eventReative</code>) was a good fix.</p>
+<p><code>req()</code> was also a lifesaver! This wrapper makes sure that the particular value is available before continuing with the calculation. This was handy when we created new brackets on the fly. It would take a split second to create the new object needed for the calculation, so the app needed to know to pause in the calculation until the value was populated.</p>
+<p><strong>When the reactivity is too slow</strong></p>
+<p>When we updateded the user interface using things like <code>updateTextInput()</code> and <code>renderUI</code>, it would take some time for the new values to kick in, affecting the calculations and plots. <code>req()</code> was helpful for some of this, but there were still some sticking points. For example, one thing that I couldn’t easily get around was that the plot does not automatically reflect the tie updates. Instead, I had to add a conditional warning so that the user would click “update” again to reflect these changes (I’m open to less clunkier ways to do this. Share your wisdom!).</p>
+</div>
+<div id="timeline" class="section level2">
+<h2>Timeline</h2>
+<p>I severely underestimated how much time this project would take. Getting the original mock up with four fixed brackets took a few hours. The rest took weeks. The majority of the extra time spent on the app didn’t even come from adding features to allow users to tune more parameters of a tax plan.</p>
+<p>The biggest time commitment came from unexpected user and reactivity behavior. These changes were hardest to make because I had to completely reorganize the inner workings of the app to accomodate certain behaviors.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/zXqV8tYe1RhYc/giphy.gif" />
+
+</div>
+<p>Dealing with these structural changes was definitely one of those times where I would stare at something for hours, give up and take a break, then come back the next day and fix it in ten minutes. Moral: take breaks!</p>
+<p>The good news is that I effectively used git branches to work on these major overhauls which was a good skill to practice. By using branches, others on the team could use the current version of the app to do other tests while I was breaking things on another branch. This also made it easier to start over again if an approach in a different branch wasn’t working out.</p>
+<div class="figure">
+<img src="https://media.giphy.com/media/3o6ZtihIv0pJqdp3H2/giphy.gif" />
+
+</div>
+<p>The making of this app was certainly an adventure! I learned a lot about my Shiny instincts (the good and the bad) and how to better foritfy an app to withstand unexpected user behavior (plus some economics along the way).</p>
+<p>Thank you again to the <a href="https://github.com/BITSS/opa-wealthtax/blob/master/credits.md">whole team</a>.</p>
+<div id="feedback-questions-comments-etc.-are-welcome-sastoudt." class="section level4">
+<h4>Feedback, questions, comments, etc. are welcome (<span class="citation">@sastoudt</span>).</h4>
+<p>If you are a Shiny afficianado, feel free to dig into the <a href="https://github.com/BITSS/opa-wealthtax/tree/master/code/interactive_visualization">source code</a> and streamline things. Pull requests are welcome. Similarly, if you find a bug, please file an issue.</p>
+<p>P.S. Alvin Chang (<span class="citation">@alv9n</span>) also made a <a href="https://www.vox.com/policy-and-politics/2019/2/12/18211833/wealth-tax-calculator-warren-sanders">cool, interactive exploration</a> of the wealth tax.</p>
+</div>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/newyears1819/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+
