@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Research on Sara A. Stoudt</title>
-    <link>/tags/research/</link>
+    <link>https://sastoudt.github.io/tags/research/</link>
     <description>Recent content in Research on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
     <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
     
-	<atom:link href="/tags/research/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="https://sastoudt.github.io/tags/research/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Research</title>
-      <link>/research/</link>
+      <link>https://sastoudt.github.io/research/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>/research/</guid>
+      <guid>https://sastoudt.github.io/research/</guid>
       <description>Graduate Research (ongoing) Clarifying the Identifiability Controversy in Species Distribution Modeling  Advisors: Will Fithian and Perry de Valpine  Ecologists commonly make strong parametric assumptions when formulating statistical models. Such assumptions have sparked repeated debates in the literature about statistical identifiability of species distribution and abundance models, among others. At issue is whether the assumption of a particular parametric form serves to impose artificial statistical identifiability that should not be relied upon or instead whether such an assumption is part and parcel of statistical modeling.</description>
     </item>
     
