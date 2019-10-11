@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Songs to Strut To</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON OCT 11, 2019 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<pre class="r"><code>library(billboard)
+library(dplyr)
+library(kableExtra)</code></pre>
+<p>I watched Saturday Night Fever in preparation for my blog post about its soundtrack on <a href="http://www.covermesongs.com/2019/10/full-albums-saturday-night-fever-soundtrack.html">CoverMeSongs</a>. The opening scene shows John Travolta marching down the street to the Bee Gees’s “Stayin Alive.’”</p>
+<p><img src="https://media.giphy.com/media/eYJhQcprr3bTa/giphy.gif" /></p>
+<p>I learned that this song is also used to help people practice CPR because it has the correct tempo for recommended compressions. This made me wonder more about the tempo of the song. Would a New Yorker really walk along at that pace? Relatedly, as an East Coaster transplanted to the West Coast for graduate school, I am certainly aware of differences in walking speed norms by geography. I wondered if there was a perfect strutting song per region.</p>
+<p>Apparently, there once was a study that tried to quantify differences in walking speeds across many cities. <a href="http://www.richardwiseman.com/quirkology/pace_home.htm">The researchers went to various cities and timed how long people took to walk 60 feet.</a> I entered that data for the 32 countries across the globe into a spreadsheet.</p>
+<pre class="r"><code>setwd(&quot;~/Desktop/walking_bpm&quot;)
+wt = read.csv(&quot;walkingTimes.csv&quot;,stringsAsFactors = F)</code></pre>
+<p>The top five fastest walking countries:</p>
+<pre class="r"><code>kable(head(wt, 5)) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:right;">
+time
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Singapore
+</td>
+<td style="text-align:left;">
+Singapore
+</td>
+<td style="text-align:right;">
+10.55
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Copenhagen
+</td>
+<td style="text-align:left;">
+Denmark
+</td>
+<td style="text-align:right;">
+10.82
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Madrid
+</td>
+<td style="text-align:left;">
+Spain
+</td>
+<td style="text-align:right;">
+10.89
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Guangzhou
+</td>
+<td style="text-align:left;">
+China
+</td>
+<td style="text-align:right;">
+10.94
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dublin
+</td>
+<td style="text-align:left;">
+Ireland
+</td>
+<td style="text-align:right;">
+11.03
+</td>
+</tr>
+</tbody>
+</table>
+<p>The top five slowest walking countries:</p>
+<pre class="r"><code>kable(tail(wt, 5)) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:right;">
+time
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+28
+</td>
+<td style="text-align:left;">
+Damascus
+</td>
+<td style="text-align:left;">
+Syria
+</td>
+<td style="text-align:right;">
+14.94
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+29
+</td>
+<td style="text-align:left;">
+Amman
+</td>
+<td style="text-align:left;">
+Jordan
+</td>
+<td style="text-align:right;">
+14.95
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+30
+</td>
+<td style="text-align:left;">
+Bern
+</td>
+<td style="text-align:left;">
+Switzerland
+</td>
+<td style="text-align:right;">
+17.37
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+31
+</td>
+<td style="text-align:left;">
+Manama
+</td>
+<td style="text-align:left;">
+Bahrain
+</td>
+<td style="text-align:right;">
+17.69
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+32
+</td>
+<td style="text-align:left;">
+Blantyre
+</td>
+<td style="text-align:left;">
+Malawi
+</td>
+<td style="text-align:right;">
+31.60
+</td>
+</tr>
+</tbody>
+</table>
+<p>Now we need to get this on a beats per minute scale. I’m going to treat one stride as a beat. According to <a href="https://www.livestrong.com/article/438170-the-average-walking-stride-length/">LiveStrong</a>, one stride is about 2.6 feet.</p>
+<pre class="r"><code>steps &lt;- 60 / 2.6
+stepsPerSec &lt;- steps / wt$time
+stepsPerMin &lt;- 60 * stepsPerSec
+summary(stepsPerMin)</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##   43.82   97.46  109.03  106.30  115.10  131.24</code></pre>
+<pre class="r"><code>wt$stepsPerMin=stepsPerMin</code></pre>
+<p>“Stayin’ Alive” comes in at 103 beats per minute, a little under the average across these countries. Notably, this tempo is too slow for John Travolta’s character, Tony Manero, to be strutting down the streets of New York to. That is more of a between Japan and Canada tempo.</p>
+<pre class="r"><code>kable(wt[19:20,]) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:right;">
+time
+</th>
+<th style="text-align:right;">
+stepsPerMin
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+19
+</td>
+<td style="text-align:left;">
+Tokyo
+</td>
+<td style="text-align:left;">
+Japan
+</td>
+<td style="text-align:right;">
+12.83
+</td>
+<td style="text-align:right;">
+107.9201
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+20
+</td>
+<td style="text-align:left;">
+Ottawa
+</td>
+<td style="text-align:left;">
+Canada
+</td>
+<td style="text-align:right;">
+13.72
+</td>
+<td style="text-align:right;">
+100.9195
+</td>
+</tr>
+</tbody>
+</table>
+<p>What song would be more appropriate tempo-wise? For that, we look at the songs on the top 100 billboard charts from 1960 to 2015 (handily compiled by the <code>billboard</code> package).</p>
+<pre class="r"><code>spotify_track_data$diff &lt;- abs(spotify_track_data$tempo - 115.38462) ## NYC&#39;s tempo
+
+tt &lt;- arrange(spotify_track_data, diff) %&gt;% head(1) %&gt;% as.data.frame()
+
+kable(tt[,c(&quot;year&quot;, &quot;artist_name&quot;,&quot;track_name&quot;)]) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+year
+</th>
+<th style="text-align:left;">
+artist_name
+</th>
+<th style="text-align:left;">
+track_name
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+1984
+</td>
+<td style="text-align:left;">
+Ray Parker, Jr.
+</td>
+<td style="text-align:left;">
+Ghostbusters
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="https://media.giphy.com/media/11jGtzDu7Nh89a/giphy.gif" /></p>
+<p>But this song wasn’t out yet, so let’s limit to hits prior to 1977, when <em>Saturday Night Fever</em> was released.</p>
+<pre class="r"><code>tt &lt;- arrange(subset(spotify_track_data, year &lt; 1977), diff) %&gt;% head(1) %&gt;% as.data.frame()
+
+kable(tt[,c(&quot;year&quot;, &quot;artist_name&quot;,&quot;track_name&quot;)]) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+year
+</th>
+<th style="text-align:left;">
+artist_name
+</th>
+<th style="text-align:left;">
+track_name
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+1972
+</td>
+<td style="text-align:left;">
+Dennis Coffey &amp; The Detroit Guitar Band
+</td>
+<td style="text-align:left;">
+Scorpio
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>blogdown::shortcode(&quot;youtube&quot;, &quot;DyuS16P911g&quot;)</code></pre>
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="//www.youtube.com/embed/DyuS16P911g" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+<p>Now that is more like it!</p>
+<p>What is the perfect strutting song for these other countries (granted that the US billboard charts may not accurately reflect “jams” in other countries)?</p>
+<pre class="r"><code>getBestFit &lt;- function(walkTime){
+ spotify_track_data[ which.min(abs(spotify_track_data$tempo-walkTime)),c(&quot;year&quot;,&quot;artist_name&quot;,&quot;track_name&quot;)]
+
+}
+
+matches = cbind.data.frame(wt[,c(&quot;city&quot;,&quot;country&quot;,&quot;stepsPerMin&quot;)],do.call(&quot;rbind&quot;,lapply(wt$stepsPerMin, getBestFit)))
+
+kable(matches) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+city
+</th>
+<th style="text-align:left;">
+country
+</th>
+<th style="text-align:right;">
+stepsPerMin
+</th>
+<th style="text-align:left;">
+year
+</th>
+<th style="text-align:left;">
+artist_name
+</th>
+<th style="text-align:left;">
+track_name
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Singapore
+</td>
+<td style="text-align:left;">
+Singapore
+</td>
+<td style="text-align:right;">
+131.24316
+</td>
+<td style="text-align:left;">
+1986
+</td>
+<td style="text-align:left;">
+Whitney Houston
+</td>
+<td style="text-align:left;">
+Greatest Love Of All
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Copenhagen
+</td>
+<td style="text-align:left;">
+Denmark
+</td>
+<td style="text-align:right;">
+127.96815
+</td>
+<td style="text-align:left;">
+2012
+</td>
+<td style="text-align:left;">
+Chris Brown
+</td>
+<td style="text-align:left;">
+Don’t Wake Me Up
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Madrid
+</td>
+<td style="text-align:left;">
+Spain
+</td>
+<td style="text-align:right;">
+127.14558
+</td>
+<td style="text-align:left;">
+1979
+</td>
+<td style="text-align:left;">
+Leif Garrett
+</td>
+<td style="text-align:left;">
+I Was Made for Dancin’
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Guangzhou
+</td>
+<td style="text-align:left;">
+China
+</td>
+<td style="text-align:right;">
+126.56448
+</td>
+<td style="text-align:left;">
+1966
+</td>
+<td style="text-align:left;">
+Allen Reynolds
+</td>
+<td style="text-align:left;">
+Five O’Clock World
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dublin
+</td>
+<td style="text-align:left;">
+Ireland
+</td>
+<td style="text-align:right;">
+125.53177
+</td>
+<td style="text-align:left;">
+1982
+</td>
+<td style="text-align:left;">
+Earth, Wind &amp; Fire
+</td>
+<td style="text-align:left;">
+Let’s Groove
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cuitiba
+</td>
+<td style="text-align:left;">
+Brazil
+</td>
+<td style="text-align:right;">
+124.40390
+</td>
+<td style="text-align:left;">
+1985
+</td>
+<td style="text-align:left;">
+Survivor
+</td>
+<td style="text-align:left;">
+The Search Is Over
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Berlin
+</td>
+<td style="text-align:left;">
+Germany
+</td>
+<td style="text-align:right;">
+124.06948
+</td>
+<td style="text-align:left;">
+2011
+</td>
+<td style="text-align:left;">
+Katy Perry
+</td>
+<td style="text-align:left;">
+Firework
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+New York
+</td>
+<td style="text-align:left;">
+USA
+</td>
+<td style="text-align:right;">
+115.38462
+</td>
+<td style="text-align:left;">
+1984
+</td>
+<td style="text-align:left;">
+Ray Parker, Jr.
+</td>
+<td style="text-align:left;">
+Ghostbusters
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Utrecht
+</td>
+<td style="text-align:left;">
+Netherlands
+</td>
+<td style="text-align:right;">
+115.00128
+</td>
+<td style="text-align:left;">
+2015
+</td>
+<td style="text-align:left;">
+Mark Ronson
+</td>
+<td style="text-align:left;">
+Uptown Funk
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Vienna
+</td>
+<td style="text-align:left;">
+Austria
+</td>
+<td style="text-align:right;">
+114.81056
+</td>
+<td style="text-align:left;">
+1987
+</td>
+<td style="text-align:left;">
+The Georgia Satellites
+</td>
+<td style="text-align:left;">
+Keep Your Hands To Yourself
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Warsaw
+</td>
+<td style="text-align:left;">
+Poland
+</td>
+<td style="text-align:right;">
+114.71544
+</td>
+<td style="text-align:left;">
+1977
+</td>
+<td style="text-align:left;">
+KC &amp; The Sunshine Band
+</td>
+<td style="text-align:left;">
+I’m Your Boogie Man
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+London
+</td>
+<td style="text-align:left;">
+United Kingdom
+</td>
+<td style="text-align:right;">
+113.77283
+</td>
+<td style="text-align:left;">
+1978
+</td>
+<td style="text-align:left;">
+Gerry Rafferty
+</td>
+<td style="text-align:left;">
+Baker Street
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Zagreb
+</td>
+<td style="text-align:left;">
+Croatia
+</td>
+<td style="text-align:right;">
+113.49306
+</td>
+<td style="text-align:left;">
+1968
+</td>
+<td style="text-align:left;">
+Clarence Carter
+</td>
+<td style="text-align:left;">
+Slip Away
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Prague
+</td>
+<td style="text-align:left;">
+Czech Republic
+</td>
+<td style="text-align:right;">
+112.11461
+</td>
+<td style="text-align:left;">
+1986
+</td>
+<td style="text-align:left;">
+ZZ Top
+</td>
+<td style="text-align:left;">
+Sleeping Bag
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Wellington
+</td>
+<td style="text-align:left;">
+New Zealand
+</td>
+<td style="text-align:right;">
+109.71596
+</td>
+<td style="text-align:left;">
+1968
+</td>
+<td style="text-align:left;">
+The Lettermen
+</td>
+<td style="text-align:left;">
+Goin’ Out Of My Head/Can’t Take My Eyes Off You (Medley) - Live;1987 Digital Remaster
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Paris
+</td>
+<td style="text-align:left;">
+France
+</td>
+<td style="text-align:right;">
+109.45576
+</td>
+<td style="text-align:left;">
+1960
+</td>
+<td style="text-align:left;">
+Connie Francis
+</td>
+<td style="text-align:left;">
+My Heart Has A Mind Of Its Own
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Stockholm
+</td>
+<td style="text-align:left;">
+Sweden
+</td>
+<td style="text-align:right;">
+108.59729
+</td>
+<td style="text-align:left;">
+1976
+</td>
+<td style="text-align:left;">
+David Bowie
+</td>
+<td style="text-align:left;">
+Golden Years - 1999 Remastered Version
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ljubljana
+</td>
+<td style="text-align:left;">
+Slovenia
+</td>
+<td style="text-align:right;">
+108.51218
+</td>
+<td style="text-align:left;">
+1980
+</td>
+<td style="text-align:left;">
+Sam Morrison and Turn The Page
+</td>
+<td style="text-align:left;">
+Against the Wind
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Tokyo
+</td>
+<td style="text-align:left;">
+Japan
+</td>
+<td style="text-align:right;">
+107.92014
+</td>
+<td style="text-align:left;">
+1984
+</td>
+<td style="text-align:left;">
+Thompson Twins
+</td>
+<td style="text-align:left;">
+Hold Me Now
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Ottawa
+</td>
+<td style="text-align:left;">
+Canada
+</td>
+<td style="text-align:right;">
+100.91949
+</td>
+<td style="text-align:left;">
+1999
+</td>
+<td style="text-align:left;">
+Faith Evans
+</td>
+<td style="text-align:left;">
+Love Like This
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Harare
+</td>
+<td style="text-align:left;">
+Zimbabwe
+</td>
+<td style="text-align:right;">
+99.46950
+</td>
+<td style="text-align:left;">
+1998
+</td>
+<td style="text-align:left;">
+Diddy
+</td>
+<td style="text-align:left;">
+Been Around The World (feat. The Notorious B.I.G. &amp; Mase)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sofia
+</td>
+<td style="text-align:left;">
+Bulgaria
+</td>
+<td style="text-align:right;">
+99.18448
+</td>
+<td style="text-align:left;">
+1964
+</td>
+<td style="text-align:left;">
+The Trashmen
+</td>
+<td style="text-align:left;">
+Surfin’ Bird
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Taipei
+</td>
+<td style="text-align:left;">
+Taiwan
+</td>
+<td style="text-align:right;">
+98.90110
+</td>
+<td style="text-align:left;">
+1967
+</td>
+<td style="text-align:left;">
+Buffalo Springfield
+</td>
+<td style="text-align:left;">
+For What It’s Worth
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cairo
+</td>
+<td style="text-align:left;">
+Egypt
+</td>
+<td style="text-align:right;">
+97.64565
+</td>
+<td style="text-align:left;">
+1975
+</td>
+<td style="text-align:left;">
+Sugarloaf
+</td>
+<td style="text-align:left;">
+Don’t Call Us, We’ll Call You
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sanaa
+</td>
+<td style="text-align:left;">
+Yemen
+</td>
+<td style="text-align:right;">
+96.89401
+</td>
+<td style="text-align:left;">
+1996
+</td>
+<td style="text-align:left;">
+Eric Clapton
+</td>
+<td style="text-align:left;">
+Change The World
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bucharest
+</td>
+<td style="text-align:left;">
+Romania
+</td>
+<td style="text-align:right;">
+96.42168
+</td>
+<td style="text-align:left;">
+1962
+</td>
+<td style="text-align:left;">
+The Shirelles
+</td>
+<td style="text-align:left;">
+Soldier Boy
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Dubai
+</td>
+<td style="text-align:left;">
+United Arab Emirates
+</td>
+<td style="text-align:right;">
+94.57755
+</td>
+<td style="text-align:left;">
+1987
+</td>
+<td style="text-align:left;">
+Gregory Abbott
+</td>
+<td style="text-align:left;">
+Shake You Down - Single Version
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Damascus
+</td>
+<td style="text-align:left;">
+Syria
+</td>
+<td style="text-align:right;">
+92.67841
+</td>
+<td style="text-align:left;">
+1970
+</td>
+<td style="text-align:left;">
+Las Clasicas de Universal Stereo
+</td>
+<td style="text-align:left;">
+Reflections of My Life
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Amman
+</td>
+<td style="text-align:left;">
+Jordan
+</td>
+<td style="text-align:right;">
+92.61641
+</td>
+<td style="text-align:left;">
+1960
+</td>
+<td style="text-align:left;">
+Percy Faith &amp; His Orchestra
+</td>
+<td style="text-align:left;">
+The Theme From “A Summer Place” - Single Version
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Bern
+</td>
+<td style="text-align:left;">
+Switzerland
+</td>
+<td style="text-align:right;">
+79.71303
+</td>
+<td style="text-align:left;">
+2007
+</td>
+<td style="text-align:left;">
+Gym Class Heroes
+</td>
+<td style="text-align:left;">
+Cupid’s Chokehold / Breakfast In America - Radio Mix
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Manama
+</td>
+<td style="text-align:left;">
+Bahrain
+</td>
+<td style="text-align:right;">
+78.27108
+</td>
+<td style="text-align:left;">
+1993
+</td>
+<td style="text-align:left;">
+Def Leppard
+</td>
+<td style="text-align:left;">
+Two Steps Behind - Live
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Blantyre
+</td>
+<td style="text-align:left;">
+Malawi
+</td>
+<td style="text-align:right;">
+43.81694
+</td>
+<td style="text-align:left;">
+1979
+</td>
+<td style="text-align:left;">
+Barbra Streisand
+</td>
+<td style="text-align:left;">
+You Don’t Bring Me Flowers
+</td>
+</tr>
+</tbody>
+</table>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/making-of-wealth-tax-app/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

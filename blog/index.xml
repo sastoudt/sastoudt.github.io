@@ -6,10 +6,20 @@
     <description>Recent content in Blogs on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Mon, 18 Mar 2019 16:20:51 -0700</lastBuildDate>
+    <lastBuildDate>Fri, 11 Oct 2019 10:20:51 -0700</lastBuildDate>
     
 	<atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Songs to Strut To</title>
+      <link>/blog/songs-to-strut-to/</link>
+      <pubDate>Fri, 11 Oct 2019 10:20:51 -0700</pubDate>
+      
+      <guid>/blog/songs-to-strut-to/</guid>
+      <description>library(billboard) library(dplyr) library(kableExtra) I watched Saturday Night Fever in preparation for my blog post about its soundtrack on CoverMeSongs. The opening scene shows John Travolta marching down the street to the Bee Gees’s “Stayin Alive.’”
+I learned that this song is also used to help people practice CPR because it has the correct tempo for recommended compressions. This made me wonder more about the tempo of the song. Would a New Yorker really walk along at that pace?</description>
+    </item>
     
     <item>
       <title>The Making of the Wealth Tax App: Shiny Lessons Learned</title>

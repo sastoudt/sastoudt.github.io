@@ -1,0 +1,94 @@
+---
+title: "Songs to Strut To"
+date: 2019-10-11T10:20:51-07:00
+---
+
+```{r,warning=F,message=F}
+library(billboard)
+library(dplyr)
+library(kableExtra)
+```
+
+I watched Saturday Night Fever in preparation for my blog post about its soundtrack on [CoverMeSongs](http://www.covermesongs.com/2019/10/full-albums-saturday-night-fever-soundtrack.html). The opening scene shows John Travolta marching down the street to the Bee Gees's "Stayin Alive.'"
+
+![](https://media.giphy.com/media/eYJhQcprr3bTa/giphy.gif)
+
+I learned that this song is also used to help people practice CPR because it has the correct tempo for recommended compressions. This made me wonder more about the tempo of the song. Would a New Yorker really walk along at that pace? Relatedly, as an East Coaster transplanted to the West Coast for graduate school, I am certainly aware of differences in walking speed norms by geography. I wondered if there was a perfect strutting song per region. 
+
+Apparently, there once was a study that tried to quantify differences in walking speeds across many cities. [The researchers went to various cities and timed how long people took to walk 60 feet.](http://www.richardwiseman.com/quirkology/pace_home.htm) I entered that data for the 32 countries across the globe into a spreadsheet.
+
+```{r}
+setwd("~/Desktop/walking_bpm")
+wt = read.csv("walkingTimes.csv",stringsAsFactors = F)
+```
+
+The top five fastest walking countries:
+
+```{r}
+kable(head(wt, 5)) %>% kable_styling()
+```
+
+The top five slowest walking countries:
+
+```{r}
+kable(tail(wt, 5)) %>% kable_styling()
+```
+
+Now we need to get this on a beats per minute scale. I'm going to treat one stride as a beat. According to [LiveStrong](https://www.livestrong.com/article/438170-the-average-walking-stride-length/), one stride is about 2.6 feet.
+
+```{r}
+steps <- 60 / 2.6
+stepsPerSec <- steps / wt$time
+stepsPerMin <- 60 * stepsPerSec
+summary(stepsPerMin)
+
+wt$stepsPerMin=stepsPerMin
+```
+
+"Stayin' Alive" comes in at 103 beats per minute, a little under the average across these countries. Notably, this tempo is too slow for John Travolta's character, Tony Manero, to be strutting down the streets of New York to. That is more of a between Japan and Canada tempo.
+
+```{r}
+kable(wt[19:20,]) %>% kable_styling()
+```
+
+What song would be more appropriate tempo-wise? For that, we look at the songs on the top 100 billboard charts from 1960 to 2015 (handily compiled by the `billboard` package).
+
+```{r}
+spotify_track_data$diff <- abs(spotify_track_data$tempo - 115.38462) ## NYC's tempo
+
+tt <- arrange(spotify_track_data, diff) %>% head(1) %>% as.data.frame()
+
+kable(tt[,c("year", "artist_name","track_name")]) %>% kable_styling()
+
+```
+
+![](https://media.giphy.com/media/11jGtzDu7Nh89a/giphy.gif)
+
+But this song wasn't out yet, so let's limit to hits prior to 1977, when *Saturday Night Fever* was released.
+
+```{r}
+tt <- arrange(subset(spotify_track_data, year < 1977), diff) %>% head(1) %>% as.data.frame()
+
+kable(tt[,c("year", "artist_name","track_name")]) %>% kable_styling()
+```
+
+```{r, eval=TRUE}
+blogdown::shortcode("youtube", "DyuS16P911g")
+```
+
+Now that is more like it!
+
+What is the perfect strutting song for these other countries (granted that the US billboard charts may not accurately reflect "jams" in other countries)?
+
+```{r}
+getBestFit <- function(walkTime){
+ spotify_track_data[ which.min(abs(spotify_track_data$tempo-walkTime)),c("year","artist_name","track_name")]
+
+}
+
+matches = cbind.data.frame(wt[,c("city","country","stepsPerMin")],do.call("rbind",lapply(wt$stepsPerMin, getBestFit)))
+
+kable(matches) %>% kable_styling()
+```
+
+

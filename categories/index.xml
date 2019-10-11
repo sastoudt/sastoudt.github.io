@@ -2,66 +2,66 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Categories on Sara A. Stoudt</title>
-    <link>https://sastoudt.github.io/categories/</link>
+    <link>/categories/</link>
     <description>Recent content in Categories on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
     <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
     
-	<atom:link href="https://sastoudt.github.io/categories/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/categories/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>About</title>
-      <link>https://sastoudt.github.io/categories/about/</link>
+      <link>/categories/about/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/categories/about/</guid>
+      <guid>/categories/about/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Coding</title>
-      <link>https://sastoudt.github.io/categories/coding/</link>
+      <link>/categories/coding/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/categories/coding/</guid>
+      <guid>/categories/coding/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Cv</title>
-      <link>https://sastoudt.github.io/categories/cv/</link>
+      <link>/categories/cv/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/categories/cv/</guid>
+      <guid>/categories/cv/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Research</title>
-      <link>https://sastoudt.github.io/categories/research/</link>
+      <link>/categories/research/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/categories/research/</guid>
+      <guid>/categories/research/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Teaching</title>
-      <link>https://sastoudt.github.io/categories/teaching/</link>
+      <link>/categories/teaching/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/categories/teaching/</guid>
+      <guid>/categories/teaching/</guid>
       <description></description>
     </item>
     
     <item>
       <title>Writing</title>
-      <link>https://sastoudt.github.io/categories/writing/</link>
+      <link>/categories/writing/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/categories/writing/</guid>
+      <guid>/categories/writing/</guid>
       <description></description>
     </item>
     

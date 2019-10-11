@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Cv on Sara A. Stoudt</title>
-    <link>https://sastoudt.github.io/categories/cv/</link>
+    <link>/categories/cv/</link>
     <description>Recent content in Cv on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
     <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
     
-	<atom:link href="https://sastoudt.github.io/categories/cv/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/categories/cv/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>CV</title>
-      <link>https://sastoudt.github.io/cv/</link>
+      <link>/cv/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/cv/</guid>
+      <guid>/cv/</guid>
       <description>You can download a full copy of my CV here.</description>
     </item>
     

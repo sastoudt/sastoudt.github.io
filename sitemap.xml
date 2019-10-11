@@ -3,121 +3,288 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
-    <loc>https://sastoudt.github.io/about/</loc>
+    <loc>/blog/songs-to-strut-to/</loc>
+    <lastmod>2019-10-11T10:20:51-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/making-of-wealth-tax-app/</loc>
+    <lastmod>2019-03-18T16:20:51-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/newyears1819/</loc>
+    <lastmod>2018-12-31T16:20:51-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week34/</loc>
+    <lastmod>2018-12-30T10:42:13-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week32/</loc>
+    <lastmod>2018-11-12T10:42:13-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week31/</loc>
+    <lastmod>2018-10-30T10:42:13-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week23/</loc>
+    <lastmod>2018-09-04T10:42:13-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-09-01-adventures-in-tidyverse-reflections/</loc>
+    <lastmod>2018-09-01T16:32:48-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-08-26-adventures-in-tidyverse-forcats/</loc>
+    <lastmod>2018-08-26T16:29:40-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-08-15-adventures-in-tidyverse-purrr/</loc>
+    <lastmod>2018-08-15T16:26:03-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week20/</loc>
+    <lastmod>2018-08-14T10:39:54-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week16/</loc>
+    <lastmod>2018-07-17T10:38:18-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week15/</loc>
+    <lastmod>2018-07-10T10:36:44-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-06-16-adventures-in-tidyverse-stringr/</loc>
+    <lastmod>2018-06-16T16:24:33-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week10/</loc>
+    <lastmod>2018-06-05T10:24:24-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-06-03-adventures-in-tidyverse-tibble/</loc>
+    <lastmod>2018-06-03T16:20:51-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week9/</loc>
+    <lastmod>2018-05-29T10:22:43-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-05-26-adventures-in-tidyverse-readr/</loc>
+    <lastmod>2018-05-26T16:14:17-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week8/</loc>
+    <lastmod>2018-05-21T10:06:52-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-05-16-adventures-in-tidyverse-tidyr/</loc>
+    <lastmod>2018-05-17T16:04:23-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week7/</loc>
+    <lastmod>2018-05-14T10:05:21-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-05-09-adventures-in-tidyverse-dplyr/</loc>
+    <lastmod>2018-05-09T15:56:46-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week6/</loc>
+    <lastmod>2018-05-07T09:53:05-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2/</loc>
+    <lastmod>2018-05-01T15:49:04-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week5/</loc>
+    <lastmod>2018-04-30T09:45:50-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week4/</loc>
+    <lastmod>2018-04-24T09:40:44-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1/</loc>
+    <lastmod>2018-04-23T15:41:43-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-04-18-confessions-of-a-tidyverse-straggler/</loc>
+    <lastmod>2018-04-18T15:33:16-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/tidytuesday/week3/</loc>
+    <lastmod>2018-04-16T09:38:17-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-03-29-tools-for-gerrymandering-analysis/</loc>
+    <lastmod>2018-03-29T16:34:33-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/2018-03-27-song-repetition-analysis/</loc>
+    <lastmod>2018-03-27T16:44:00-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/about/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/cv/</loc>
+    <loc>/cv/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/coding/</loc>
+    <loc>/coding/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/research/</loc>
+    <loc>/research/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/teaching/</loc>
+    <loc>/teaching/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/writing/</loc>
+    <loc>/writing/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/tags/about/</loc>
+    <loc>/categories/about/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/categories/about/</loc>
+    <loc>/tags/about/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/categories/</loc>
+    <loc>/blog/</loc>
+    <lastmod>2019-10-11T10:20:51-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/tags/coding/</loc>
+    <loc>/categories/coding/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/categories/coding/</loc>
+    <loc>/tags/coding/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/tags/cv/</loc>
+    <loc>/categories/cv/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/categories/cv/</loc>
+    <loc>/tags/cv/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/tags/research/</loc>
+    <loc>/categories/research/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/categories/research/</loc>
+    <loc>/tags/research/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/</loc>
+    <loc>/</loc>
+    <lastmod>2019-10-11T10:20:51-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/tags/</loc>
+    <loc>/categories/teaching/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/tags/teaching/</loc>
+    <loc>/tags/teaching/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/categories/teaching/</loc>
+    <loc>/tidytuesday/</loc>
+    <lastmod>2018-12-30T10:42:13-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/writing/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>https://sastoudt.github.io/tags/writing/</loc>
-    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>https://sastoudt.github.io/categories/writing/</loc>
+    <loc>/tags/writing/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>

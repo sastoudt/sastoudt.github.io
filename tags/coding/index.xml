@@ -2,21 +2,21 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Coding on Sara A. Stoudt</title>
-    <link>https://sastoudt.github.io/tags/coding/</link>
+    <link>/tags/coding/</link>
     <description>Recent content in Coding on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
     <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
     
-	<atom:link href="https://sastoudt.github.io/tags/coding/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/tags/coding/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
       <title>Coding Projects</title>
-      <link>https://sastoudt.github.io/coding/</link>
+      <link>/coding/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/coding/</guid>
+      <guid>/coding/</guid>
       <description>Miscellaneous Coding Projects  Census Data Aggregator: While at the Los Angeles Times Data Desk, I worked to add functionality to the Census data aggregator, an open source Python library that helps aggregate data from the census while still accounting for margin of error. stringr Vignette: I wrote a vignette to help users transition from performing string operations in base R to using the tidyverse stringr package.
 Wealth Tax Shiny App: UC Berkeley economists Emmanuel Saez and Gabriel Zucman analyzed Senator Elizabeth Warren’s proposal for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis (OPA).</description>
     </item>

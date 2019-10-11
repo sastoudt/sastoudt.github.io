@@ -2,59 +2,406 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Sara A. Stoudt</title>
-    <link>https://sastoudt.github.io/</link>
+    <link>/</link>
     <description>Recent content on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Sun, 02 Oct 2016 22:55:05 -0400</lastBuildDate>
+    <lastBuildDate>Fri, 11 Oct 2019 10:20:51 -0700</lastBuildDate>
     
-	<atom:link href="https://sastoudt.github.io/index.xml" rel="self" type="application/rss+xml" />
+	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
     
     <item>
+      <title>Songs to Strut To</title>
+      <link>/blog/songs-to-strut-to/</link>
+      <pubDate>Fri, 11 Oct 2019 10:20:51 -0700</pubDate>
+      
+      <guid>/blog/songs-to-strut-to/</guid>
+      <description>library(billboard) library(dplyr) library(kableExtra) I watched Saturday Night Fever in preparation for my blog post about its soundtrack on CoverMeSongs. The opening scene shows John Travolta marching down the street to the Bee Gees’s “Stayin Alive.’”
+I learned that this song is also used to help people practice CPR because it has the correct tempo for recommended compressions. This made me wonder more about the tempo of the song. Would a New Yorker really walk along at that pace?</description>
+    </item>
+    
+    <item>
+      <title>The Making of the Wealth Tax App: Shiny Lessons Learned</title>
+      <link>/blog/making-of-wealth-tax-app/</link>
+      <pubDate>Mon, 18 Mar 2019 16:20:51 -0700</pubDate>
+      
+      <guid>/blog/making-of-wealth-tax-app/</guid>
+      <description>UC Berkeley economists Emmanuel Saez and Gabriel Zucman analyzed Senator Elizabeth Warren’s proposal for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis (OPA). I got involved because they needed someone to make an interactive visualization that would allow users to explore different wealth tax proposals. Check it out here.</description>
+    </item>
+    
+    <item>
+      <title>2018 Highlights, 2019 Goals</title>
+      <link>/blog/newyears1819/</link>
+      <pubDate>Mon, 31 Dec 2018 16:20:51 -0700</pubDate>
+      
+      <guid>/blog/newyears1819/</guid>
+      <description>It’s that time of year, time to reflect on our little victories and make plans of attack for the future. I love reading about everyone’s accomplishments and goals, so I figured I would add mine to the mix.
+ I definitely felt what I’m calling the fourth year funk this semester and didn’t feel like I was quite in the zone nor at my very best. More on this later? But perseverance is the name of the grad school game, so luckily there are still some things I accomplished.</description>
+    </item>
+    
+    <item>
+      <title>Week 34: Thanksgiving Dinner</title>
+      <link>/tidytuesday/week34/</link>
+      <pubDate>Sun, 30 Dec 2018 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/week34/</guid>
+      <description>.superbigimage{ overflow-x:scroll; white-space: nowrap; } .superbigimage img{ max-width: none; } /* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/  This is super tardy for Thanksgiving, but since Christmas is around the corner, and often there is a similar food vibe, here we go anyway…
+library(dplyr) library(ggplot2) library(forcats) library(stringr) library(tidyr) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-11-20&amp;quot;) tg= read.csv(&amp;quot;thanksgiving_meals.csv&amp;quot;) Who travels most?
+Trying to break down by community type, age, and gender, leaves bins too sparse.
+look = tg %&amp;gt;% filter(celebrate==&amp;quot;Yes&amp;quot;) %&amp;gt;% group_by(travel, community_type,age,gender) %&amp;gt;% summarise(count=n()) summary(look$count) ## too sparse ## Min.</description>
+    </item>
+    
+    <item>
+      <title>Week 32: US Wind Farm Locations</title>
+      <link>/tidytuesday/week32/</link>
+      <pubDate>Mon, 12 Nov 2018 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/week32/</guid>
+      <description>.superbigimage{ overflow-x:scroll; white-space: nowrap; } .superbigimage img{ max-width: none; } /* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/  Tardy as usual…
+ library(tidyr) library(dplyr) library(ggplot2) library(geofacet) library(RColorBrewer) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-11-06&amp;quot;) wind= read.csv(&amp;quot;us_wind.csv&amp;quot;) Deal with the missing data: I used na_if for the first time here.
+wind=wind %&amp;gt;% mutate(faa_ors=na_if(faa_ors,&amp;quot;missing&amp;quot;),faa_asn=na_if(faa_asn,&amp;quot;missing&amp;quot;),usgs_pr_id=na_if(usgs_pr_id,-9999), t_state=na_if(t_state,&amp;quot;missing&amp;quot;),t_county=na_if(t_county,&amp;quot;missing&amp;quot;),t_fips=na_if(t_fips,&amp;quot;missing&amp;quot;),p_name=na_if(p_name,&amp;quot;missing&amp;quot;),p_year=na_if(p_year,-9999), p_tnum=na_if(p_tnum,-9999), p_cap=na_if(p_cap,-9999), t_manu=na_if(t_manu,&amp;quot;missing&amp;quot;), t_model=na_if(t_model,&amp;quot;missing&amp;quot;), t_cap=na_if(t_cap,-9999),t_hh=na_if(t_hh,-9999), t_rd=na_if(t_rd,-9999), t_rsa=na_if(t_rsa,-9999),t_ttlh=na_if(t_ttlh,-9999),t_img_date=na_if(t_img_date,&amp;quot;missing&amp;quot;), t_img_srce=na_if(t_img_srce,&amp;quot;missing&amp;quot;)) When windmills became operational by state over time:
+toP=wind %&amp;gt;% group_by(t_state,p_year) %&amp;gt;% summarise(count=n()) ggplot(toP,aes(p_year,count))+geom_point()+geom_line()+facet_geo(~t_state)  It’s too hard to see what is going on because of big windmill states like CA.</description>
+    </item>
+    
+    <item>
+      <title>Week 31: R and R package downloads</title>
+      <link>/tidytuesday/week31/</link>
+      <pubDate>Tue, 30 Oct 2018 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/week31/</guid>
+      <description>.superbigimage{ overflow-x:scroll; white-space: nowrap; } .superbigimage img{ max-width: none; } /* https://stackoverflow.com/questions/52448104/how-to-add-horizontal-scroll-bar-for-a-ggplot-plot-in-rmarkdown-html*/  library(ggplot2) library(dplyr) library(tidyr) library(forcats) library(cranlogs) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-10-30&amp;quot;) rd=read.csv(&amp;quot;r_downloads_year.csv&amp;quot;) rd$date=as.Date(as.character(rd$date)) First download of each R version rd %&amp;gt;% drop_na(os) %&amp;gt;% group_by(version,os) %&amp;gt;% summarise(first=min(date)) %&amp;gt;% ggplot(.,aes(fct_rev(version),as.Date(first),col=os))+ geom_point()+coord_flip()+xlab(&amp;quot;date of first download&amp;quot;)+ylab(&amp;quot;R version&amp;quot;)  Take-Aways
+ Windows often lags. I suspect “devel” and “latest” are relative to the current version since they appear early on.   Tidyverse and its components tidyverse=cran_downloads(package=&amp;quot;tidyverse&amp;quot;,from=min(rd$date),to=max(rd$date)) ggpl=cran_downloads(package=&amp;quot;ggplot2&amp;quot;,from=min(rd$date),to=max(rd$date)) dp=cran_downloads(package=&amp;quot;dplyr&amp;quot;,from=min(rd$date),to=max(rd$date)) tid=cran_downloads(package=&amp;quot;tidyr&amp;quot;,from=min(rd$date),to=max(rd$date)) re=cran_downloads(package=&amp;quot;readr&amp;quot;,from=min(rd$date),to=max(rd$date)) pr=cran_downloads(package=&amp;quot;purrr&amp;quot;,from=min(rd$date),to=max(rd$date)) tib=cran_downloads(package=&amp;quot;tibble&amp;quot;,from=min(rd$date),to=max(rd$date)) st=cran_downloads(package=&amp;quot;stringr&amp;quot;,from=min(rd$date),to=max(rd$date)) fc=cran_downloads(package=&amp;quot;forcats&amp;quot;,from=min(rd$date),to=max(rd$date)) allTy=rbind.</description>
+    </item>
+    
+    <item>
+      <title>Week 23: Fast Food Calories</title>
+      <link>/tidytuesday/week23/</link>
+      <pubDate>Tue, 04 Sep 2018 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/week23/</guid>
+      <description>Data
+Article
+Data Source
+require(ggplot2) require(dplyr) require(gridExtra) require(tidyr) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-09-04&amp;quot;) ff = read.csv(&amp;quot;fastfood_calories.csv&amp;quot;, stringsAsFactors = F) ff = ff[,-c(1, ncol(ff))] ## remove salad (all the same) and X I wanted a simple way to group items across restaurants, so I’m going to follow this example and use hierarchical clustering via the Levenshtein Distance (typically used for string distances).
+d &amp;lt;- adist(ff$item) rownames(d) &amp;lt;- ff$Item hc &amp;lt;- hclust(as.dist(d)) df &amp;lt;- data.frame(ff,cut = cutree(hc, k = 10)) ## 10 is a totally arbitrary choice Let’s see what groups we end up with.</description>
+    </item>
+    
+    <item>
+      <title>You Can Teach a Base R Dog Tidy Tricks</title>
+      <link>/blog/2018-09-01-adventures-in-tidyverse-reflections/</link>
+      <pubDate>Sat, 01 Sep 2018 16:32:48 -0700</pubDate>
+      
+      <guid>/blog/2018-09-01-adventures-in-tidyverse-reflections/</guid>
+      <description>This summer I aimed to update my R skills via the tidyverse and blog about my experience. See here for my motivations.
+Although I didn’t make it through all of the tidyverse affiliated packages, I did finish blog posts for all of the core packages: ggplot took two parts, dplyr, tidyr, readr, tibble, stringr, purrr joint with @kellieotto, and forcats.
+This felt like a milestone worth briefly reflecting on, so here goes.</description>
+    </item>
+    
+    <item>
+      <title>Cursing with Instead of at Factors</title>
+      <link>/blog/2018-08-26-adventures-in-tidyverse-forcats/</link>
+      <pubDate>Sun, 26 Aug 2018 16:29:40 -0700</pubDate>
+      
+      <guid>/blog/2018-08-26-adventures-in-tidyverse-forcats/</guid>
+      <description>library(forcats) library(tidyr) library(dplyr) library(ggplot2) library(sp) library(maps) library(maptools) ## Thank you to Chris Kennedy for kindly telling me I should be using library instead of require on my posts. Forever ago @dpseidel drew my attention to an awesome dataset collected by @jimwebb about tweets that cursed being cold/hot. This reminded me of a project that @danascientist (so many Dana’s!) and I did in @BaumerBen’s class where we tried to assess how cold it had to be for people to talk about being cold on Twitter.</description>
+    </item>
+    
+    <item>
+      <title>A Tale of Two Kitties: Two apply Users Convert to purrr</title>
+      <link>/blog/2018-08-15-adventures-in-tidyverse-purrr/</link>
+      <pubDate>Wed, 15 Aug 2018 16:26:03 -0700</pubDate>
+      
+      <guid>/blog/2018-08-15-adventures-in-tidyverse-purrr/</guid>
+      <description>For this post about purrr, I had help from Kellie Ottoboni (@kellieotto) since we both wanted to update our skills. We both took some code from our own research and converted it from its original form (usually with variants of apply) to variants of map. This post talks about that experience, pitfalls we ran into, and cool tricks we learned.
+Sara’s Adventure in the Tidyverse The goal for the code I’m revamping is to simulate data under a variety of scenarios where various parameters change.</description>
+    </item>
+    
+    <item>
+      <title>Week 20: Russian Troll Tweets</title>
+      <link>/tidytuesday/week20/</link>
+      <pubDate>Tue, 14 Aug 2018 10:39:54 -0700</pubDate>
+      
+      <guid>/tidytuesday/week20/</guid>
+      <description>require(purrr) require(dplyr) require(ggplot2) require(gridExtra) require(stringr) require(readr) require(lubridate) require(data.table) require(tidyr) This week’s Tidy Tuesday uses data from 538 that shows tweets from Russian trolls. Read more about the data here.
+setwd(&amp;quot;~/Desktop/russian-troll-tweets&amp;quot;) files &amp;lt;- list.files() files &amp;lt;- files[grepl(&amp;quot;.csv&amp;quot;, files)] getData &amp;lt;- lapply(files,fread) tweet &amp;lt;- do.call(&amp;quot;rbind&amp;quot;,getData) This analysis was inspired by Jennifer Golbeck’s “Benford’s Law Applies to Online Social Networks”. Benford’s Law provides the expected frequency (non-uniform) of numbers’ first digits. In this paper she finds that both the number of followers and the number of following per user on Twitter follow Benford’s Law.</description>
+    </item>
+    
+    <item>
+      <title>Week 16: Exercise USA</title>
+      <link>/tidytuesday/week16/</link>
+      <pubDate>Tue, 17 Jul 2018 10:38:18 -0700</pubDate>
+      
+      <guid>/tidytuesday/week16/</guid>
+      <description>Week 16 CDC
+CDC - National Health Statistics Reports|
+require(readxl) require(dplyr) require(ggplot2) require(stringr) require(tidyr) require(geofacet) require(viridis) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-07-17&amp;quot;) exercise=read_excel(&amp;quot;week16_exercise.xlsx&amp;quot;,sheet=1) exercise=exercise[,-1] ## remove count exercise=exercise[-1,] ## remove &amp;quot;all states&amp;quot;&amp;quot; exerciseT=exercise %&amp;gt;% gather(type, value,-state) exerciseT$value=as.numeric(exerciseT$value) ## Warning: NAs introduced by coercion You Better Work I expected that working men and women would have less time to exercise, but it looks like those who work meet the federal guidelines for exercise more across the US.</description>
+    </item>
+    
+    <item>
+      <title>Week 15: Craft Beer USA</title>
+      <link>/tidytuesday/week15/</link>
+      <pubDate>Tue, 10 Jul 2018 10:36:44 -0700</pubDate>
+      
+      <guid>/tidytuesday/week15/</guid>
+      <description>Week 15 Craft Beer USA
+data.world
+thrillist.com
+require(readxl) require(dplyr) require(ggplot2) require(stringr) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-07-10&amp;quot;) beers=read_excel(&amp;quot;week15_beers.xlsx&amp;quot;,sheet=1) brewer=read_excel(&amp;quot;week15_beers.xlsx&amp;quot;,sheet=2) beer=inner_join(beers,brewer,by =c(&amp;quot;brewery_id&amp;quot;=&amp;quot;id&amp;quot;)) byState=beer %&amp;gt;% group_by(state) %&amp;gt;% summarise(numBrewer=length(unique(brewery_id)),count=n(),mabv=mean(abv,na.rm=T)) counties= map_data(&amp;quot;county&amp;quot;) state=map_data(&amp;quot;state&amp;quot;) stateInfo=cbind.data.frame(abb=state.abb,name=tolower(state.name)) state=inner_join(state,stateInfo,by=c(&amp;quot;region&amp;quot;=&amp;quot;name&amp;quot;)) ## Warning: Column `region`/`name` joining character vector and factor, ## coercing into character vector all_state=inner_join(state,byState,by=c(&amp;quot;abb&amp;quot;=&amp;quot;state&amp;quot;)) ## Warning: Column `abb`/`state` joining factor and character vector, coercing ## into character vector This palette isn’t very visually appealing, but in the spirit of beer, I’ll use it anyway.</description>
+    </item>
+    
+    <item>
+      <title>Gender Neutral Letters of Recommendation with stringR</title>
+      <link>/blog/2018-06-16-adventures-in-tidyverse-stringr/</link>
+      <pubDate>Sat, 16 Jun 2018 16:24:33 -0700</pubDate>
+      
+      <guid>/blog/2018-06-16-adventures-in-tidyverse-stringr/</guid>
+      <description>require(reticulate) require(stringr) require(babynames) There are lots of functions in stringR that improve upon base R equivalents for string processing. I’m not going to go through all the functionality, but at the end of the post, after the main attraction, I’ll go through examples in the stringR documentation and pick out the ones that seem handiest for scenarios I have run into where base R has been found wanting.
+Gender Neutral Letters of Rec.</description>
+    </item>
+    
+    <item>
+      <title>Week 10: Biketown Bikeshare</title>
+      <link>/tidytuesday/week10/</link>
+      <pubDate>Tue, 05 Jun 2018 10:24:24 -0700</pubDate>
+      
+      <guid>/tidytuesday/week10/</guid>
+      <description>require(dplyr) require(readr) require(lubridate) require(ggplot2) Tidy the Raw Data. Luckily, each file has the same header, so we can easily stack them.
+setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-06-05/PublicTripData&amp;quot;) toRead=list.files() individ=lapply(toRead,read.csv) full=do.call(&amp;quot;rbind&amp;quot;,individ) head(full,1) ## RouteID PaymentPlan StartHub StartLatitude StartLongitude ## 1 1282087 Casual NE Sandy at 16th 45.52441 -122.6498 ## StartDate StartTime EndHub EndLatitude EndLongitude EndDate EndTime ## 1 7/19/2016 10:22 45.53506 -122.6546 7/19/2016 10:48 ## TripType BikeID BikeName Distance_Miles Duration RentalAccessPath ## 1 6083 0468 BIKETOWN 1.</description>
+    </item>
+    
+    <item>
+      <title>Troubles with Tibble</title>
+      <link>/blog/2018-06-03-adventures-in-tidyverse-tibble/</link>
+      <pubDate>Sun, 03 Jun 2018 16:20:51 -0700</pubDate>
+      
+      <guid>/blog/2018-06-03-adventures-in-tidyverse-tibble/</guid>
+      <description>require(readr) require(dplyr) require(ggplot2) require(tibble) require(data.table) require(gridExtra) Note: I’m skipping over purrr until @kellieotto returns from her travels, so we can write our joint post.
+This week’s post is on tibbles. This actually came at a perfect time since recently I’ve run into a few mysteries where I get unexpected errors or output after a data frame gets turned into a tibble at some point during my workflow (like when I use functions from the tidyverse).</description>
+    </item>
+    
+    <item>
+      <title>Week 9: Comic Book Characters</title>
+      <link>/tidytuesday/week9/</link>
+      <pubDate>Tue, 29 May 2018 10:22:43 -0700</pubDate>
+      
+      <guid>/tidytuesday/week9/</guid>
+      <description>Data: Comic book characters
+Data Source: FiveThirtyEight package
+Article: FiveThirtyEight.com
+require(dplyr) require(ggplot2) require(tidyr) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-05-29/&amp;quot;) cb=read.csv(&amp;quot;week9_comic_characters.csv&amp;quot;) Names: Boy v. Man, Girl v. Woman cb$isBoy=unlist(lapply(cb$name,function(x){grepl(&amp;quot;boy\\&amp;gt;&amp;quot;,x,ignore.case=T)})) ## nothing after boy cb$isGirl=unlist(lapply(cb$name,function(x){grepl(&amp;quot;girl&amp;quot;,x,ignore.case=T)}))## cb$isMan=unlist(lapply(cb$name,function(x){grepl(&amp;quot;man\\&amp;gt;&amp;quot;,x,ignore.case=T)})) ## nothing after man cb$isWoman=unlist(lapply(cb$name,function(x){grepl(&amp;quot;woman&amp;quot;,x,ignore.case=T)}))## cb$isMan[which(cb$isMan==1 &amp;amp; cb$isWoman==1)]=0 ## don&amp;#39;t want to double count woman byYear=cb %&amp;gt;% group_by(year)%&amp;gt;%summarise(isGirl=sum(isGirl),count=n(),isWoman=sum(isWoman),isBoy=sum(isBoy),isMan=sum(isMan)) %&amp;gt;% mutate(percentG=isGirl/count,percentW=isWoman/count) Tangent: Just for the record: characters identified as another’s girlfriend exist, but no boyfriends.
+gf=cb[which(unlist(lapply(cb$name,function(x){grepl(&amp;quot;girlfriend&amp;quot;,x,ignore.case=T)}))==T),] gf$name ## [1] Ruby (Thug&amp;#39;s girlfriend) (Earth-616) ## [2] Annie (Noh-Varr&amp;#39;s Girlfriend) (Earth-616) ## [3] Karen (Hijack&amp;#39;s girlfriend) (Earth-616) ## 23272 Levels: &amp;#39;Spinner (Earth-616) .</description>
+    </item>
+    
+    <item>
+      <title>Wrangling USDA Data with readr</title>
+      <link>/blog/2018-05-26-adventures-in-tidyverse-readr/</link>
+      <pubDate>Sat, 26 May 2018 16:14:17 -0700</pubDate>
+      
+      <guid>/blog/2018-05-26-adventures-in-tidyverse-readr/</guid>
+      <description>When I saw that this week’s blog post was supposed to be about readr I drew a blank on how to get my hands dirty using the functionality in the package. I didn’t want to use the same sample data in the documentation, but I also didn’t want to go scouring for a dataset that I wasn’t really motivated to munge. Then fate stepped in.
+At work I wanted to get some data from the USDA that is not available through their API service.</description>
+    </item>
+    
+    <item>
+      <title>Week 8: US Honey Production</title>
+      <link>/tidytuesday/week8/</link>
+      <pubDate>Mon, 21 May 2018 10:06:52 -0700</pubDate>
+      
+      <guid>/tidytuesday/week8/</guid>
+      <description>Data: US Honey Production
+Data Source: USDA
+Data Source:Kaggle.com
+Article: Bee Culture
+Find my cleaning process for going from the three raw data files to my clean version here.
+It’s a bit like… require(dplyr) require(ggplot2) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-05-21/week8_honey_production&amp;quot;) honey=read.csv(&amp;quot;honeyDataNice.csv&amp;quot;,stringsAsFactors=F) names(honey) ## [1] &amp;quot;state&amp;quot; &amp;quot;numColonies&amp;quot; &amp;quot;yieldPerColony&amp;quot; &amp;quot;production&amp;quot; ## [5] &amp;quot;stocks&amp;quot; &amp;quot;avgPricePerLb&amp;quot; &amp;quot;valProd&amp;quot; &amp;quot;year&amp;quot; By Year byYear=honey %&amp;gt;% group_by(year)%&amp;gt;% summarise(numColoniesT=sum(numColonies),productionT=sum(production),avgPrice=mean(avgPricePerLb),sdPrice=sd(avgPricePerLb),avgYieldPerCol=mean(yieldPerColony),sdYieldPerCol=sd(yieldPerColony),mnumColonies=mean(numColonies),mproduction=mean(production),sdnumColonies=sd(numColonies),sdproduction=sd(production)) Supply and Demand
+ggplot(byYear,aes(x=year,y=mnumColonies))+geom_point() ## no real difference, scale is narrow ggplot(byYear,aes(x=year,y=sdnumColonies))+geom_point() ## increasing variability ggplot(byYear,aes(x=year,y=mproduction))+geom_point() ## decline ggplot(byYear,aes(x=year,y=sdproduction))+geom_point() ## decline ggplot(byYear,aes(x=year,avgPrice))+geom_point() ## increase ggplot(byYear,aes(x=year,sdPrice))+geom_point() ## increase Efficiency</description>
+    </item>
+    
+    <item>
+      <title>Grading with tidyr</title>
+      <link>/blog/2018-05-16-adventures-in-tidyverse-tidyr/</link>
+      <pubDate>Thu, 17 May 2018 16:04:23 -0700</pubDate>
+      
+      <guid>/blog/2018-05-16-adventures-in-tidyverse-tidyr/</guid>
+      <description>It’s that time of year… The end of the semester means grading galore for professors and graduate student instructors. In this post, I will explore tidyr in the context of organizing and calculating grades.
+I have some familiarity with reshape2, but I always have to Google an example to remember how to go from wide to long format and vice versa. I’m hoping the tidyr functions will be more intuitive, so I won’t end up like:</description>
+    </item>
+    
+    <item>
+      <title>Week 7: Star Wars Survey</title>
+      <link>/tidytuesday/week7/</link>
+      <pubDate>Mon, 14 May 2018 10:05:21 -0700</pubDate>
+      
+      <guid>/tidytuesday/week7/</guid>
+      <description>Week 7 - Star Wars Survey (2014) RAW DATA
+Article
+DataSource fivethirtyeight (fivethirtyeight package)
+ How do perceptions of female Star Wars characters differ across age and gender? require(data.table) require(dplyr) require(ggplot2) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-05-14&amp;quot;) sw=fread(&amp;quot;week7_starwars.csv&amp;quot;) ## read.csv didn&amp;#39;t work for me Brute force manipulation.
+realHeader=sw[1,] sw=sw[-1,] names(sw)[c(36,38)]=c(&amp;quot;householdIncome&amp;quot;,&amp;quot;location&amp;quot;) names(sw)[2]=&amp;quot;seenStarWars&amp;quot; Let’s focus on those who have actually seen Star Wars.
+swYes=subset(sw,seenStarWars==&amp;quot;Yes&amp;quot;) Padme ## complete data only toPlot=swYes[-which(swYes$Gender==&amp;quot;&amp;quot;),c(&amp;quot;V28&amp;quot;,&amp;quot;Gender&amp;quot;,&amp;quot;Age&amp;quot;)] toPlot=toPlot[-which(toPlot$V28==&amp;quot;&amp;quot;),] toPlot$V28=factor(toPlot$V28) toPlot$V28=factor(toPlot$V28,levels=levels(toPlot$V28)[c(4,6,3,1,2,5)]) ## GROSS! byCatGen=toPlot%&amp;gt;%group_by(V28,Gender)%&amp;gt;%summarise(count=n()) byGen=toPlot%&amp;gt;%group_by(Gender)%&amp;gt;%summarise(count=n()) toPlot=byCatGen%&amp;gt;% inner_join(byGen,by=c(&amp;quot;Gender&amp;quot;=&amp;quot;Gender&amp;quot;))%&amp;gt;%mutate(percent=count.</description>
+    </item>
+    
+    <item>
+      <title>Guilty Pleasures via dplyr</title>
+      <link>/blog/2018-05-09-adventures-in-tidyverse-dplyr/</link>
+      <pubDate>Wed, 09 May 2018 15:56:46 -0700</pubDate>
+      
+      <guid>/blog/2018-05-09-adventures-in-tidyverse-dplyr/</guid>
+      <description>Next up on my to-learn list is dplyr. I use group_by and summarize fairly regularly, but there is other functionality that I want to learn to take advantage of.
+ mutate select filter arrange pull (instead of my favorite, $) various joins (instead of merge)  In anticipation of The Bachelorette starting at the end of May, I’m going to wrangle some data on previous contestants. Yes, watching The Bachelorette/The Bachelor is my guilty pleasure.</description>
+    </item>
+    
+    <item>
+      <title>Week 6: Global Coffee Chains</title>
+      <link>/tidytuesday/week6/</link>
+      <pubDate>Mon, 07 May 2018 09:53:05 -0700</pubDate>
+      
+      <guid>/tidytuesday/week6/</guid>
+      <description>Fueled By Dunkin Week 6 - Global coffee-chain locations (as of 2017 or 2018) RAW DATA
+Article
+DataSource (Starbucks): kaggle.com
+DataSource (Tim Horton): timhortons.com
+DataSource (Dunkin Donuts): odditysoftware.com
+require(readxl) require(dplyr) require(maps) require(ggmap) require(fields) require(sf) setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-05-07&amp;quot;) coffee1=read_excel(&amp;quot;week6_coffee_chains.xlsx&amp;quot;,sheet=1) coffee2=read_excel(&amp;quot;week6_coffee_chains.xlsx&amp;quot;,sheet=2) coffee3=read_excel(&amp;quot;week6_coffee_chains.xlsx&amp;quot;,sheet=3) ## all have different columns starbucksUS=subset(coffee1,Country==&amp;quot;US&amp;quot;) dunkinUS=subset(coffee3,e_country==&amp;quot;USA&amp;quot;) ## all in US so not really needed How far do I need to walk/drive to get my fix? I’m putting my personal biases into this, so I“m only looking at Dunkin and Starbucks within the US.</description>
+    </item>
+    
+    <item>
+      <title>Reliving my Undergrad Thesis via ggplot2: Part 2</title>
+      <link>/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2/</link>
+      <pubDate>Tue, 01 May 2018 15:49:04 -0700</pubDate>
+      
+      <guid>/blog/2018-05-01-adventures-in-tidyverse-ggplot2-part-2/</guid>
+      <description>In a previous post I tackled reproducing one type of plot from my undergrad thesis (maps with color coded dots). The goal for this post is to recreate an interpolated heat map over an actual US map in ggplot. Full disclosure: this was a struggle, and it still isn’t perfect.
+This was definitely me at many points throughout the process.
+ But I recognize that practice builds intuition, so if you know how I can do something better or how to answer one of my lingering questions, please reach out!</description>
+    </item>
+    
+    <item>
+      <title>Week 5: ACS Census Data (2015)</title>
+      <link>/tidytuesday/week5/</link>
+      <pubDate>Mon, 30 Apr 2018 09:45:50 -0700</pubDate>
+      
+      <guid>/tidytuesday/week5/</guid>
+      <description>Setup require(ggplot2) require(maps) require(dplyr) require(plotly) require(spotifyr)  Week 5 - County-level American Community Survey (5-year estimates) 2015 RAW DATA
+DataSource: census.gov
+Kaggle source
+This week I am taking inspiration from the Tidy Tuesday submissions of @AidoBo and @jakekaupp.
+I’m slightly tweaking @AidoBo’s function to plot continuous variables on a map to help me explore.
+For #TidyTuesday I created simple function which allows you to plot any continuous variable in the data on a map #rstats #r4ds pic.</description>
+    </item>
+    
+    <item>
+      <title>Week 4: Australian Salaries by Gender</title>
+      <link>/tidytuesday/week4/</link>
+      <pubDate>Tue, 24 Apr 2018 09:40:44 -0700</pubDate>
+      
+      <guid>/tidytuesday/week4/</guid>
+      <description>Week 4 - Gender differences in Australian Average Taxable Income RAW DATA
+Article
+DataSource: data.gov.au
+Disparities in STEM Take-aways
+About equal number of indivuals in scientist jobs. Many more males in engineering jobs.  (to be fair, should look into proportion of work force)
+Rough OLS interpretation: For every dollar a woman makes in science, a man makes $1.52. Rough OLS interpretation: For every dollar a woman makes in engineering, a man makes $1.</description>
+    </item>
+    
+    <item>
+      <title>Reliving my Undergrad Thesis via ggplot2: Part 1</title>
+      <link>/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1/</link>
+      <pubDate>Mon, 23 Apr 2018 15:41:43 -0700</pubDate>
+      
+      <guid>/blog/2018-04-23-adventures-in-tidyverse-ggplot2-part-1/</guid>
+      <description>As the first step in tidying my life, I revamp the maps in my undergraduate thesis using ggplot. I admit I am a reluctant ggplot2 user. I feel like I don’t have control over small details, and I’m constantly Googling to change something small. However, I recognize the benefits of ggplot deep down and know that if I just get used to the syntax, I’ll slowly break away from reliance on Google.</description>
+    </item>
+    
+    <item>
+      <title>Confessions of a Tidyverse Straggler</title>
+      <link>/blog/2018-04-18-confessions-of-a-tidyverse-straggler/</link>
+      <pubDate>Wed, 18 Apr 2018 15:33:16 -0700</pubDate>
+      
+      <guid>/blog/2018-04-18-confessions-of-a-tidyverse-straggler/</guid>
+      <description>These are my confessions… Obligatory Usher Reference
+ I learned R before the tidyverse (shout out to @BaumerBen’s Multiple Regression class Fall 2016) and have failed to update my skills. There, I said it. I’m a statistics PhD student whose code is riddled with dollar signs (pull Sara!) and the occassional loop that I’ve never wrangled into a proper apply statement (which should now be switched to purrr?). And although I have picked up some ggplot2 and dplyr (I’m not THAT much of an R hermit), I really don’t know what new functionality is available.</description>
+    </item>
+    
+    <item>
+      <title>Week 3: Global Mortality</title>
+      <link>/tidytuesday/week3/</link>
+      <pubDate>Mon, 16 Apr 2018 09:38:17 -0700</pubDate>
+      
+      <guid>/tidytuesday/week3/</guid>
+      <description>Setup require(readxl) require(dplyr) require(ggplot2) require(gridExtra) require(tidyr) require(RColorBrewer)  Week 3 - Global causes of mortality RAW DATA
+Article
+DatSource: ourworldindata.org
+Original Graphic
+ Read and Clean Data setwd(&amp;quot;~/Desktop/tidytuesday/data/2018-04-16&amp;quot;) gm=read_excel(&amp;quot;global_mortality.xlsx&amp;quot;) gm.gathered=gather(gm,cause,percent,-country,-country_code,-year) ## want a single column for cause of death gm.gathered$cause=as.vector(gsub(&amp;quot; \\(\\%\\)&amp;quot;,&amp;quot;&amp;quot;,gm.gathered$cause)) ## remove (%) in causes of death  Get Colors Ready I will want the color per cause to be the same across plots.
+The colors I use are still not perfectly distinguishable.</description>
+    </item>
+    
+    <item>
+      <title>Generating and Visualizing Valid Redistricting Scenarios</title>
+      <link>/blog/2018-03-29-tools-for-gerrymandering-analysis/</link>
+      <pubDate>Thu, 29 Mar 2018 16:34:33 -0700</pubDate>
+      
+      <guid>/blog/2018-03-29-tools-for-gerrymandering-analysis/</guid>
+      <description>I recently spent some time at the Geometry of Redistricting Hackathon where I learned about quantitative approaches to assessing gerrymandering. Check out the Metric Geometry and Gerrymandering Group on GitHub to see how you can get involved. I focused on improving documentation during my brief time at the hackathon, but I did not get a chance to contribute as much as I would have liked during the hackathon itself due to my own time constraints.</description>
+    </item>
+    
+    <item>
+      <title>Analyzing Song Repetition in R Using geniusr</title>
+      <link>/blog/2018-03-27-song-repetition-analysis/</link>
+      <pubDate>Tue, 27 Mar 2018 16:44:00 -0700</pubDate>
+      
+      <guid>/blog/2018-03-27-song-repetition-analysis/</guid>
+      <description>Rick Wicklin (@RickWicklin) posted a blog post recently about how to visualize repetition in song lyrics using SAS. I wanted to do the same thing using R and also utilizing geniusr to more easily access a variety of song lyrics to compare.
+Note: There is also geniusR that I did not dig into further.
+First let’s create some functions to make it easy to compare a bunch of different songs.</description>
+    </item>
+    
+    <item>
       <title>About</title>
-      <link>https://sastoudt.github.io/about/</link>
+      <link>/about/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/about/</guid>
+      <guid>/about/</guid>
       <description>My name is Sara Stoudt. I am a fifth year student in the UC Berkeley Statistics Department and a Berkeley Institute for Data Science Fellow. Prior to being a BIDS Fellow, I was supported by a National Physical Sciences Consortium Fellowship  with the National Institute of Standards and Technology  and part of the Data Science for the 21st Century: Environment and Society Training Program .
 My research focus is on ecological applications of statistics, and I am advised by Will Fithian and Perry de Valpine.</description>
     </item>
     
     <item>
       <title>CV</title>
-      <link>https://sastoudt.github.io/cv/</link>
+      <link>/cv/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/cv/</guid>
+      <guid>/cv/</guid>
       <description>You can download a full copy of my CV here.</description>
     </item>
     
     <item>
       <title>Coding Projects</title>
-      <link>https://sastoudt.github.io/coding/</link>
+      <link>/coding/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/coding/</guid>
+      <guid>/coding/</guid>
       <description>Miscellaneous Coding Projects  Census Data Aggregator: While at the Los Angeles Times Data Desk, I worked to add functionality to the Census data aggregator, an open source Python library that helps aggregate data from the census while still accounting for margin of error. stringr Vignette: I wrote a vignette to help users transition from performing string operations in base R to using the tidyverse stringr package.
 Wealth Tax Shiny App: UC Berkeley economists Emmanuel Saez and Gabriel Zucman analyzed Senator Elizabeth Warren’s proposal for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis (OPA).</description>
     </item>
     
     <item>
       <title>Research</title>
-      <link>https://sastoudt.github.io/research/</link>
+      <link>/research/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/research/</guid>
+      <guid>/research/</guid>
       <description>Graduate Research (ongoing) Clarifying the Identifiability Controversy in Species Distribution Modeling  Advisors: Will Fithian and Perry de Valpine  Ecologists commonly make strong parametric assumptions when formulating statistical models. Such assumptions have sparked repeated debates in the literature about statistical identifiability of species distribution and abundance models, among others. At issue is whether the assumption of a particular parametric form serves to impose artificial statistical identifiability that should not be relied upon or instead whether such an assumption is part and parcel of statistical modeling.</description>
     </item>
     
     <item>
       <title>Teaching</title>
-      <link>https://sastoudt.github.io/teaching/</link>
+      <link>/teaching/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/teaching/</guid>
+      <guid>/teaching/</guid>
       <description>You can download a draft (work in progress) of my teaching statement here. 
 Spring 2018
 
@@ -67,10 +414,10 @@ Students write 4 posts during the semester related to mathematics, statistics, c
     
     <item>
       <title>Writing</title>
-      <link>https://sastoudt.github.io/writing/</link>
+      <link>/writing/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
-      <guid>https://sastoudt.github.io/writing/</guid>
+      <guid>/writing/</guid>
       <description>Links to my writing that lives somewhere other than my blog.  Blogging Beyond: based on Deb Nolan and my experience teaching writing for statistics and data science, a belated response to @KelseyAHE’s request for a blog about student blogs
 
 Gender Issues Roundtable Discussion: A Case Study in Uncomfortable Conversations: with Kellie Ottoboni, Rebecca Barter, and Ryan Giordano
