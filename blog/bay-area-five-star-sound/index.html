@@ -1,0 +1,779 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">The Bay Area&#39;s Five Star Sound</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON OCT 29, 2019 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<p>I signed up to get Dan Kopf’s “Golden Stats Warrior” newsletter, a newsletter that provides data driven insight into the Bay Area. You can sign up too <a href="https://goldenstatswarrior.substack.com/">here</a>.</p>
+<p>The last edition looked at the greatest albums from the Bay Area. Of albums by Bay Area natives, which ones got five stars on <a href="https://www.allmusic.com/">AllMusic</a>? Being a bit of a <a href="http://www.covermesongs.com/author/sarastoudt">music nerd</a>, I wanted to dig in further. Kopf was kind enough to share the data with me so that I could do some more exploring.</p>
+<p>I decided to use the Spotify API to get audio features for all of the songs on these albums. Then we can see if there is a quintessential Bay Area sound.</p>
+<pre class="r"><code>library(dplyr)
+library(spotifyr)
+library(purrr)
+library(lubridate)
+library(ggplot2)
+library(ggradar)
+library(kableExtra)
+library(scales)</code></pre>
+<pre class="r"><code>spotify_client_id=&quot;&quot; ## put yours here
+spotify_client_secret=&quot;&quot; ## put yours here
+access_token &lt;- get_spotify_access_token(client_id=spotify_client_id,client_secret=spotify_client_secret)</code></pre>
+<pre class="r"><code>setwd(&quot;~/Desktop/freelance/goldenStatWarrior&quot;)
+data &lt;- read.csv(&quot;BayAreaAlbums-datafromletter3.csv&quot;, stringsAsFactors = F)
+greatest &lt;- subset(data, Score == 5)</code></pre>
+<p>First we grab the audio features for any album by the Bay Area artists who scored a five on at least one album.</p>
+<pre class="r"><code>helper &lt;- function(x) {
+  get_artist_audio_features(x, include_groups = &quot;album&quot;, authorization = access_token)
+}
+
+
+
+safe_spotify &lt;- safely(helper) ## don&#39;t want it to crash if there is a bad request
+
+allInfoGreatest &lt;- unique(greatest$Artist.Name) %&gt;% map(safe_spotify)
+save(allInfoGreatest, file = &quot;allInfoGreatest.RData&quot;)
+
+testSly &lt;- helper(&quot;family stone&quot;) ## Sly &amp; the Family Stone gets weird, so do them seperately</code></pre>
+<p>Then we clean that up a bit.</p>
+<pre class="r"><code>load(file = &quot;allInfoGreatest.RData&quot;)
+clean &lt;- lapply(allInfoGreatest, function(x) {
+  x$result
+})
+clean2 &lt;- do.call(&quot;rbind&quot;, clean)
+
+clean2$album_release_date &lt;- as.Date(clean2$album_release_date)
+clean2$year &lt;- year(clean2$album_release_date)
+testSly$album_release_date &lt;- as.Date(testSly$album_release_date)
+testSly$year &lt;- year(testSly$album_release_date)
+clean3 &lt;- rbind(clean2, testSly)
+
+save(clean3, file = &quot;clean3.RData&quot;)</code></pre>
+<p>Now we get things prepped for merging based on names. This could get ugly.</p>
+<pre class="r"><code>setwd(&quot;~/Desktop/freelance/goldenStatWarrior&quot;)
+load(file=&quot;clean3.RData&quot;)
+
+greatest$Artist.Name=tolower(greatest$Artist.Name)
+greatest$Album.Name=tolower(greatest$Album.Name)
+clean3$album_name=tolower(clean3$album_name)
+clean3$artist_name=tolower(clean3$artist_name)</code></pre>
+<p>Inevitably, it did. These were the ones where I had to do some manual fudging to get things right.</p>
+<pre class="r"><code>greatest$Album.Name[which(greatest$Album.Name == &quot;handel: messiah [2008 recording]&quot;)] &lt;- &quot;handel: messiah&quot;
+greatest$Artist.Name[which(greatest$Artist.Name == &quot;dave brubeck&quot;)] &lt;- &quot;the dave brubeck quartet&quot;
+
+greatest$Album.Name[which(greatest$Album.Name == &quot;lorraine at emmanuel&quot;)] &lt;- &quot;lorraine hunt lieberson at emmanuel&quot;
+
+greatest$Album.Name[which(greatest$Album.Name == &quot;recital: lorraine hunt lieberson at ravinia&quot;)] &lt;- &quot;recital at ravinia&quot;
+
+greatest$Album.Name[which(greatest$Album.Name == &quot;red house painters (roller-coaster)&quot;)] &lt;- &quot;red house painters i&quot;
+
+greatest$Album.Name[which(greatest$Album.Name == &quot;john adams: harmonielehre; short ride in a fast machine&quot;)] &lt;- &quot;adams: harmonielehre - short ride in a fast machine&quot;
+
+greatest$Artist.Name[which(greatest$Artist.Name == &quot;vince guaraldi&quot;)] &lt;- &quot;vince guaraldi trio&quot;
+
+greatest$Album.Name[which(greatest$Album.Name == &quot;cast your fate to the wind: jazz impressions of black orpheus&quot;)] &lt;- &quot;cast your fate to the wind&quot;
+
+greatest$Album.Name[which(greatest$Album.Name == &quot;a boy named charlie brown [original soundtrack]&quot;)] &lt;- &quot;a boy named charlie brown&quot;
+
+greatest2 &lt;- rbind.data.frame(greatest, greatest[which(greatest$Album.Name == &quot;cast your fate to the wind&quot;), ])
+
+greatest2$Album.Name[nrow(greatest2)] &lt;- &quot;jazz impressions of black orpheus&quot; ## split into two on Spotify</code></pre>
+<p>Actually do the matching.</p>
+<pre class="r"><code>helper &lt;- function(x) {
+  use &lt;- greatest2[x, c(&quot;Album.Name&quot;, &quot;Artist.Name&quot;, &quot;Year&quot;)]
+
+  test &lt;- subset(clean3, artist_name == use$Artist.Name)
+  toReturn &lt;- test[agrep(use$Album.Name, test$album_name), ] ## sort of fuzzy match
+  return(toReturn)
+}
+
+
+getData &lt;- lapply(1:nrow(greatest2), helper)
+test &lt;- lapply(getData, nrow)</code></pre>
+<p>Which ones didn’t work out?</p>
+<pre class="r"><code>tt = greatest[which(unlist(test)==0),] 
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Artist.URL
+</th>
+<th style="text-align:left;">
+Year
+</th>
+<th style="text-align:left;">
+City
+</th>
+<th style="text-align:left;">
+Artist.Name
+</th>
+<th style="text-align:right;">
+Score
+</th>
+<th style="text-align:left;">
+Album.Name
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+658
+</td>
+<td style="text-align:left;">
+/artist/marty-paich-mn0000858709
+</td>
+<td style="text-align:left;">
+1956
+</td>
+<td style="text-align:left;">
+Oakland
+</td>
+<td style="text-align:left;">
+marty paich
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+sings fred astaire
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+933
+</td>
+<td style="text-align:left;">
+/artist/russell-garcia-mn0000808436
+</td>
+<td style="text-align:left;">
+1958
+</td>
+<td style="text-align:left;">
+Oakland
+</td>
+<td style="text-align:left;">
+russell garcia
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+fantastica: music from outer space
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1032
+</td>
+<td style="text-align:left;">
+/artist/souls-of-mischief-mn0000041857
+</td>
+<td style="text-align:left;">
+1993
+</td>
+<td style="text-align:left;">
+Oakland
+</td>
+<td style="text-align:left;">
+souls of mischief
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+93 ’til infinity
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1225
+</td>
+<td style="text-align:left;">
+/artist/tony%21-toni%21-ton%C3%A9%21-mn0000790667
+</td>
+<td style="text-align:left;">
+1990
+</td>
+<td style="text-align:left;">
+Oakland
+</td>
+<td style="text-align:left;">
+tony! toni! toné!
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+the revival
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+1457
+</td>
+<td style="text-align:left;">
+/artist/david-murray-mn0000182855
+</td>
+<td style="text-align:left;">
+1982
+</td>
+<td style="text-align:left;">
+Berkeley
+</td>
+<td style="text-align:left;">
+david murray
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+murray’s steps
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2043
+</td>
+<td style="text-align:left;">
+/artist/los-tigres-del-norte-mn0000806336
+</td>
+<td style="text-align:left;">
+1989
+</td>
+<td style="text-align:left;">
+San Jose
+</td>
+<td style="text-align:left;">
+los tigres del norte
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+triunfo solido
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2294
+</td>
+<td style="text-align:left;">
+/artist/andra%C3%A9-crouch-mn0000031263
+</td>
+<td style="text-align:left;">
+1978
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+andraé crouch
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+andrae crouch &amp; the disciples
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2453
+</td>
+<td style="text-align:left;">
+/artist/big-brother-the-holding-company-mn0000758943
+</td>
+<td style="text-align:left;">
+1968
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+big brother &amp; the holding company
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+cheap thrills
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2791
+</td>
+<td style="text-align:left;">
+/artist/constantine-orbelian-mn0000937363
+</td>
+<td style="text-align:left;">
+2017
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+constantine orbelian
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+georgy sviridov: russia cast adrift
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+2910
+</td>
+<td style="text-align:left;">
+/artist/del-sol-string-quartet-mn0000335603
+</td>
+<td style="text-align:left;">
+2009
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+del sol string quartet
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+marc blitzstein: first life - rare early works
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+3518
+</td>
+<td style="text-align:left;">
+/artist/jeannette-sorrell-mn0001286718
+</td>
+<td style="text-align:left;">
+2011
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+jeannette sorrell
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+come to the river: an early american gathering
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4520
+</td>
+<td style="text-align:left;">
+/artist/leon-fleisher-mn0001209232
+</td>
+<td style="text-align:left;">
+2009
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+leon fleisher
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+hindemith: klaviermusik mit orchester; dvorák: symphony no. 9 “from the new world”
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4588
+</td>
+<td style="text-align:left;">
+/artist/linda-tillery-mn0000594698
+</td>
+<td style="text-align:left;">
+1993
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+linda tillery
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+secrets
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+4635
+</td>
+<td style="text-align:left;">
+/artist/lorraine-hunt-lieberson-mn0001472476
+</td>
+<td style="text-align:left;">
+2007
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+lorraine hunt lieberson
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+songs by mahler, handel &amp; peter lieberson
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+5492
+</td>
+<td style="text-align:left;">
+/artist/ruggiero-ricci-mn0000249876
+</td>
+<td style="text-align:left;">
+1985
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+ruggiero ricci
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+franck: violin sonata; prokofiev: violin sonata op. 94a
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+6281
+</td>
+<td style="text-align:left;">
+/artist/vince-guaraldi-mn0000201678
+</td>
+<td style="text-align:left;">
+1966
+</td>
+<td style="text-align:left;">
+San Francisco
+</td>
+<td style="text-align:left;">
+vince guaraldi trio
+</td>
+<td style="text-align:right;">
+5
+</td>
+<td style="text-align:left;">
+it’s the great pumpkin, charlie brown
+</td>
+</tr>
+</tbody>
+</table>
+<p>I checked, and this wasn’t just an issue of merging on slightly different names. I couldn’t find the analogue in the albums pulled from Spotify based on the artist names. We only lost 16 out of 56, not bad!</p>
+<pre class="r"><code>dataINeed=do.call(&quot;rbind&quot;,getData)
+save(dataINeed,file = &quot;fullData2018-10-28.RData&quot;)</code></pre>
+<p>Now we get to the fun stuff. What kind of features do we have? We want to get the average and variability across songs, per album.</p>
+<pre class="r"><code>characteristics &lt;- c(&quot;danceability&quot;, &quot;energy&quot;, &quot;loudness&quot;, &quot;speechiness&quot;, &quot;acousticness&quot;, &quot;instrumentalness&quot;, &quot;liveness&quot;, &quot;valence&quot;)
+
+charSum &lt;- dataINeed[, c(characteristics, &quot;album_name&quot;)] %&gt;%
+  group_by(album_name) %&gt;%
+  summarise(
+    meanDanceability = mean(danceability), meanEnergy = mean(energy),
+    meanLoudness = mean(loudness), meanSpeechiness = mean(speechiness),
+    meanAcousticness = mean(acousticness), meanInstrumentalness = mean(instrumentalness), meanLiveness = mean(liveness), meanValence = mean(valence),
+    varDanceability = var(danceability), varEnergy = var(energy),
+    varLoudness = var(loudness), varSpeechiness = var(speechiness),
+    varAcousticness = var(acousticness), varInstrumentalness = var(instrumentalness), varLiveness = var(liveness), varValence = var(valence)
+  )
+
+
+## add mean of everything in black
+add &lt;- cbind.data.frame(album_name = &quot;avg&quot;, t(apply(dataINeed[, c(characteristics)], 2, mean)))
+
+
+meanStuff &lt;- charSum[, 1:9]
+names(add) &lt;- names(meanStuff)
+meanStuff &lt;- rbind.data.frame(meanStuff, add)
+varStuff &lt;- charSum[, c(1, 10:17)]</code></pre>
+<p>Now, I wanted to make some cool radar plots, inspired by music analysis like <a href="https://www.freecodecamp.org/news/spotifys-this-is-playlists-the-ultimate-song-analysis-for-50-mainstream-artists-491882081819/">this</a>. You can also find descriptions of the features there.</p>
+<p>Of course there is a <code>gg</code> version, but I had to tweak the internal functionality to get the plots to look like what I wanted them to. This gets a bit gnarly, so I’m compartmentalizing that code over <a href="https://gist.github.com/sastoudt/fc4580ceb903add59df0b670a8451954">here</a>.</p>
+<pre class="r"><code>setwd(&quot;~/Desktop/freelance/goldenStatWarrior&quot;)
+source(&quot;fix_ggradar.R&quot;)</code></pre>
+<p>I also snagged some code from the internal <code>ggradar</code> so that I could add a line representing the average across all albums in black. That stuff lives in the following helper function.</p>
+<pre class="r"><code>helperPlot &lt;- function(base) {
+  grid.min &lt;- 0 # , # 10,
+  grid.mid &lt;- 0.5 # , # 50,
+  grid.max &lt;- 1 # , # 100,
+  centre.y &lt;- grid.min - ((1 / 9) * (grid.max - grid.min))
+  plot.data &lt;- as.data.frame(toP[nrow(toP), ])
+  names(plot.data)[1] &lt;- &quot;group&quot;
+
+
+  if (!is.factor(plot.data[, 1])) {
+    plot.data[, 1] &lt;- as.factor(as.character(plot.data[, 1]))
+  }
+
+  plot.data.offset &lt;- plot.data
+  plot.data.offset[, 2:ncol(plot.data)] &lt;- plot.data[, 2:ncol(plot.data)] + abs(centre.y)
+  # print(plot.data.offset)
+  # (b) convert into radial coords
+  group &lt;- NULL
+  group$path &lt;- CalculateGroupPath(plot.data.offset)
+
+  group.line.width &lt;- 1.5
+  group.point.size &lt;- 6
+  # ... + group (cluster) &#39;paths&#39;
+  base &lt;- base + geom_path(
+    data = group$path, aes(x = x, y = y, group = group),
+    size = group.line.width, lty = 2, col = &quot;black&quot;
+  )
+
+  # ... + group points (cluster data)
+
+  base &lt;- base + geom_point(data = group$path, aes(x = x, y = y, group = group), size = group.point.size, alpha = 0.5, col = &quot;black&quot;)
+
+  return(base)
+}</code></pre>
+<p>Acousticness for the win! However, there are quite a few albums that hit high instrumentalness (makes sense, lots of jazz and classical music), high energy, danceability (they aren’t called Funky Divas for nothing), and loudness (Green Day, anyone?)</p>
+<pre class="r"><code>toP &lt;- meanStuff %&gt;% mutate_at(vars(-album_name), rescale)
+
+base &lt;- ggradar2(toP[-nrow(toP), ])
+
+helperPlot(base)</code></pre>
+<p><img src="/blog/bay-area-five-star-sound_files/figure-html/unnamed-chunk-14-1.png" width="80%" /></p>
+<p>Which album is most like the average five-star Bay Area album? Dave Brubeck’s “Time Out”</p>
+<p>This isn’t particularly suprising has Brubeck has the third highest number of albums on the five-star list.</p>
+<pre class="r"><code>test=as.matrix(dist(toP[,-1]))
+
+#toP[which.min(test[nrow(toP),-ncol(test)]),]
+
+dataINeed %&gt;% group_by(album_id) %&gt;% summarise(count=n(),artist=artist_name[1])  %&gt;% group_by(artist) %&gt;% summarise(count=n()) %&gt;% arrange(desc(count))</code></pre>
+<pre><code>## # A tibble: 24 x 2
+##    artist                   count
+##    &lt;chr&gt;                    &lt;int&gt;
+##  1 vince guaraldi trio          9
+##  2 lorraine hunt lieberson      8
+##  3 the dave brubeck quartet     6
+##  4 leon fleisher                5
+##  5 moby grape                   5
+##  6 david murray                 3
+##  7 san francisco symphony       3
+##  8 chanticleer                  2
+##  9 grateful dead                2
+## 10 green day                    2
+## # … with 14 more rows</code></pre>
+<p>The Bay Area likes variability in valence (positivity of sound).</p>
+<pre class="r"><code>toP = varStuff %&gt;% mutate_at(vars(-album_name), rescale) 
+
+base = ggradar2(toP[-nrow(toP),])
+
+helperPlot(base)</code></pre>
+<p><img src="/blog/bay-area-five-star-sound_files/figure-html/unnamed-chunk-16-1.png" width="80%" /></p>
+<p>Which album has the variability most like the average five-star Bay Area album? The Grateful Dead’s “American Beauty” (from SF)</p>
+<pre class="r"><code>test=as.matrix(dist(toP[,-1]))
+
+#toP[which.min(test[nrow(toP),-ncol(test)]),]</code></pre>
+<p>What about the <a href="https://sastoudt.github.io/blog/songs-to-strut-to/">Bay Area pace</a>? Let’s look at tempo.</p>
+<pre class="r"><code>ggplot(dataINeed, aes(x=tempo)) + geom_histogram()+xlab(&quot;beats per minute&quot;)</code></pre>
+<p><img src="/blog/bay-area-five-star-sound_files/figure-html/unnamed-chunk-18-1.png" width="672" /></p>
+<p>What song is most like the average tempo? Ironically, Brubeck’s St. Louis Blues. Brubeck is a Concord original.</p>
+<pre class="r"><code>mean(dataINeed$tempo)</code></pre>
+<pre><code>## [1] 111.9667</code></pre>
+<pre class="r"><code>#dataINeed[which.min(abs(dataINeed$tempo-mean(dataINeed$tempo))),]
+
+blogdown::shortcode(&quot;youtube&quot;, &quot;tq2YENV_Q9s&quot;)</code></pre>
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="//www.youtube.com/embed/tq2YENV_Q9s" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+<p>But there is a peak in the tempo distribution that is slower than the mean. What song is most like this mode? Gotta love a good cover of The Beatles’ “Yesterday” by Oakland’s En Vogue.</p>
+<pre class="r"><code>#which.max(table(round(dataINeed$tempo)))
+
+# mode
+#dataINeed[which.min(abs(dataINeed$tempo-80)),]
+
+blogdown::shortcode(&quot;youtube&quot;, &quot;k1PiJAeydLs&quot;)</code></pre>
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="//www.youtube.com/embed/k1PiJAeydLs" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+<p>What about those few faster paced jams? Here is an inspirational song from San Francisco’s Moby Grape.</p>
+<pre class="r"><code>#dataINeed[which.min(abs(dataINeed$tempo-200)),]
+
+blogdown::shortcode(&quot;youtube&quot;, &quot;9-RKXCvb5E&quot;)</code></pre>
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="//www.youtube.com/embed/9-RKXCvb5E" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+<p>What is an example of a song that is in the most prominent key? Oakland’s Digital Underground gives us “Doowutchyalike.”</p>
+<pre class="r"><code>#which.max(table(dataINeed$key_mode))
+
+#dataINeed[which(dataINeed$key_mode==&quot;A major&quot;)[1],]
+
+blogdown::shortcode(&quot;youtube&quot;, &quot;5P4WZHlHsyk&quot;)</code></pre>
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="//www.youtube.com/embed/5P4WZHlHsyk" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+<p>There is plenty more to dig into here.</p>
+<ul>
+<li>What about all of the other star-levels?</li>
+<li>Are the 5-star albums from another area noticeably different than the Bay Area ones?</li>
+<li>Do these Bay Area albums call out their roots in the song lyrics?</li>
+</ul>
+<p>But those are for another day…</p>
+<p>Thanks again to Dan Kopf (<span class="citation">@dkopf</span>) for sharing the data! Thoughts, comments, suggestions, etc. welcome –&gt; <span class="citation">@sastoudt</span>.</p>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/songs-to-strut-to/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+
