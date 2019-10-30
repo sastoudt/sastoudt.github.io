@@ -1,0 +1,131 @@
+---
+title: 'Week 44, 2019: Squirrel Census'
+draft: yes
+date: '2019-10-30T10:42:13-07:00'
+geometry: margin=.1in
+---
+
+It has been a LONG time since I last participated in Tidy Tuesday. Apologies #rstats world! It turns out getting a PhD is... alot. But I obviously had to return for the Squirrel Census.
+
+![](http://giphygifs.s3.amazonaws.com/media/NoHe3HpB1Mg8w/giphy.gif)
+
+```{r,warning=F, message=F}
+library(dplyr)
+library(stringr)
+library(kableExtra)
+library(ggplot2)
+library(purrr)
+library(magrittr)
+
+setwd("~/Desktop/tidytuesday/data/2019/2019-10-29")
+
+sq <- read.csv("nyc_squirrels.csv",stringsAsFactors = F)
+names(sq)
+```
+
+What weird stuff can we find? The `highlight_fur_color` field catches my eye. Who knew squirrels were into highlights?
+
+![https://i.redd.it/k9czezc36xi21.jpg](/tidytuesday/squirrel-census_files/coverSquirrel.jpg)
+
+```{r}
+
+tt = sq %>% group_by(unique_squirrel_id) %>% summarise(primary_fur_color = primary_fur_color[1]) %>% group_by(primary_fur_color) %>% summarise(count=n()) %>% arrange(desc(count)) %>% as.data.frame()
+
+kable(tt) %>% kable_styling()
+
+tt <- sq %>% group_by(unique_squirrel_id) %>% summarise(primary_fur_color = primary_fur_color[1], highlight_fur_color = highlight_fur_color[1]) %>% group_by(primary_fur_color, highlight_fur_color) %>% summarise(count = n()) %>% arrange(desc(count)) %>% as.data.frame()
+
+kable(tt) %>% kable_styling()
+
+```
+
+I'm kind of surprised that gray with black highlights is so uncommon. But to be fair, that surprise is based on absolutely no knowlege of NYC squirrels. Enlighten me!
+
+
+The next weird thing I wanted to dig in was the `other_activities` field. Look at some of these gems.
+
+```{r}
+unique(sq$other_activities)[3:12]
+```
+
+I'm interested in the squirrel interactions.
+
+```{r}
+interactions <- sq[str_which(sq$other_activities, "#"), ]
+
+#interactions[1, ]
+
+interactions <- interactions[-1, ] ## get rid of #jealous
+```
+
+The first thing I want to know is whether this level of detail is concentrated in one pocket (due to a few really intense data collectors). Actually, no!
+
+```{r}
+ggplot(sq, aes(long, lat)) + geom_point() + geom_point(data = interactions, aes(long, lat), col = "red") + theme_minimal()
+```
+
+For each interaction, who is the other squirrel?
+
+```{r}
+nums <- unlist(map(str_split(interactions$other_activities, "#"), 2)) ## grab the number
+justNums <- str_replace_all(nums, "[^0-9]", "") ## get rid of the extra junk
+interactions$otherSquirrel <- justNums
+```
+
+Ok, now for some data munging. If we look at the `unique_squirrel_id` field, it isn't a perfect paste of "Hectare ID" + "Shift" + "Date" + "Hectare Squirrel Number." The hectare ID has to be un-padded, the date has to be striped of the year, and the squirrel number has to be padded. Here we go!
+
+
+```{r}
+getBuddy <- function(x) {
+  unpadHectare <- str_sub(interactions$hectare[x], str_locate(interactions$hectare[x], "[^0]")[1], str_length(interactions$hectare[x]))
+  # https://stat.ethz.ch/pipermail/r-help/2010-October/255450.html
+  newDate <- str_sub(interactions$date[x], 1, 4)
+  paddedSquirrel <- str_pad(interactions$otherSquirrel[x], width = 2, side = "left", pad = "0")
+  id <- paste(unpadHectare, interactions$shift[x], newDate, paddedSquirrel, sep = "-")
+  subset(sq, unique_squirrel_id == id)
+}
+```
+
+Pause for some fun.
+
+```{r}
+interactions$other_activities[31]
+```
+
+Back to business.
+
+```{r}
+buddies <- map(1:nrow(interactions), getBuddy)
+
+map(buddies, nrow) %>% unlist() %>% summary() ## check that everyone got a buddy
+```
+
+```{r}
+interactions %<>% mutate(otherSquirrelAge = unlist(map(buddies, "age"))) ## fancy pipe!
+interactions %<>% mutate(otherSquirrelPrimaryFurColor = unlist(map(buddies, "primary_fur_color")))
+interactions %<>% mutate(otherSquirrelHighlightFurColor = unlist(map(buddies, "highlight_fur_color")))
+```
+
+It looks like squirrels interact with squirrels like them in terms of age and coloring. But of course there is a big disparity in age and color overall, so I don't want to read too much into this. 
+
+```{r}
+tt <- interactions %>% group_by(age, otherSquirrelAge) %>% summarise(count = n())
+
+kable(tt) %>% kable_styling()
+
+tt <- interactions %>% group_by(primary_fur_color, otherSquirrelPrimaryFurColor) %>% summarise(count = n()) %>% arrange(desc(count))
+
+kable(tt) %>% kable_styling()
+
+tt <- interactions %>% group_by(primary_fur_color, highlight_fur_color, otherSquirrelPrimaryFurColor, otherSquirrelHighlightFurColor) %>% summarise(count = n()) %>% arrange(desc(count))
+
+
+kable(tt) %>% kable_styling()
+
+
+
+```
+
+So what have we learned? Not much, but there was some fun data wrangling + squirrels. Full disclosure, I did some not-tidy stuff in the exploratory phase, but in this post I took some extra time to switch back to the tidyverse. I admit, I had to refer back to [this](https://stringr.tidyverse.org/articles/from-base.html) multiple times despite writing it.
+
+Comments, suggestions, etc. are welcome --> @sastoudt

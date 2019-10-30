@@ -6,10 +6,30 @@
     <description>Recent content on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Fri, 11 Oct 2019 10:20:51 -0700</lastBuildDate>
+    <lastBuildDate>Wed, 30 Oct 2019 10:42:13 -0700</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Week 44, 2019: Squirrel Census</title>
+      <link>/tidytuesday/squirrel-census/</link>
+      <pubDate>Wed, 30 Oct 2019 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/squirrel-census/</guid>
+      <description>It has been a LONG time since I last participated in Tidy Tuesday. Apologies #rstats world! It turns out getting a PhD is… alot. But I obviously had to return for the Squirrel Census.
+library(dplyr) library(stringr) library(kableExtra) library(ggplot2) library(purrr) library(magrittr) setwd(&amp;quot;~/Desktop/tidytuesday/data/2019/2019-10-29&amp;quot;) sq &amp;lt;- read.csv(&amp;quot;nyc_squirrels.csv&amp;quot;,stringsAsFactors = F) names(sq) ## [1] &amp;quot;long&amp;quot; ## [2] &amp;quot;lat&amp;quot; ## [3] &amp;quot;unique_squirrel_id&amp;quot; ## [4] &amp;quot;hectare&amp;quot; ## [5] &amp;quot;shift&amp;quot; ## [6] &amp;quot;date&amp;quot; ## [7] &amp;quot;hectare_squirrel_number&amp;quot; ## [8] &amp;quot;age&amp;quot; ## [9] &amp;quot;primary_fur_color&amp;quot; ## [10] &amp;quot;highlight_fur_color&amp;quot; ## [11] &amp;quot;combination_of_primary_and_highlight_color&amp;quot; ## [12] &amp;quot;color_notes&amp;quot; ## [13] &amp;quot;location&amp;quot; ## [14] &amp;quot;above_ground_sighter_measurement&amp;quot; ## [15] &amp;quot;specific_location&amp;quot; ## [16] &amp;quot;running&amp;quot; ## [17] &amp;quot;chasing&amp;quot; ## [18] &amp;quot;climbing&amp;quot; ## [19] &amp;quot;eating&amp;quot; ## [20] &amp;quot;foraging&amp;quot; ## [21] &amp;quot;other_activities&amp;quot; ## [22] &amp;quot;kuks&amp;quot; ## [23] &amp;quot;quaas&amp;quot; ## [24] &amp;quot;moans&amp;quot; ## [25] &amp;quot;tail_flags&amp;quot; ## [26] &amp;quot;tail_twitches&amp;quot; ## [27] &amp;quot;approaches&amp;quot; ## [28] &amp;quot;indifferent&amp;quot; ## [29] &amp;quot;runs_from&amp;quot; ## [30] &amp;quot;other_interactions&amp;quot; ## [31] &amp;quot;lat_long&amp;quot; ## [32] &amp;quot;zip_codes&amp;quot; ## [33] &amp;quot;community_districts&amp;quot; ## [34] &amp;quot;borough_boundaries&amp;quot; ## [35] &amp;quot;city_council_districts&amp;quot; ## [36] &amp;quot;police_precincts&amp;quot; What weird stuff can we find?</description>
+    </item>
+    
+    <item>
+      <title>The Bay Area&#39;s Five Star Sound</title>
+      <link>/blog/bay-area-five-star-sound/</link>
+      <pubDate>Tue, 29 Oct 2019 10:20:51 -0700</pubDate>
+      
+      <guid>/blog/bay-area-five-star-sound/</guid>
+      <description>I signed up to get Dan Kopf’s “Golden Stats Warrior” newsletter, a newsletter that provides data driven insight into the Bay Area. You can sign up too here.
+The last edition looked at the greatest albums from the Bay Area. Of albums by Bay Area natives, which ones got five stars on AllMusic? Being a bit of a music nerd, I wanted to dig in further. Kopf was kind enough to share the data with me so that I could do some more exploring.</description>
+    </item>
     
     <item>
       <title>Songs to Strut To</title>

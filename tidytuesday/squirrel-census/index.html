@@ -1,0 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.48" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 44, 2019: Squirrel Census</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON OCT 30, 2019 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    <script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<p>It has been a LONG time since I last participated in Tidy Tuesday. Apologies #rstats world! It turns out getting a PhD is… alot. But I obviously had to return for the Squirrel Census.</p>
+<p><img src="http://giphygifs.s3.amazonaws.com/media/NoHe3HpB1Mg8w/giphy.gif" /></p>
+<pre class="r"><code>library(dplyr)
+library(stringr)
+library(kableExtra)
+library(ggplot2)
+library(purrr)
+library(magrittr)
+
+setwd(&quot;~/Desktop/tidytuesday/data/2019/2019-10-29&quot;)
+
+sq &lt;- read.csv(&quot;nyc_squirrels.csv&quot;,stringsAsFactors = F)
+names(sq)</code></pre>
+<pre><code>##  [1] &quot;long&quot;                                      
+##  [2] &quot;lat&quot;                                       
+##  [3] &quot;unique_squirrel_id&quot;                        
+##  [4] &quot;hectare&quot;                                   
+##  [5] &quot;shift&quot;                                     
+##  [6] &quot;date&quot;                                      
+##  [7] &quot;hectare_squirrel_number&quot;                   
+##  [8] &quot;age&quot;                                       
+##  [9] &quot;primary_fur_color&quot;                         
+## [10] &quot;highlight_fur_color&quot;                       
+## [11] &quot;combination_of_primary_and_highlight_color&quot;
+## [12] &quot;color_notes&quot;                               
+## [13] &quot;location&quot;                                  
+## [14] &quot;above_ground_sighter_measurement&quot;          
+## [15] &quot;specific_location&quot;                         
+## [16] &quot;running&quot;                                   
+## [17] &quot;chasing&quot;                                   
+## [18] &quot;climbing&quot;                                  
+## [19] &quot;eating&quot;                                    
+## [20] &quot;foraging&quot;                                  
+## [21] &quot;other_activities&quot;                          
+## [22] &quot;kuks&quot;                                      
+## [23] &quot;quaas&quot;                                     
+## [24] &quot;moans&quot;                                     
+## [25] &quot;tail_flags&quot;                                
+## [26] &quot;tail_twitches&quot;                             
+## [27] &quot;approaches&quot;                                
+## [28] &quot;indifferent&quot;                               
+## [29] &quot;runs_from&quot;                                 
+## [30] &quot;other_interactions&quot;                        
+## [31] &quot;lat_long&quot;                                  
+## [32] &quot;zip_codes&quot;                                 
+## [33] &quot;community_districts&quot;                       
+## [34] &quot;borough_boundaries&quot;                        
+## [35] &quot;city_council_districts&quot;                    
+## [36] &quot;police_precincts&quot;</code></pre>
+<p>What weird stuff can we find? The <code>highlight_fur_color</code> field catches my eye. Who knew squirrels were into highlights?</p>
+<div class="figure">
+<img src="/tidytuesday/squirrel-census_files/coverSquirrel.jpg" alt="https://i.redd.it/k9czezc36xi21.jpg" />
+<p class="caption"><a href="https://i.redd.it/k9czezc36xi21.jpg" class="uri">https://i.redd.it/k9czezc36xi21.jpg</a></p>
+</div>
+<pre class="r"><code>tt = sq %&gt;% group_by(unique_squirrel_id) %&gt;% summarise(primary_fur_color = primary_fur_color[1]) %&gt;% group_by(primary_fur_color) %&gt;% summarise(count=n()) %&gt;% arrange(desc(count)) %&gt;% as.data.frame()
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+primary_fur_color
+</th>
+<th style="text-align:right;">
+count
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+2468
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+392
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:right;">
+103
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+55
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>tt &lt;- sq %&gt;% group_by(unique_squirrel_id) %&gt;% summarise(primary_fur_color = primary_fur_color[1], highlight_fur_color = highlight_fur_color[1]) %&gt;% group_by(primary_fur_color, highlight_fur_color) %&gt;% summarise(count = n()) %&gt;% arrange(desc(count)) %&gt;% as.data.frame()
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+primary_fur_color
+</th>
+<th style="text-align:left;">
+highlight_fur_color
+</th>
+<th style="text-align:right;">
+count
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+894
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+750
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+487
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:right;">
+265
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+162
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+94
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+74
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+62
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray, White
+</td>
+<td style="text-align:right;">
+58
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+55
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Black, Cinnamon, White
+</td>
+<td style="text-align:right;">
+32
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:right;">
+24
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:right;">
+10
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Black, Cinnamon
+</td>
+<td style="text-align:right;">
+9
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+8
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Black, White
+</td>
+<td style="text-align:right;">
+7
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Black, White
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray, Black
+</td>
+<td style="text-align:right;">
+3
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+Gray, White
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<p>I’m kind of surprised that gray with black highlights is so uncommon. But to be fair, that surprise is based on absolutely no knowlege of NYC squirrels. Enlighten me!</p>
+<p>The next weird thing I wanted to dig in was the <code>other_activities</code> field. Look at some of these gems.</p>
+<pre class="r"><code>unique(sq$other_activities)[3:12]</code></pre>
+<pre><code>##  [1] &quot;wrestling with mother&quot;                        
+##  [2] &quot;grooming&quot;                                     
+##  [3] &quot;walking&quot;                                      
+##  [4] &quot;moving slowly&quot;                                
+##  [5] &quot;sitting&quot;                                      
+##  [6] &quot;eating (ate upside down on a tree — #jealous)&quot;
+##  [7] &quot;running (with nut)&quot;                           
+##  [8] &quot;playing with #5&quot;                              
+##  [9] &quot;hiding nut&quot;                                   
+## [10] &quot;drank from a pond of rain water&quot;</code></pre>
+<p>I’m interested in the squirrel interactions.</p>
+<pre class="r"><code>interactions &lt;- sq[str_which(sq$other_activities, &quot;#&quot;), ]
+
+#interactions[1, ]
+
+interactions &lt;- interactions[-1, ] ## get rid of #jealous</code></pre>
+<p>The first thing I want to know is whether this level of detail is concentrated in one pocket (due to a few really intense data collectors). Actually, no!</p>
+<pre class="r"><code>ggplot(sq, aes(long, lat)) + geom_point() + geom_point(data = interactions, aes(long, lat), col = &quot;red&quot;) + theme_minimal()</code></pre>
+<p><img src="/tidytuesday/squirrel-census_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>For each interaction, who is the other squirrel?</p>
+<pre class="r"><code>nums &lt;- unlist(map(str_split(interactions$other_activities, &quot;#&quot;), 2)) ## grab the number
+justNums &lt;- str_replace_all(nums, &quot;[^0-9]&quot;, &quot;&quot;) ## get rid of the extra junk
+interactions$otherSquirrel &lt;- justNums</code></pre>
+<p>Ok, now for some data munging. If we look at the <code>unique_squirrel_id</code> field, it isn’t a perfect paste of “Hectare ID” + “Shift” + “Date” + “Hectare Squirrel Number.” The hectare ID has to be un-padded, the date has to be striped of the year, and the squirrel number has to be padded. Here we go!</p>
+<pre class="r"><code>getBuddy &lt;- function(x) {
+  unpadHectare &lt;- str_sub(interactions$hectare[x], str_locate(interactions$hectare[x], &quot;[^0]&quot;)[1], str_length(interactions$hectare[x]))
+  # https://stat.ethz.ch/pipermail/r-help/2010-October/255450.html
+  newDate &lt;- str_sub(interactions$date[x], 1, 4)
+  paddedSquirrel &lt;- str_pad(interactions$otherSquirrel[x], width = 2, side = &quot;left&quot;, pad = &quot;0&quot;)
+  id &lt;- paste(unpadHectare, interactions$shift[x], newDate, paddedSquirrel, sep = &quot;-&quot;)
+  subset(sq, unique_squirrel_id == id)
+}</code></pre>
+<p>Pause for some fun.</p>
+<pre class="r"><code>interactions$other_activities[31]</code></pre>
+<pre><code>## [1] &quot;canoodling w/ #9&quot;</code></pre>
+<p>Back to business.</p>
+<pre class="r"><code>buddies &lt;- map(1:nrow(interactions), getBuddy)
+
+map(buddies, nrow) %&gt;% unlist() %&gt;% summary() ## check that everyone got a buddy</code></pre>
+<pre><code>##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+##       1       1       1       1       1       1</code></pre>
+<pre class="r"><code>interactions %&lt;&gt;% mutate(otherSquirrelAge = unlist(map(buddies, &quot;age&quot;))) ## fancy pipe!
+interactions %&lt;&gt;% mutate(otherSquirrelPrimaryFurColor = unlist(map(buddies, &quot;primary_fur_color&quot;)))
+interactions %&lt;&gt;% mutate(otherSquirrelHighlightFurColor = unlist(map(buddies, &quot;highlight_fur_color&quot;)))</code></pre>
+<p>It looks like squirrels interact with squirrels like them in terms of age and coloring. But of course there is a big disparity in age and color overall, so I don’t want to read too much into this.</p>
+<pre class="r"><code>tt &lt;- interactions %&gt;% group_by(age, otherSquirrelAge) %&gt;% summarise(count = n())
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+age
+</th>
+<th style="text-align:left;">
+otherSquirrelAge
+</th>
+<th style="text-align:right;">
+count
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Adult
+</td>
+<td style="text-align:left;">
+Adult
+</td>
+<td style="text-align:right;">
+52
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Adult
+</td>
+<td style="text-align:left;">
+Juvenile
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Juvenile
+</td>
+<td style="text-align:left;">
+Adult
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Juvenile
+</td>
+<td style="text-align:left;">
+Juvenile
+</td>
+<td style="text-align:right;">
+5
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>tt &lt;- interactions %&gt;% group_by(primary_fur_color, otherSquirrelPrimaryFurColor) %&gt;% summarise(count = n()) %&gt;% arrange(desc(count))
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+primary_fur_color
+</th>
+<th style="text-align:left;">
+otherSquirrelPrimaryFurColor
+</th>
+<th style="text-align:right;">
+count
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+51
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+6
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<pre class="r"><code>tt &lt;- interactions %&gt;% group_by(primary_fur_color, highlight_fur_color, otherSquirrelPrimaryFurColor, otherSquirrelHighlightFurColor) %&gt;% summarise(count = n()) %&gt;% arrange(desc(count))
+
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+primary_fur_color
+</th>
+<th style="text-align:left;">
+highlight_fur_color
+</th>
+<th style="text-align:left;">
+otherSquirrelPrimaryFurColor
+</th>
+<th style="text-align:left;">
+otherSquirrelHighlightFurColor
+</th>
+<th style="text-align:right;">
+count
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+20
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+11
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+4
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray, White
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray, White
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+2
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:left;">
+Cinnamon
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Black
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+Cinnamon, White
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+White
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Gray
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:left;">
+NA
+</td>
+<td style="text-align:right;">
+1
+</td>
+</tr>
+</tbody>
+</table>
+<p>So what have we learned? Not much, but there was some fun data wrangling + squirrels. Full disclosure, I did some not-tidy stuff in the exploratory phase, but in this post I took some extra time to switch back to the tidyverse. I admit, I had to refer back to <a href="https://stringr.tidyverse.org/articles/from-base.html">this</a> multiple times despite writing it.</p>
+<p>Comments, suggestions, etc. are welcome –&gt; <span class="citation">@sastoudt</span></p>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/week34/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

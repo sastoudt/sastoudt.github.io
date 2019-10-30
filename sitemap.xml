@@ -3,6 +3,16 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>/tidytuesday/squirrel-census/</loc>
+    <lastmod>2019-10-30T10:42:13-07:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>/blog/bay-area-five-star-sound/</loc>
+    <lastmod>2019-10-29T10:20:51-07:00</lastmod>
+  </url>
+  
+  <url>
     <loc>/blog/songs-to-strut-to/</loc>
     <lastmod>2019-10-11T10:20:51-07:00</lastmod>
   </url>
@@ -188,31 +198,25 @@
   </url>
   
   <url>
-    <loc>/categories/about/</loc>
-    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
     <loc>/tags/about/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/blog/</loc>
-    <lastmod>2019-10-11T10:20:51-07:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/categories/</loc>
+    <loc>/categories/about/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/categories/coding/</loc>
+    <loc>/blog/</loc>
+    <lastmod>2019-10-29T10:20:51-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
@@ -224,7 +228,7 @@
   </url>
   
   <url>
-    <loc>/categories/cv/</loc>
+    <loc>/categories/coding/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
@@ -236,7 +240,7 @@
   </url>
   
   <url>
-    <loc>/categories/research/</loc>
+    <loc>/categories/cv/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
@@ -248,19 +252,19 @@
   </url>
   
   <url>
-    <loc>/</loc>
-    <lastmod>2019-10-11T10:20:51-07:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/tags/</loc>
+    <loc>/categories/research/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
-    <loc>/categories/teaching/</loc>
+    <loc>/</loc>
+    <lastmod>2019-10-30T10:42:13-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/tags/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
@@ -272,19 +276,25 @@
   </url>
   
   <url>
-    <loc>/tidytuesday/</loc>
-    <lastmod>2018-12-30T10:42:13-07:00</lastmod>
-    <priority>0</priority>
-  </url>
-  
-  <url>
-    <loc>/categories/writing/</loc>
+    <loc>/categories/teaching/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
   
   <url>
+    <loc>/tidytuesday/</loc>
+    <lastmod>2019-10-30T10:42:13-07:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
     <loc>/tags/writing/</loc>
+    <lastmod>2016-10-02T22:55:05-04:00</lastmod>
+    <priority>0</priority>
+  </url>
+  
+  <url>
+    <loc>/categories/writing/</loc>
     <lastmod>2016-10-02T22:55:05-04:00</lastmod>
     <priority>0</priority>
   </url>
