@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.59.1" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Week 52, 2019: Christmas Songs</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON DEC 24, 2019 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    
+<script src="/rmarkdown-libs/kePrint/kePrint.js"></script>
+
+
+<pre class="r"><code>setwd(&quot;~/Desktop/tidytuesday/data/2019/2019-12-24&quot;)
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(sentimentr)
+library(kableExtra)
+library(spotifyr)
+library(genius)
+library(purrr)
+
+songs &lt;- read.csv(&quot;christmas_songs.csv&quot;, stringsAsFactors = F)
+lyrics &lt;- read_tsv(&quot;christmas_lyrics.tsv&quot;)</code></pre>
+<p>Let’s see how basic sentiment analysis classifies these Christmas hits. Luckily, I already have this code ready to go from my <a href="https://github.com/sastoudt/groove_is_in_the_heart_and_data/blob/master/4_lyrics_Nice.R">R Ladies Lightning Talk</a>.</p>
+<pre class="r"><code>allSentiment &lt;- sentiment(lyrics$lyric)
+
+lyrics$id &lt;- 1:nrow(lyrics)
+
+lyrics2 &lt;- merge(allSentiment, lyrics, by.x = &quot;element_id&quot;, by.y = &quot;id&quot;)</code></pre>
+<div id="top-5-most-positive-songs-on-average-across-lyric-lines" class="section level2">
+<h2>Top 5 Most Positive Songs (on average across lyric lines)</h2>
+<pre class="r"><code>tt &lt;- lyrics2 %&gt;% group_by(track_title) %&gt;% summarise(meanSentiment = mean(sentiment)) %&gt;% arrange(desc(meanSentiment)) %&gt;% head(5)
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+track_title
+</th>
+<th style="text-align:right;">
+meanSentiment
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Silent Night
+</td>
+<td style="text-align:right;">
+0.6897360
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Sing Noel
+</td>
+<td style="text-align:right;">
+0.5814179
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+God Rest Ye Merry Gentlemen
+</td>
+<td style="text-align:right;">
+0.3192399
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Hark! The Herald Angels Sing
+</td>
+<td style="text-align:right;">
+0.2859315
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+O Holy Night
+</td>
+<td style="text-align:right;">
+0.2756963
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="https://media.giphy.com/media/EngMqO1t8epRm/giphy.gif" /></p>
+</div>
+<div id="top-5-most-negative-songs-on-average-across-lyric-lines" class="section level2">
+<h2>Top 5 Most Negative Songs (on average across lyric lines)</h2>
+<pre class="r"><code>tt &lt;- lyrics2 %&gt;% group_by(track_title) %&gt;% summarise(meanSentiment = mean(sentiment)) %&gt;% arrange(meanSentiment) %&gt;% head(5)
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+track_title
+</th>
+<th style="text-align:right;">
+meanSentiment
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+You’re A Mean One, Mr. Grinch
+</td>
+<td style="text-align:right;">
+-0.1200570
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+This Cold War With You
+</td>
+<td style="text-align:right;">
+-0.0752970
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+To Each His Own
+</td>
+<td style="text-align:right;">
+-0.0490823
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Come On Into My Arms
+</td>
+<td style="text-align:right;">
+-0.0465882
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+I’ll Break Out Again Tonight
+</td>
+<td style="text-align:right;">
+-0.0404023
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="https://media.giphy.com/media/1H7iCPUDE8KCQ/giphy.gif" /></p>
+</div>
+<div id="distribution-of-sentiment" class="section level2">
+<h2>Distribution of Sentiment</h2>
+<p>There is a big peak at zero and then plenty of positive sentiment songs, but I would have expected more. However, this is just some basic analysis, so a more sophisticated approach might yield more like we expect.</p>
+<pre class="r"><code>lyrics3 &lt;- lyrics2 %&gt;% group_by(track_title) %&gt;% summarise(meanSentiment = mean(sentiment))
+
+ggplot(lyrics3, aes(meanSentiment)) + geom_histogram() + theme_minimal()</code></pre>
+<p><img src="/tidytuesday/holiday-song-sentiment_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+</div>
+<div id="what-makes-mr.grinch-so-negative" class="section level2">
+<h2>What makes Mr. Grinch so negative?</h2>
+<pre class="r"><code>tt &lt;- lyrics2 %&gt;% filter(track_title == &quot;You&#39;re A Mean One, Mr. Grinch&quot;) %&gt;% select(sentiment, lyric) %&gt;% arrange(sentiment) %&gt;% head(5)
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+sentiment
+</th>
+<th style="text-align:left;">
+lyric
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+-0.5833333
+</td>
+<td style="text-align:left;">
+You’re a bad banana with a greasy black peel
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+-0.5833333
+</td>
+<td style="text-align:left;">
+You’re a bad banana with a greasy black peel
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+-0.4472136
+</td>
+<td style="text-align:left;">
+You’re a nasty, wasty skunk
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+-0.4472136
+</td>
+<td style="text-align:left;">
+You nauseate me, Mr. Grinch
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+-0.4472136
+</td>
+<td style="text-align:left;">
+You’re a crooked, jerky jocky
+</td>
+</tr>
+</tbody>
+</table>
+<p><img src="https://media.giphy.com/media/bh4jzePjmd9iE/giphy.gif" /></p>
+<p>What makes “Silent Night” so positive? Repetition! Free idea: analyze the <a href="https://sastoudt.github.io/blog/2018-03-27-song-repetition-analysis/">repetition</a> of the holiday hits.</p>
+<pre class="r"><code>tt &lt;- lyrics2 %&gt;% filter(track_title == &quot;Silent Night&quot;) %&gt;% select(sentiment, lyric) %&gt;% arrange(desc(sentiment)) %&gt;% head(5)
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:right;">
+sentiment
+</th>
+<th style="text-align:left;">
+lyric
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+1.06066
+</td>
+<td style="text-align:left;">
+Sleep in heavenly peace, sleep in heavenly peace
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1.06066
+</td>
+<td style="text-align:left;">
+Sleep in heavenly peace, sleep in heavenly peace
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1.06066
+</td>
+<td style="text-align:left;">
+Sleep in heavenly peace, sleep in heavenly peace
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1.06066
+</td>
+<td style="text-align:left;">
+Sleep in heavenly peace, sleep in heavenly peace
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1.06066
+</td>
+<td style="text-align:left;">
+Sleep in heavenly peace, sleep in heavenly peace
+</td>
+</tr>
+</tbody>
+</table>
+<p>Now let’s compare these songs to the songs on the Stoudt Christmas CD. This CD was lovingly curated by my dad, and I have listened to it every Christmas that I can remember, from in the car driving across Pennsylvania to see family to while decorating the tree. This year I don’t get to hear it played from the real CD at home, so I had to make a Spotify version. Check it out <a href="https://open.spotify.com/playlist/0bso6lvKInn3myZ65vCSyj?si=DcD0IBwSS6eyZcdgUFM49w">here</a>. Usually I’m all for a good shuffled playlist, but this one has to be listened to in order, because TRADITION.</p>
+<p>As soon as I hear those opening lines of Paul McCartney’s “Wonderful Christmastime” I know it’s holiday time!</p>
+<pre class="r"><code>blogdown::shortcode(&quot;youtube&quot;, &quot;94Ye-3C1FC8&quot;)</code></pre>
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="https://www.youtube.com/embed/94Ye-3C1FC8" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+<pre class="r"><code>spotify_client_id &lt;- &quot;&quot; ## put yours here
+spotify_client_secret &lt;- &quot;&quot; ## put yours here
+access_token &lt;- get_spotify_access_token(client_id = spotify_client_id, client_secret = spotify_client_secret)</code></pre>
+<pre class="r"><code>stoudtChristmas &lt;- get_playlist_tracks(&quot;0bso6lvKInn3myZ65vCSyj&quot;, authorization = access_token)</code></pre>
+<pre class="r"><code>safe_lyrics &lt;- safely(genius_lyrics)
+
+artists &lt;- unlist(lapply(stoudtChristmas$track.artists, function(x) {
+  x[1, &quot;name&quot;]
+}))
+track_name &lt;- stoudtChristmas$track.name
+
+lyricsStoudt &lt;- mapply(safe_lyrics, artists, track_name, SIMPLIFY = F)
+
+didItWork &lt;- lapply(lyricsStoudt, function(x) {
+  x$error
+})
+
+sum(unlist(lapply(didItWork, is.null))) ## 14 of 21 have lyrics
+setwd(&quot;~/Desktop/tidytuesday/week52_2019&quot;)
+save(lyricsStoudt, file = &quot;lyricsStoudtChristmas.RData&quot;)</code></pre>
+<p>Unfortunately, this Bruce classic got dropped.</p>
+<pre class="r"><code>blogdown::shortcode(&quot;youtube&quot;, &quot;76WFkKp8Tjs&quot;)</code></pre>
+
+<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden;">
+  <iframe src="https://www.youtube.com/embed/76WFkKp8Tjs" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border:0;" allowfullscreen title="YouTube Video"></iframe>
+</div>
+
+<pre class="r"><code>setwd(&quot;~/Desktop/tidytuesday/week52_2019&quot;)
+load(file = &quot;lyricsStoudtChristmas.RData&quot;)
+
+test &lt;- lapply(lyricsStoudt, function(x) {
+  x$result
+})
+
+allL &lt;- do.call(&quot;rbind&quot;, test)
+
+allSentiment &lt;- sentiment(allL$lyric)
+
+allL$id &lt;- 1:nrow(allL)
+
+allL2 &lt;- merge(allSentiment, allL, by.x = &quot;element_id&quot;, by.y = &quot;id&quot;)</code></pre>
+</div>
+<div id="top-5-most-positive-songs-on-average-across-lyric-lines-1" class="section level2">
+<h2>Top 5 Most Positive Songs (on average across lyric lines)</h2>
+<pre class="r"><code>tt &lt;- allL2 %&gt;% group_by(track_title) %&gt;% summarise(meanSentiment = mean(sentiment)) %&gt;% arrange(desc(meanSentiment)) %&gt;% head(5)
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+track_title
+</th>
+<th style="text-align:right;">
+meanSentiment
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Peace On Earth / Little Drummer Boy
+</td>
+<td style="text-align:right;">
+0.2620499
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Christmas Wrapping
+</td>
+<td style="text-align:right;">
+0.2461397
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Feliz Navidad
+</td>
+<td style="text-align:right;">
+0.2355009
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Rockin’ Around the Christmas Tree
+</td>
+<td style="text-align:right;">
+0.1862966
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+White Christmas
+</td>
+<td style="text-align:right;">
+0.1810358
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="top-5-most-negative-songs-on-average-across-lyric-lines-1" class="section level2">
+<h2>Top 5 Most Negative Songs (on average across lyric lines)</h2>
+<pre class="r"><code>tt &lt;- allL2 %&gt;% group_by(track_title) %&gt;% summarise(meanSentiment = mean(sentiment)) %&gt;% arrange(meanSentiment) %&gt;% head(5)
+
+kable(tt) %&gt;% kable_styling()</code></pre>
+<table class="table" style="margin-left: auto; margin-right: auto;">
+<thead>
+<tr>
+<th style="text-align:left;">
+track_title
+</th>
+<th style="text-align:right;">
+meanSentiment
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Blue Christmas
+</td>
+<td style="text-align:right;">
+0.0289615
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Jingle Bell Rock
+</td>
+<td style="text-align:right;">
+0.0459830
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Snoopy’s Christmas
+</td>
+<td style="text-align:right;">
+0.0695365
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+I Saw Three Ships
+</td>
+<td style="text-align:right;">
+0.0697308
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+I Saw Mommy Kissing Santa Claus
+</td>
+<td style="text-align:right;">
+0.0698132
+</td>
+</tr>
+</tbody>
+</table>
+<p>How does the Stoudt family Christmas album compare? We’re pretty positive (in red) in comparison to all of the hits.</p>
+<pre class="r"><code>allL3 &lt;- allL2 %&gt;% group_by(track_title) %&gt;% summarise(meanSentiment = mean(sentiment))
+
+ggplot(lyrics3, aes(meanSentiment)) + geom_histogram() + theme_minimal() + geom_histogram(data = allL3, aes(meanSentiment), fill = &quot;red&quot;)</code></pre>
+<p><img src="/tidytuesday/holiday-song-sentiment_files/figure-html/unnamed-chunk-16-1.png" width="672" /></p>
+<p>Happy Holidays!</p>
+<p><img src="https://media.giphy.com/media/l2YWfE68CKpenij1m/giphy.gif" /></p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/tidytuesday/squirrel-census/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/tidytuesday">tidytuesday</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+

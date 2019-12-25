@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on Sara A. Stoudt</title>
@@ -12,7 +12,7 @@
     
     
     <item>
-      <title>About</title>
+      <title>about</title>
       <link>/tags/about/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
@@ -21,16 +21,7 @@
     </item>
     
     <item>
-      <title>Coding</title>
-      <link>/tags/coding/</link>
-      <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
-      
-      <guid>/tags/coding/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>Cv</title>
+      <title>CV</title>
       <link>/tags/cv/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
@@ -39,7 +30,7 @@
     </item>
     
     <item>
-      <title>Research</title>
+      <title>research</title>
       <link>/tags/research/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
@@ -48,7 +39,7 @@
     </item>
     
     <item>
-      <title>Teaching</title>
+      <title>teaching</title>
       <link>/tags/teaching/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       
@@ -57,7 +48,7 @@
     </item>
     
     <item>
-      <title>Writing</title>
+      <title>writing</title>
       <link>/tags/writing/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
       

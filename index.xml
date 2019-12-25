@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Sara A. Stoudt</title>
@@ -6,10 +6,20 @@
     <description>Recent content on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Wed, 30 Oct 2019 10:42:13 -0700</lastBuildDate>
+    <lastBuildDate>Tue, 24 Dec 2019 10:42:13 -0700</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Week 52, 2019: Christmas Songs</title>
+      <link>/tidytuesday/holiday-song-sentiment/</link>
+      <pubDate>Tue, 24 Dec 2019 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/holiday-song-sentiment/</guid>
+      <description>setwd(&amp;quot;~/Desktop/tidytuesday/data/2019/2019-12-24&amp;quot;) library(readr) library(dplyr) library(ggplot2) library(sentimentr) library(kableExtra) library(spotifyr) library(genius) library(purrr) songs &amp;lt;- read.csv(&amp;quot;christmas_songs.csv&amp;quot;, stringsAsFactors = F) lyrics &amp;lt;- read_tsv(&amp;quot;christmas_lyrics.tsv&amp;quot;) Let’s see how basic sentiment analysis classifies these Christmas hits. Luckily, I already have this code ready to go from my R Ladies Lightning Talk.
+allSentiment &amp;lt;- sentiment(lyrics$lyric) lyrics$id &amp;lt;- 1:nrow(lyrics) lyrics2 &amp;lt;- merge(allSentiment, lyrics, by.x = &amp;quot;element_id&amp;quot;, by.y = &amp;quot;id&amp;quot;) Top 5 Most Positive Songs (on average across lyric lines) tt &amp;lt;- lyrics2 %&amp;gt;% group_by(track_title) %&amp;gt;% summarise(meanSentiment = mean(sentiment)) %&amp;gt;% arrange(desc(meanSentiment)) %&amp;gt;% head(5) kable(tt) %&amp;gt;% kable_styling()   track_title  meanSentiment      Silent Night  0.</description>
+    </item>
     
     <item>
       <title>Week 44, 2019: Squirrel Census</title>
@@ -57,7 +67,7 @@ I learned that this song is also used to help people practice CPR because it has
       
       <guid>/blog/newyears1819/</guid>
       <description>It’s that time of year, time to reflect on our little victories and make plans of attack for the future. I love reading about everyone’s accomplishments and goals, so I figured I would add mine to the mix.
- I definitely felt what I’m calling the fourth year funk this semester and didn’t feel like I was quite in the zone nor at my very best. More on this later? But perseverance is the name of the grad school game, so luckily there are still some things I accomplished.</description>
+ I definitely felt what I’m calling the fourth year funk this semester and didn’t feel like I was quite in the zone nor at my very best. More on this later?</description>
     </item>
     
     <item>
@@ -398,16 +408,6 @@ My research focus is on ecological applications of statistics, and I am advised 
     </item>
     
     <item>
-      <title>Coding Projects</title>
-      <link>/coding/</link>
-      <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
-      
-      <guid>/coding/</guid>
-      <description>Miscellaneous Coding Projects  Census Data Aggregator: While at the Los Angeles Times Data Desk, I worked to add functionality to the Census data aggregator, an open source Python library that helps aggregate data from the census while still accounting for margin of error. stringr Vignette: I wrote a vignette to help users transition from performing string operations in base R to using the tidyverse stringr package.
-Wealth Tax Shiny App: UC Berkeley economists Emmanuel Saez and Gabriel Zucman analyzed Senator Elizabeth Warren’s proposal for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis (OPA).</description>
-    </item>
-    
-    <item>
       <title>Research</title>
       <link>/research/</link>
       <pubDate>Sun, 02 Oct 2016 22:55:05 -0400</pubDate>
@@ -443,6 +443,15 @@ Students write 4 posts during the semester related to mathematics, statistics, c
 Gender Issues Roundtable Discussion: A Case Study in Uncomfortable Conversations: with Kellie Ottoboni, Rebecca Barter, and Ryan Giordano
 
 Fixed, Mixed, and Random Effects as part of Rebecca Barter&amp;rsquo;s Practical Statistics group</description>
+    </item>
+    
+    <item>
+      <title></title>
+      <link>/coding/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      
+      <guid>/coding/</guid>
+      <description>code{white-space: pre;} pre:not([class]) { background-color: white; }  if (window.hljs) { hljs.configure({languages: []}); hljs.initHighlightingOnLoad(); if (document.readyState &amp;&amp; document.readyState === &#34;complete&#34;) { window.setTimeout(function() { hljs.initHighlighting(); }, 0); } }  h1 { font-size: 34px; } h1.title { font-size: 38px; } h2 { font-size: 30px; } h3 { font-size: 24px; } h4 { font-size: 18px; } h5 { font-size: 16px; } h6 { font-size: 12px; } .</description>
     </item>
     
   </channel>

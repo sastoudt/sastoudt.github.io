@@ -14,7 +14,7 @@
 
 <title>Sara A. Stoudt</title>
 
-<meta name="generator" content="Hugo 0.48" />
+<meta name="generator" content="Hugo 0.59.1" />
 
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
@@ -55,7 +55,10 @@
 </section>
 <section id="content-pane" class="row">
   <div class="col-md-12 text-justify content">
-    <p>I recently spent some time at the <a href="https://gerrymandrsanfrancisco.weebly.com/">Geometry of Redistricting Hackathon</a> where I learned about quantitative approaches to assessing <a href="https://en.wikipedia.org/wiki/Gerrymandering">gerrymandering</a>. Check out the <a href="https://github.com/gerrymandr">Metric Geometry and Gerrymandering Group on GitHub</a> to see how you can get involved. I focused on improving documentation during my brief time at the hackathon, but I did not get a chance to contribute as much as I would have liked during the hackathon itself due to my own time constraints.</p>
+    
+
+
+<p>I recently spent some time at the <a href="https://gerrymandrsanfrancisco.weebly.com/">Geometry of Redistricting Hackathon</a> where I learned about quantitative approaches to assessing <a href="https://en.wikipedia.org/wiki/Gerrymandering">gerrymandering</a>. Check out the <a href="https://github.com/gerrymandr">Metric Geometry and Gerrymandering Group on GitHub</a> to see how you can get involved. I focused on improving documentation during my brief time at the hackathon, but I did not get a chance to contribute as much as I would have liked during the hackathon itself due to my own time constraints.</p>
 <p>Here I hope to continue to improve the overall documentation by giving some intuition about how one can generate valid redistricting plans and evaluate them based on compactness measures using the <em>mandeR</em> and <em>redist</em> packages as well as some code from the <a href="https://github.com/gerrymandr/mcmcviz/">MCMC visualization project</a>. The <a href="https://github.com/gerrymandr/mandeR"><em>mandeR</em> package</a> takes shapefiles and calculates a variety of compactness measures for each polygon. The <a href="https://cran.r-project.org/web/packages/redist/redist.pdf"><em>redist</em> package</a> implements a Markov Chain Monte Carlo (MCMC) approach to generating valid redistricting plans. We combine the functionality of both to get some intuition about the issues facing the quantitative study of gerrymandering.</p>
 <pre class="r"><code>require(redist)
 require(mandeR)

@@ -1,0 +1,168 @@
+---
+title: 'Week 52, 2019: Christmas Songs'
+draft: no
+date: '2019-12-24T10:42:13-07:00'
+geometry: margin=.1in
+---
+
+```{r,warning=F, message = F}
+setwd("~/Desktop/tidytuesday/data/2019/2019-12-24")
+library(readr)
+library(dplyr)
+library(ggplot2)
+library(sentimentr)
+library(kableExtra)
+library(spotifyr)
+library(genius)
+library(purrr)
+
+songs <- read.csv("christmas_songs.csv", stringsAsFactors = F)
+lyrics <- read_tsv("christmas_lyrics.tsv")
+```
+
+Let's see how basic sentiment analysis classifies these Christmas hits. Luckily, I already have this code ready to go from my [R Ladies Lightning Talk](https://github.com/sastoudt/groove_is_in_the_heart_and_data/blob/master/4_lyrics_Nice.R).
+
+```{r,warning=F}
+allSentiment <- sentiment(lyrics$lyric)
+
+lyrics$id <- 1:nrow(lyrics)
+
+lyrics2 <- merge(allSentiment, lyrics, by.x = "element_id", by.y = "id")
+```
+
+## Top 5 Most Positive Songs (on average across lyric lines)
+
+```{r}
+tt <- lyrics2 %>% group_by(track_title) %>% summarise(meanSentiment = mean(sentiment)) %>% arrange(desc(meanSentiment)) %>% head(5)
+
+kable(tt) %>% kable_styling()
+```
+
+![](https://media.giphy.com/media/EngMqO1t8epRm/giphy.gif)
+
+## Top 5 Most Negative Songs (on average across lyric lines)
+
+```{r}
+tt <- lyrics2 %>% group_by(track_title) %>% summarise(meanSentiment = mean(sentiment)) %>% arrange(meanSentiment) %>% head(5)
+
+kable(tt) %>% kable_styling()
+```
+
+![](https://media.giphy.com/media/1H7iCPUDE8KCQ/giphy.gif)
+
+## Distribution of Sentiment
+
+There is a big peak at zero and then plenty of positive sentiment songs, but I would have expected more. However, this is just some basic analysis, so a more sophisticated approach might yield more like we expect.
+
+```{r,warning=F, message=F}
+lyrics3 <- lyrics2 %>% group_by(track_title) %>% summarise(meanSentiment = mean(sentiment))
+
+ggplot(lyrics3, aes(meanSentiment)) + geom_histogram() + theme_minimal()
+```
+
+## What makes Mr. Grinch so negative?
+
+```{r}
+tt <- lyrics2 %>% filter(track_title == "You're A Mean One, Mr. Grinch") %>% select(sentiment, lyric) %>% arrange(sentiment) %>% head(5)
+
+kable(tt) %>% kable_styling()
+```
+
+![](https://media.giphy.com/media/bh4jzePjmd9iE/giphy.gif)
+
+What makes "Silent Night" so positive? Repetition! Free idea: analyze the [repetition](https://sastoudt.github.io/blog/2018-03-27-song-repetition-analysis/) of the holiday hits.
+
+```{r}
+tt <- lyrics2 %>% filter(track_title == "Silent Night") %>% select(sentiment, lyric) %>% arrange(desc(sentiment)) %>% head(5)
+
+kable(tt) %>% kable_styling()
+```
+
+Now let's compare these songs to the songs on the Stoudt Christmas CD. This CD was lovingly curated by my dad, and I have listened to it every Christmas that I can remember, from in the car driving across Pennsylvania to see family to while decorating the tree. This year I don't get to hear it played from the real CD at home, so I had to make a Spotify version. Check it out [here](https://open.spotify.com/playlist/0bso6lvKInn3myZ65vCSyj?si=DcD0IBwSS6eyZcdgUFM49w). Usually I'm all for a good shuffled playlist, but this one has to be listened to in order, because TRADITION. 
+
+As soon as I hear those opening lines of Paul McCartney's "Wonderful Christmastime" I know it's holiday time!
+
+```{r}
+blogdown::shortcode("youtube", "94Ye-3C1FC8")
+```
+
+
+```{r,eval = F}
+spotify_client_id <- "" ## put yours here
+spotify_client_secret <- "" ## put yours here
+access_token <- get_spotify_access_token(client_id = spotify_client_id, client_secret = spotify_client_secret)
+```
+
+```{r,eval = F}
+stoudtChristmas <- get_playlist_tracks("0bso6lvKInn3myZ65vCSyj", authorization = access_token)
+```
+
+```{r,eval=F}
+safe_lyrics <- safely(genius_lyrics)
+
+artists <- unlist(lapply(stoudtChristmas$track.artists, function(x) {
+  x[1, "name"]
+}))
+track_name <- stoudtChristmas$track.name
+
+lyricsStoudt <- mapply(safe_lyrics, artists, track_name, SIMPLIFY = F)
+
+didItWork <- lapply(lyricsStoudt, function(x) {
+  x$error
+})
+
+sum(unlist(lapply(didItWork, is.null))) ## 14 of 21 have lyrics
+setwd("~/Desktop/tidytuesday/week52_2019")
+save(lyricsStoudt, file = "lyricsStoudtChristmas.RData")
+```
+
+Unfortunately, this Bruce classic got dropped.
+
+```{r}
+blogdown::shortcode("youtube", "76WFkKp8Tjs")
+```
+
+```{r}
+setwd("~/Desktop/tidytuesday/week52_2019")
+load(file = "lyricsStoudtChristmas.RData")
+
+test <- lapply(lyricsStoudt, function(x) {
+  x$result
+})
+
+allL <- do.call("rbind", test)
+
+allSentiment <- sentiment(allL$lyric)
+
+allL$id <- 1:nrow(allL)
+
+allL2 <- merge(allSentiment, allL, by.x = "element_id", by.y = "id")
+```
+
+## Top 5 Most Positive Songs (on average across lyric lines)
+
+```{r}
+tt <- allL2 %>% group_by(track_title) %>% summarise(meanSentiment = mean(sentiment)) %>% arrange(desc(meanSentiment)) %>% head(5)
+
+kable(tt) %>% kable_styling()
+```
+
+## Top 5 Most Negative Songs (on average across lyric lines)
+
+```{r}
+tt <- allL2 %>% group_by(track_title) %>% summarise(meanSentiment = mean(sentiment)) %>% arrange(meanSentiment) %>% head(5)
+
+kable(tt) %>% kable_styling()
+```
+
+How does the Stoudt family Christmas album compare? We're pretty positive (in red) in comparison to all of the hits.
+
+```{r,warning=F, message=F}
+allL3 <- allL2 %>% group_by(track_title) %>% summarise(meanSentiment = mean(sentiment))
+
+ggplot(lyrics3, aes(meanSentiment)) + geom_histogram() + theme_minimal() + geom_histogram(data = allL3, aes(meanSentiment), fill = "red")
+```
+
+Happy Holidays! 
+
+![](https://media.giphy.com/media/l2YWfE68CKpenij1m/giphy.gif)

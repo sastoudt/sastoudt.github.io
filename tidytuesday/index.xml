@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tidytuesdays on Sara A. Stoudt</title>
@@ -6,10 +6,20 @@
     <description>Recent content in Tidytuesdays on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Wed, 30 Oct 2019 10:42:13 -0700</lastBuildDate>
+    <lastBuildDate>Tue, 24 Dec 2019 10:42:13 -0700</lastBuildDate>
     
 	<atom:link href="/tidytuesday/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Week 52, 2019: Christmas Songs</title>
+      <link>/tidytuesday/holiday-song-sentiment/</link>
+      <pubDate>Tue, 24 Dec 2019 10:42:13 -0700</pubDate>
+      
+      <guid>/tidytuesday/holiday-song-sentiment/</guid>
+      <description>setwd(&amp;quot;~/Desktop/tidytuesday/data/2019/2019-12-24&amp;quot;) library(readr) library(dplyr) library(ggplot2) library(sentimentr) library(kableExtra) library(spotifyr) library(genius) library(purrr) songs &amp;lt;- read.csv(&amp;quot;christmas_songs.csv&amp;quot;, stringsAsFactors = F) lyrics &amp;lt;- read_tsv(&amp;quot;christmas_lyrics.tsv&amp;quot;) Let’s see how basic sentiment analysis classifies these Christmas hits. Luckily, I already have this code ready to go from my R Ladies Lightning Talk.
+allSentiment &amp;lt;- sentiment(lyrics$lyric) lyrics$id &amp;lt;- 1:nrow(lyrics) lyrics2 &amp;lt;- merge(allSentiment, lyrics, by.x = &amp;quot;element_id&amp;quot;, by.y = &amp;quot;id&amp;quot;) Top 5 Most Positive Songs (on average across lyric lines) tt &amp;lt;- lyrics2 %&amp;gt;% group_by(track_title) %&amp;gt;% summarise(meanSentiment = mean(sentiment)) %&amp;gt;% arrange(desc(meanSentiment)) %&amp;gt;% head(5) kable(tt) %&amp;gt;% kable_styling()   track_title  meanSentiment      Silent Night  0.</description>
+    </item>
     
     <item>
       <title>Week 44, 2019: Squirrel Census</title>
