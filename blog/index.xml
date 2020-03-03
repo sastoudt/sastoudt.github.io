@@ -6,10 +6,21 @@
     <description>Recent content in Blogs on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Tue, 29 Oct 2019 10:20:51 -0700</lastBuildDate>
+    <lastBuildDate>Tue, 03 Mar 2020 16:20:51 -0700</lastBuildDate>
     
 	<atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>What&#39;s in a (presidential) name?</title>
+      <link>/blog/political-names/</link>
+      <pubDate>Tue, 03 Mar 2020 16:20:51 -0700</pubDate>
+      
+      <guid>/blog/political-names/</guid>
+      <description>We are hearing these names a lot, and it’s only going to continue (p.s. VOTE). But don’t these names seem a bit… ordinary to you?
+library(babynames) library(dplyr) library(ggplot2) How popular are these Democratic candidate names throughout history? The babynames dataset can help shed some light on this question. Let’s look at the proportion of babies with these particular names over time.
+candidates = c(&amp;quot;Elizabeth&amp;quot;,&amp;quot;Amy&amp;quot;,&amp;quot;Joseph&amp;quot;,&amp;quot;Peter&amp;quot;, &amp;quot;Bernard&amp;quot;,&amp;quot;Michael&amp;quot;, &amp;quot;Thomas&amp;quot;) candidate_status = c(T, F, T, F, T, T, F) yearTotals = babynames %&amp;gt;% group_by(year) %&amp;gt;% summarise(yearTotal = sum(n)) candidateData = babynames %&amp;gt;% filter(name %in% candidates) %&amp;gt;% group_by(year, name) %&amp;gt;% summarise(count = sum(n)) candidateData = merge(candidateData, yearTotals, by.</description>
+    </item>
     
     <item>
       <title>The Bay Area&#39;s Five Star Sound</title>

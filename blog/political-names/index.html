@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.59.1" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">What&#39;s in a (presidential) name?</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAR 3, 2020 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    
+
+
+<p>We are hearing these names a lot, and it’s only going to continue (p.s. VOTE). But don’t these names seem a bit… ordinary to you?</p>
+<pre class="r"><code>library(babynames)
+library(dplyr)
+library(ggplot2)</code></pre>
+<p>How popular are these Democratic candidate names throughout history? The babynames dataset can help shed some light on this question. Let’s look at the proportion of babies with these particular names over time.</p>
+<pre class="r"><code>candidates = c(&quot;Elizabeth&quot;,&quot;Amy&quot;,&quot;Joseph&quot;,&quot;Peter&quot;, &quot;Bernard&quot;,&quot;Michael&quot;, &quot;Thomas&quot;)
+candidate_status = c(T, F, T, F, T, T, F)
+
+yearTotals = babynames %&gt;% group_by(year) %&gt;% summarise(yearTotal = sum(n))
+
+candidateData = babynames %&gt;% filter(name %in% candidates) %&gt;% group_by(year, name) %&gt;% summarise(count = sum(n))
+
+candidateData = merge(candidateData, yearTotals, by.x=&quot;year&quot;, by.y=&quot;year&quot;)
+candidateData$prop = candidateData$count/candidateData$yearTotal
+
+
+ggplot(candidateData, aes(year, prop, col=name, group=name))+geom_point()+geom_line()+theme_minimal()+ylab(&quot;proportion of babies in year&quot;)</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>Fad names (with peaks): Amy, Thomas, Michael</p>
+<p>More stable names: Bernard, Elizabeth, Joseph, Peter</p>
+<p>For the sticklers, we can just look at the ones moving forward.</p>
+<pre class="r"><code>ggplot(subset(candidateData, name %in% candidates[candidate_status]), aes(year, prop, col=name, group=name))+geom_point()+geom_line()+theme_minimal()+ylab(&quot;proportion of babies in year&quot;)</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>But this is just proportion of babies over time. What about the ranking of names? (Insert ranked choice voting joke here.)</p>
+<pre class="r"><code>test = babynames %&gt;% group_by(year, name) %&gt;% summarise(count = sum(n))
+
+allYears = unique(test$year)
+
+# this is gross, but bear with me
+helper &lt;- function(x){
+  dat = subset(test, year == x)
+  dat = dat %&gt;% arrange(desc(count))
+  dat$ranking = 1:nrow(dat)
+
+  return(dat)
+}
+
+byYearRanking = lapply(allYears, helper)
+
+allRanked = do.call(&quot;rbind&quot;,byYearRanking)
+
+allRanked %&gt;% filter(name %in% candidates) %&gt;% ggplot(.,aes(year, ranking, col=name, group =name))+geom_point()+geom_line()+theme_minimal()</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<p>Many of these names are ranked pretty high fairly consistently.</p>
+<pre class="r"><code>allRanked %&gt;% filter(name %in% candidates[candidate_status]) %&gt;% ggplot(.,aes(year, ranking, col=name, group =name))+geom_point()+geom_line()+theme_minimal()</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Alas, poor Bernard, let’s zoom in a bit.</p>
+<pre class="r"><code>allRanked %&gt;% filter(name %in% candidates) %&gt;% ggplot(.,aes(year, ranking, col=name, group =name))+geom_point()+geom_line()+theme_minimal()+ylim(c(0,750))</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-6-1.png" width="672" /></p>
+<p>It appears that these names often make the top 200 of baby names each year.</p>
+<p>What are the average and best ranks across time?</p>
+<pre class="r"><code>allRanked %&gt;% filter(name %in% candidates) %&gt;% group_by(name) %&gt;% summarise(avgRank = mean(ranking), bestRank = min(ranking)) %&gt;% arrange(avgRank)</code></pre>
+<pre><code>## # A tibble: 7 x 3
+##   name      avgRank bestRank
+##   &lt;chr&gt;       &lt;dbl&gt;    &lt;int&gt;
+## 1 Joseph       15.9        7
+## 2 Thomas       30.4       10
+## 3 Elizabeth    30.9        8
+## 4 Michael      60.3        1
+## 5 Peter       152.        67
+## 6 Amy         288.         9
+## 7 Bernard     594.       107</code></pre>
+<p>Joseph has the best average rank, but only Michael reached the top spot at one point in history.</p>
+<p>How consistently were these names in the top 200, 100, or 50 spot over time?</p>
+<pre class="r"><code>allRanked %&gt;% filter(ranking&lt;=200) %&gt;% group_by(name) %&gt;% summarise(count = n()) %&gt;% arrange(desc(count)) %&gt;% filter(name %in% candidates) </code></pre>
+<pre><code>## # A tibble: 7 x 2
+##   name      count
+##   &lt;chr&gt;     &lt;int&gt;
+## 1 Elizabeth   138
+## 2 Joseph      138
+## 3 Michael     138
+## 4 Thomas      138
+## 5 Peter       112
+## 6 Amy          48
+## 7 Bernard      32</code></pre>
+<pre class="r"><code>allRanked %&gt;% filter(ranking&lt;=100) %&gt;% group_by(name) %&gt;% summarise(count = n()) %&gt;% arrange(desc(count)) %&gt;% filter(name %in% candidates) </code></pre>
+<pre><code>## # A tibble: 6 x 2
+##   name      count
+##   &lt;chr&gt;     &lt;int&gt;
+## 1 Elizabeth   138
+## 2 Joseph      138
+## 3 Thomas      138
+## 4 Michael      89
+## 5 Peter        43
+## 6 Amy          28</code></pre>
+<pre class="r"><code>allRanked %&gt;% filter(ranking&lt;=50) %&gt;% group_by(name) %&gt;% summarise(count = n()) %&gt;% arrange(desc(count)) %&gt;% filter(name %in% candidates) </code></pre>
+<pre><code>## # A tibble: 5 x 2
+##   name      count
+##   &lt;chr&gt;     &lt;int&gt;
+## 1 Joseph      138
+## 2 Elizabeth   137
+## 3 Thomas      120
+## 4 Michael      80
+## 5 Amy          19</code></pre>
+<p>Out of 138 years of data, Joseph has always been in the top 50 of baby names. Elizabeth misses perfection by one year. Peter doesn’t crack the top 50 ceiling, but makes it into the top 100. Bernard manages to be in the top 200 for 32 years. It seems like these candidates are taking “name recognition” benefits a bit too far.</p>
+<p>What does this mean for the presidential hopefuls? We love a good George, John, or James for president, but we’ve also had a Millard and Rutherford, so it’s anyone’s guess.</p>
+<pre class="r"><code>presidents &lt;- c(&quot;George&quot;, &quot;John&quot;, &quot;Thomas&quot;, &quot;James&quot;, &quot;Andrew&quot;, &quot;Martin&quot;, &quot;William&quot;, &quot;Zachary&quot;, &quot;Millard&quot;, &quot;Franklin&quot;, &quot;Abraham&quot;, &quot;Ulysses&quot;, &quot;Rutherford&quot;, &quot;Chester&quot;, &quot;Grover&quot;, &quot;Benjamin&quot;, &quot;Theodore&quot;, &quot;Woodrow&quot;,&quot;Warren&quot;,&quot;Calvin&quot;,&quot;Herbert&quot;, &quot;Harry&quot;, &quot;Dwight&quot;,&quot;Lyndon&quot;, &quot;Richard&quot;,&quot;Gerald&quot;, &quot;Ronald&quot;, &quot;Barack&quot;, &quot;Donald&quot;)
+
+presidentData = babynames %&gt;% filter(name %in% presidents) %&gt;% group_by(year, name) %&gt;% summarise(count = sum(n))
+
+presidentData = merge(presidentData, yearTotals, by.x=&quot;year&quot;, by.y=&quot;year&quot;)
+presidentData$prop = presidentData$count/presidentData$yearTotal
+
+presidentPop = presidentData %&gt;% group_by(name) %&gt;% summarise(averageProp = mean(prop)) %&gt;% arrange(desc(averageProp))
+
+presidentPop$id = 1:nrow(presidentPop)
+
+presidentData = merge(presidentData, presidentPop, by.x=&quot;name&quot;, by.y=&quot;name&quot;)
+
+
+ggplot(subset(presidentData, id %in% 1:5), aes(year, prop, col=name, group=name))+geom_point()+geom_line()+theme_minimal()+ylab(&quot;proportion of babies in year&quot;)</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(subset(presidentData, id %in% 6:10), aes(year, prop, col=name, group=name))+geom_point()+geom_line()+theme_minimal()+ylab(&quot;proportion of babies in year&quot;)</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-9-2.png" width="672" /></p>
+<pre class="r"><code>ggplot(subset(presidentData, id %in% 11:15), aes(year, prop, col=name, group=name))+geom_point()+geom_line()+theme_minimal()+ylab(&quot;proportion of babies in year&quot;)</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-9-3.png" width="672" /></p>
+<pre class="r"><code>ggplot(subset(presidentData, id %in% 16:20), aes(year, prop, col=name, group=name))+geom_point()+geom_line()+theme_minimal()+ylab(&quot;proportion of babies in year&quot;)</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-9-4.png" width="672" /></p>
+<pre class="r"><code>ggplot(subset(presidentData, id %in% 21:25), aes(year, prop, col=name, group=name))+geom_point()+geom_line()+theme_minimal()+ylab(&quot;proportion of babies in year&quot;)</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-9-5.png" width="672" /></p>
+<pre class="r"><code>ggplot(subset(presidentData, id %in% 26:30), aes(year, prop, col=name, group=name))+geom_point()+geom_line()+theme_minimal()+ylab(&quot;proportion of babies in year&quot;)</code></pre>
+<p><img src="/blog/political-names_files/figure-html/unnamed-chunk-9-6.png" width="672" /></p>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/bay-area-five-star-sound/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+
