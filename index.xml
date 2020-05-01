@@ -6,10 +6,21 @@
     <description>Recent content on Sara A. Stoudt</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-US</language>
-    <lastBuildDate>Tue, 03 Mar 2020 16:20:51 -0700</lastBuildDate>
+    <lastBuildDate>Fri, 01 May 2020 10:20:51 -0700</lastBuildDate>
     
 	<atom:link href="/index.xml" rel="self" type="application/rss+xml" />
     
+    
+    <item>
+      <title>Parallelization Pitfalls</title>
+      <link>/blog/parallelization-pitfalls/</link>
+      <pubDate>Fri, 01 May 2020 10:20:51 -0700</pubDate>
+      
+      <guid>/blog/parallelization-pitfalls/</guid>
+      <description>Just run it in parallel, they said. It’ll be easy, they said.
+In reality, I ran into many pitfalls as I tried to setup my simulation study on the department cluster. This blog post will outline my missteps and lessons learned in hopes that it will save someone else some time. Some of the information, but not all, is specific to Berkeley’s computing setup.
+Motivating Problem I have a simulation study that requires fitting models of different complexity to a variety of scenarios.</description>
+    </item>
     
     <item>
       <title>What&#39;s in a (presidential) name?</title>

@@ -1,0 +1,184 @@
+---
+title: "Parallelization Pitfalls"
+date: 2020-05-01T10:20:51-07:00
+draft: true
+---
+
+Just run it in parallel, they said. It'll be easy, they said.
+
+![](https://media.giphy.com/media/Rl9Yqavfj2Ula/giphy.gif)
+
+
+In reality, I ran into many pitfalls as I tried to setup my simulation study on the department cluster. This blog post will outline my missteps and lessons learned in hopes that it will save someone else some time. Some of the information, but not all, is specific to Berkeley's computing setup.
+
+![](https://media.giphy.com/media/sAlngGh5oNzIQ/giphy.gif)
+
+## Motivating Problem
+
+I have a simulation study that requires fitting models of different complexity to a variety of scenarios. Each scenario is replicated many times. It looks a bit like this (go ahead, judge that gnarly nested loop).
+
+```{r, eval = F}
+## R pseudocode
+
+for(i in 1:length(scenarios)){
+  for(j in 1:numberReplicates){
+    for(k in 1:length(modelComplexity)){
+      fit a model of complexity k
+      save some output
+    }
+  }
+}
+
+```
+
+I have too many scenarios and each model fit takes too long to run this overnight on my laptop which is my usual M.O. Plus, my computer fan isn't super conducive to a good night's sleep (#StudioApartmentLife).
+
+## Organizing files
+
+I realized I had to run this on the statistics department cluster which means I had to get my input files organized, my R script cleaned of any absolute paths, figure out how to get output files back to my personal computer, and write a bash script to launch the R script on the cluster.
+
+To transfer files, I use `sftp` and `put` in the terminal. More info on file transfer [here](https://statistics.berkeley.edu/computing/copying-files).
+
+```{bash,eval = F}
+cd folder_where_stuff_lives_on_my_computer
+sftp username@computername.berkeley.edu
+put my_script.R
+put my_input_data.RData
+```
+
+For Berkeley people, you can find the appropriate `computername` [here](https://scf.berkeley.edu/ingrid). Also, after running the `sftp` line you'll have to enter your password, and FYI, as you type, it won't show up on the command line.
+
+Later on, when I want to get my output files back to my computer, I'll have to use `get` in the terminal.
+
+```{bash,eval = F}
+cd folder_where_I_want_stuff_to_live
+sftp username@computername.berkeley.edu
+get results_*
+```
+
+Note, I named all of my results files with this beginning prefix `results_` so that I could use the * to just get them all at once without typing a bunch. 
+
+## Making it happen
+
+Here is a sample bash script that is named `r_scenario1.sh`
+
+```{bash, eval = F}
+#!/bin/bash
+#SBATCH --cpus-per-task 5
+
+cp ~/simulated_data.RData /tmp/.
+R CMD BATCH --no-save cluster_scenario1.R sim1.Rout
+ls -l /tmp
+cp /tmp/results* ~/.
+```
+
+- The first `cp` line moves the input data to the cluster.
+- The `R CMD BATCH` line runs the R script on the cluster and saves anything that is written to the console in the `.Rout` file. This will be useful to help see why things don't work.
+- The last `cp` copies all of the results files (I used `csv` files) off of the cluster back to my own directory on the school machine. 
+
+To launch this bash script I first `ssh` into a school computer using the terminal (more info [here](https://statistics.berkeley.edu/computing/ssh)):
+
+```{bash,eval = F}
+ssh username@computername.berkeley.edu
+```
+
+(Again you'll have to enter your password.)
+
+Then I run the following line in the terminal: 
+
+```{bash, eval = F}
+sbatch r_scenario1.sh
+```
+
+To see what is happening on the cluster, run this in the terminal:
+
+```{bash, eval = F}
+squeue
+```
+
+Find more information about how to monitor progress [here](https://statistics.berkeley.edu/computing/servers/cluster#monitor).
+
+## Potential Pitfall: R packages not installed/forget to load them in script
+
+Login to a Berkeley computer, launch R via the command line, and just make sure you can load all the packages you want. If they live there, they should live on the cluster. Inevitably, I forgot to load certain packages in certain R scripts. The script would fail, and I figured out why from the `.Rout` file.
+
+## Potential Pitfall: not respecting the cluster scheduler
+
+There is a lot going on in `cluster_scenario1.R` where all my actual code goes, but the important part is:
+
+```{r, eval = F}
+library(parallel)
+mclapply(1:10, helper, mc.cores = 5)
+```
+
+A helper function does all of the heavy lifting, reading in input data, fitting models, and writing out results files. The key here is that the number we use for `mc.cores` needs to match `--cpus-per-task` in the bash script. The cluster scheduler uses this information when assigning tasks to parts of the cluster. I had initially forgotten to specify `--cpus-per-task` which messed things up. Thank you to Chris Paciorek for kindly explaining what I was doing wrong.
+
+## Potential Pitfall: time/memory constraints
+
+There are [time and memory constraints](https://statistics.berkeley.edu/computing/servers/cluster#access-job-restrictions) that your code has to follow to be run on the Berkeley cluster. In practice this means that you have to be reasonably sure that each `R` script will finish in the allotted time and not require too much memory.
+
+I [timed](https://stats.idre.ucla.edu/r/faq/how-can-i-time-my-code/) a few model fits locally and scaled that time up to estimate how long a certain chunk of simulations would take. 
+
+The memory constraints were much more trial and error. I would run a chunk, get a memory error, and then try to further partition the scenarios into different runs until I no longer got a memory error. Sorry that I can't be more helpful here. 
+
+## Potential Pitfall: what should I be saving, more memory considerations
+
+These are computationally expensive simulations, so it was important that I saved every possible output I would need to do my analysis. However, because there were so many simulations, the memory used really adds up. I went through a few trial and error iterations here too. I would run some simulations, realize I needed some extra information, and then have to adjust what results were saved for the next batch. Prior planning would be nice, but you just can't always anticipate what you might need.
+
+## Potential Pitfall: threads, tasks, cores, nodes, CPUs
+
+At this point I had things working, but I'm impatient, and it seemed like things were taking much longer than I had expected. Luckily, the Berkeley Research Computing program was having a [workshop on parallel computing](https://github.com/ucb-rit/savio-training-parallel-2020), so I tuned in. I learned that there are different ways to partition *tasks* across *cores*/*threads*/*cpus* which live on *nodes*. Understanding the terminology and the hierarchy was helpful for me. Long story short, if you are using `mclapply` the relevant bash flag is in fact `--cpus-per-task`. My choice of 5 CPUs was to ensure that I wasn't hogging too much of the statistics cluster which is used by the whole department. Note: on the Berkeley Stats cluster you can use a fraction of the total CPUs on a particular node whereas on other clusters you would want to use all the CPUs on one node or you are effectively wasting the others. 
+
+## Potential Pitfall: load balancing
+
+This one turned out to be the real kicker. 
+
+![](https://media.giphy.com/media/8WdsK61D9YOOc/giphy.gif)
+
+
+If you recall, I had a setup like this:
+
+```{r, eval = F}
+## pseudocode
+
+for(i in 1:length(scenarios)){
+  for(j in 1:numberReplicates){
+    for(k in 1:length(modelComplexity)){
+      fit a model of complexity k
+      save some output
+    }
+  }
+}
+
+```
+
+and I was parallelizing over `k`. This turned out to the absolute worst place to introduce parallelization. Go figure!
+
+For example, when `k=5`, the model takes WAY LONGER to fit than when `k=1`. This meant that four cores were waiting around for the fifth task to be done before restarting with the next chunk of five models. 
+
+Again, the Berkeley Research Computing program came to my rescue. They had virtual office hours where Nicolas Chan and Christopher Hann-Soden explained that to "balance the computational load" I should parallelize over chunks of tasks that should take about the same order of magnitude of time to run. Note: tasks should also not be too fast because the overhead of moving everything on and off the cluster adds up. That luckily wasn't my problem. So at first, I thought I should just parallelize over the replicates since each replicate of the same scenario should take about the same amount of time to fit. But then Christopher offered a game-changing suggestion.
+
+```{r, eval = F}
+params <- expand.grid(i = 1:length(scenarios),
+                      j = 1:numberReplicates,
+                      k = 1:length(modelComplexity))
+mclapply(1:nrow(params), helper, mc.cores = 5)
+```
+
+If I pre-generated all of the combinations, then none of the cores would be waiting on anything else to finish. When a core finished, it would just take the next combination. Anecdotally, once I implemented this, things run MUCH faster (probably at least 2 times faster if not more).
+
+In conclusion, my simulations are still running, but I feel better about them being as fast as possible. It only took weeks of trial and error to get the whole process streamlined. 
+
+![](https://media.giphy.com/media/F77lbfwEAnYNG/giphy.gif)
+
+Hopefully this helps you avoid some pitfalls. Good luck parallelizing! As always, feedback appreciated: [@sastoudt](https://twitter.com/sastoudt).
+
+
+
+
+
+
+
+
+
+

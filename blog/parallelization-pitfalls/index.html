@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="content-type" content="text/html; charset=utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+<meta name="description" content="Simple minimalist theme">
+<meta name="keywords" content="minimalist,blog,goa,hugo,developer">
+
+<base href="/">
+
+<title>Sara A. Stoudt</title>
+
+<meta name="generator" content="Hugo 0.59.1" />
+
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/default.min.css">
+
+
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:300,400|Roboto+Slab:400,700|Roboto:300,300i,400,400i,500,500i,700,700i">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.6.3/css/font-awesome.min.css">
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32">
+<link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16">
+<link rel="manifest" href="/manifest.json">
+<link rel="mask-icon" href="/safari-pinned-tab.svg" color="#5bbad5">
+<meta name="theme-color" content="#ffffff">
+
+</head>
+<body lang="en-US">
+<div class="container">
+
+
+<header class="row text-left title">
+  <h1 class="title">Parallelization Pitfalls</h1>
+</header>
+<section id="category-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-left meta">
+        PUBLISHED ON MAY 1, 2020 
+      
+    </h6>
+  </div>
+  
+</section>
+<section id="content-pane" class="row">
+  <div class="col-md-12 text-justify content">
+    
+
+
+<p>Just run it in parallel, they said. It’ll be easy, they said.</p>
+<p><img src="https://media.giphy.com/media/Rl9Yqavfj2Ula/giphy.gif" /></p>
+<p>In reality, I ran into many pitfalls as I tried to setup my simulation study on the department cluster. This blog post will outline my missteps and lessons learned in hopes that it will save someone else some time. Some of the information, but not all, is specific to Berkeley’s computing setup.</p>
+<p><img src="https://media.giphy.com/media/sAlngGh5oNzIQ/giphy.gif" /></p>
+<div id="motivating-problem" class="section level2">
+<h2>Motivating Problem</h2>
+<p>I have a simulation study that requires fitting models of different complexity to a variety of scenarios. Each scenario is replicated many times. It looks a bit like this (go ahead, judge that gnarly nested loop).</p>
+<pre class="r"><code>## R pseudocode
+
+for(i in 1:length(scenarios)){
+  for(j in 1:numberReplicates){
+    for(k in 1:length(modelComplexity)){
+      fit a model of complexity k
+      save some output
+    }
+  }
+}</code></pre>
+<p>I have too many scenarios and each model fit takes too long to run this overnight on my laptop which is my usual M.O. Plus, my computer fan isn’t super conducive to a good night’s sleep (#StudioApartmentLife).</p>
+</div>
+<div id="organizing-files" class="section level2">
+<h2>Organizing files</h2>
+<p>I realized I had to run this on the statistics department cluster which means I had to get my input files organized, my R script cleaned of any absolute paths, figure out how to get output files back to my personal computer, and write a bash script to launch the R script on the cluster.</p>
+<p>To transfer files, I use <code>sftp</code> and <code>put</code> in the terminal. More info on file transfer <a href="https://statistics.berkeley.edu/computing/copying-files">here</a>.</p>
+<pre class="bash"><code>cd folder_where_stuff_lives_on_my_computer
+sftp username@computername.berkeley.edu
+put my_script.R
+put my_input_data.RData</code></pre>
+<p>For Berkeley people, you can find the appropriate <code>computername</code> <a href="https://scf.berkeley.edu/ingrid">here</a>. Also, after running the <code>sftp</code> line you’ll have to enter your password, and FYI, as you type, it won’t show up on the command line.</p>
+<p>Later on, when I want to get my output files back to my computer, I’ll have to use <code>get</code> in the terminal.</p>
+<pre class="bash"><code>cd folder_where_I_want_stuff_to_live
+sftp username@computername.berkeley.edu
+get results_*</code></pre>
+<p>Note, I named all of my results files with this beginning prefix <code>results_</code> so that I could use the * to just get them all at once without typing a bunch.</p>
+</div>
+<div id="making-it-happen" class="section level2">
+<h2>Making it happen</h2>
+<p>Here is a sample bash script that is named <code>r_scenario1.sh</code></p>
+<pre class="bash"><code>#!/bin/bash
+#SBATCH --cpus-per-task 5
+
+cp ~/simulated_data.RData /tmp/.
+R CMD BATCH --no-save cluster_scenario1.R sim1.Rout
+ls -l /tmp
+cp /tmp/results* ~/.</code></pre>
+<ul>
+<li>The first <code>cp</code> line moves the input data to the cluster.</li>
+<li>The <code>R CMD BATCH</code> line runs the R script on the cluster and saves anything that is written to the console in the <code>.Rout</code> file. This will be useful to help see why things don’t work.</li>
+<li>The last <code>cp</code> copies all of the results files (I used <code>csv</code> files) off of the cluster back to my own directory on the school machine.</li>
+</ul>
+<p>To launch this bash script I first <code>ssh</code> into a school computer using the terminal (more info <a href="https://statistics.berkeley.edu/computing/ssh">here</a>):</p>
+<pre class="bash"><code>ssh username@computername.berkeley.edu</code></pre>
+<p>(Again you’ll have to enter your password.)</p>
+<p>Then I run the following line in the terminal:</p>
+<pre class="bash"><code>sbatch r_scenario1.sh</code></pre>
+<p>To see what is happening on the cluster, run this in the terminal:</p>
+<pre class="bash"><code>squeue</code></pre>
+<p>Find more information about how to monitor progress <a href="https://statistics.berkeley.edu/computing/servers/cluster#monitor">here</a>.</p>
+</div>
+<div id="potential-pitfall-r-packages-not-installedforget-to-load-them-in-script" class="section level2">
+<h2>Potential Pitfall: R packages not installed/forget to load them in script</h2>
+<p>Login to a Berkeley computer, launch R via the command line, and just make sure you can load all the packages you want. If they live there, they should live on the cluster. Inevitably, I forgot to load certain packages in certain R scripts. The script would fail, and I figured out why from the <code>.Rout</code> file.</p>
+</div>
+<div id="potential-pitfall-not-respecting-the-cluster-scheduler" class="section level2">
+<h2>Potential Pitfall: not respecting the cluster scheduler</h2>
+<p>There is a lot going on in <code>cluster_scenario1.R</code> where all my actual code goes, but the important part is:</p>
+<pre class="r"><code>library(parallel)
+mclapply(1:10, helper, mc.cores = 5)</code></pre>
+<p>A helper function does all of the heavy lifting, reading in input data, fitting models, and writing out results files. The key here is that the number we use for <code>mc.cores</code> needs to match <code>--cpus-per-task</code> in the bash script. The cluster scheduler uses this information when assigning tasks to parts of the cluster. I had initially forgotten to specify <code>--cpus-per-task</code> which messed things up. Thank you to Chris Paciorek for kindly explaining what I was doing wrong.</p>
+</div>
+<div id="potential-pitfall-timememory-constraints" class="section level2">
+<h2>Potential Pitfall: time/memory constraints</h2>
+<p>There are <a href="https://statistics.berkeley.edu/computing/servers/cluster#access-job-restrictions">time and memory constraints</a> that your code has to follow to be run on the Berkeley cluster. In practice this means that you have to be reasonably sure that each <code>R</code> script will finish in the allotted time and not require too much memory.</p>
+<p>I <a href="https://stats.idre.ucla.edu/r/faq/how-can-i-time-my-code/">timed</a> a few model fits locally and scaled that time up to estimate how long a certain chunk of simulations would take.</p>
+<p>The memory constraints were much more trial and error. I would run a chunk, get a memory error, and then try to further partition the scenarios into different runs until I no longer got a memory error. Sorry that I can’t be more helpful here.</p>
+</div>
+<div id="potential-pitfall-what-should-i-be-saving-more-memory-considerations" class="section level2">
+<h2>Potential Pitfall: what should I be saving, more memory considerations</h2>
+<p>These are computationally expensive simulations, so it was important that I saved every possible output I would need to do my analysis. However, because there were so many simulations, the memory used really adds up. I went through a few trial and error iterations here too. I would run some simulations, realize I needed some extra information, and then have to adjust what results were saved for the next batch. Prior planning would be nice, but you just can’t always anticipate what you might need.</p>
+</div>
+<div id="potential-pitfall-threads-tasks-cores-nodes-cpus" class="section level2">
+<h2>Potential Pitfall: threads, tasks, cores, nodes, CPUs</h2>
+<p>At this point I had things working, but I’m impatient, and it seemed like things were taking much longer than I had expected. Luckily, the Berkeley Research Computing program was having a <a href="https://github.com/ucb-rit/savio-training-parallel-2020">workshop on parallel computing</a>, so I tuned in. I learned that there are different ways to partition <em>tasks</em> across <em>cores</em>/<em>threads</em>/<em>cpus</em> which live on <em>nodes</em>. Understanding the terminology and the hierarchy was helpful for me. Long story short, if you are using <code>mclapply</code> the relevant bash flag is in fact <code>--cpus-per-task</code>. My choice of 5 CPUs was to ensure that I wasn’t hogging too much of the statistics cluster which is used by the whole department. Note: on the Berkeley Stats cluster you can use a fraction of the total CPUs on a particular node whereas on other clusters you would want to use all the CPUs on one node or you are effectively wasting the others.</p>
+</div>
+<div id="potential-pitfall-load-balancing" class="section level2">
+<h2>Potential Pitfall: load balancing</h2>
+<p>This one turned out to be the real kicker.</p>
+<p><img src="https://media.giphy.com/media/8WdsK61D9YOOc/giphy.gif" /></p>
+<p>If you recall, I had a setup like this:</p>
+<pre class="r"><code>## pseudocode
+
+for(i in 1:length(scenarios)){
+  for(j in 1:numberReplicates){
+    for(k in 1:length(modelComplexity)){
+      fit a model of complexity k
+      save some output
+    }
+  }
+}</code></pre>
+<p>and I was parallelizing over <code>k</code>. This turned out to the absolute worst place to introduce parallelization. Go figure!</p>
+<p>For example, when <code>k=5</code>, the model takes WAY LONGER to fit than when <code>k=1</code>. This meant that four cores were waiting around for the fifth task to be done before restarting with the next chunk of five models.</p>
+<p>Again, the Berkeley Research Computing program came to my rescue. They had virtual office hours where Nicolas Chan and Christopher Hann-Soden explained that to “balance the computational load” I should parallelize over chunks of tasks that should take about the same order of magnitude of time to run. Note: tasks should also not be too fast because the overhead of moving everything on and off the cluster adds up. That luckily wasn’t my problem. So at first, I thought I should just parallelize over the replicates since each replicate of the same scenario should take about the same amount of time to fit. But then Christopher offered a game-changing suggestion.</p>
+<pre class="r"><code>params &lt;- expand.grid(i = 1:length(scenarios),
+                      j = 1:numberReplicates,
+                      k = 1:length(modelComplexity))
+mclapply(1:nrow(params), helper, mc.cores = 5)</code></pre>
+<p>If I pre-generated all of the combinations, then none of the cores would be waiting on anything else to finish. When a core finished, it would just take the next combination. Anecdotally, once I implemented this, things run MUCH faster (probably at least 2 times faster if not more).</p>
+<p>In conclusion, my simulations are still running, but I feel better about them being as fast as possible. It only took weeks of trial and error to get the whole process streamlined.</p>
+<p><img src="https://media.giphy.com/media/F77lbfwEAnYNG/giphy.gif" /></p>
+<p>Hopefully this helps you avoid some pitfalls. Good luck parallelizing! As always, feedback appreciated: <span class="citation">[@sastoudt]</span>(<a href="https://twitter.com/sastoudt" class="uri">https://twitter.com/sastoudt</a>).</p>
+</div>
+
+  </div>
+</section>
+<section id="tag-pane" class="row meta">
+  
+  <div class="col-md-12">
+    <h6 class="text-right meta">
+      
+    </h6>
+  </div>
+  
+</section>
+
+
+
+
+
+
+
+
+<section id="menu-pane" class="row menu text-center">
+  
+  
+  <span><a class="menu-item" href="/blog/political-names/">&lt; prev | </a></span>
+  
+  
+  <span><a class="menu-item" href="/blog">blog</a></span>
+  
+  
+  
+  <h4 class="text-center"><a class="menu-item" href="/">home</a></h4>
+</section>
+
+
+
+<footer class="row text-center footer">
+  <hr />
+  
+  <h6 class="text-center copyright"></h6>
+  
+  <h6 class="text-center powered">Powered by <a href="https://gohugo.io/">Hugo</a> &amp; <a href="https://github.com/shenoybr/hugo-goa">Goa</a>.</h6>
+  
+  
+</footer>
+
+</div>
+
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+  
+
+<script type="text/javascript">
+hljs.initHighlightingOnLoad();
+</script>
+
+
+
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	window.ga=window.ga||function(){(ga.q=ga.q||[]).push(arguments)};ga.l=+new Date;
+	ga('create', 'XYZ', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+<script async src='https://www.google-analytics.com/analytics.js'></script>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
+
+
