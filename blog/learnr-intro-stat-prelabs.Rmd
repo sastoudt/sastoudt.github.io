@@ -1,0 +1,119 @@
+---
+title: "Using `learnr` Tutorials in an Intro Stats Class as Pre-Labs"
+date: 2021-06-02T10:20:51-07:00
+---
+
+## TLDR
+
+I adapted the intro stat labs from [Open Intro (with randomization and simulation)](https://www.openintro.org/book/isrs/) into [`learnr`](https://rstudio.github.io/learnr/) tutorials and had students complete them prior to coming to lab. This alleviated many pain points for both me and my students. 10/10 would do again. 
+
+## What I did in the fall
+
+In the fall, I taught intro stats remotely to about 45 students. In addition to the lecture, these students were split across 2 labs that met for 1 hour and 15 minutes each once a week. Students worked in pairs to complete a lab report syncronously (with a few exceptions).
+
+I tweaked slightly and rearranged the labs that come with [Open Intro (with randomization and simulation)](https://www.openintro.org/book/isrs/), but I leaned pretty hard on these pre-existing materials because this was my first time teaching this course.. Thank you Open Intro!
+
+This intro stats class also had a final data analysis project. In consultation with Will Hopper and Scott LaCombe who were also teaching intro stat that semester, we narrowed the scope of this project a bit given the pandemic circumstances. In teams of three students were asked to explore a dataset chosen from a pre-established list of datasets that Will, Scott, and I compiled. We let students find their own if they wished, but all of my students in the fall took me up on the offer to streamline the searching process. After they individually explored the data, they were to come together and pick two quantitative variables and one qualitative variable to further investigate. 
+
+As the semester went on and they learned about linear models. One member of the team was to fit two univariate models (`quant1 ~ quant2, quant1 ~ qual`), one member was to fit the parallel slopes model (`quant1 ~ quant2 + qual`), and one member was to fit the interaction model (`quant1 ~ quant2 * qual`). Each team would then pick a final "best" model and write a report on the model's findings while defending their model choice.
+
+### Painpoints
+
+The labs brought me and my students plenty of angst. The main issue was that the lab assignments ended up being too long to get through in one lab period, at least in the remote conditions. Different lab duos were placed in different breakout rooms, and I'd jumpn around answering questions. Students ended up waiting on me to debug a problem A LOT which stalled their progress. I'm only one person after all!
+
+As a consequence of the time pressure, I suspected that students weren't always reading through the whole lab document that explained new concepts or R functions and were skipping around to the exercises. This meant they weren't getting the full explanation of new ideas and code but were "plugging and chugging". Not ideal!
+
+As an aside, some of the Shiny elements broke for certain students, and then they couldn't easily move past this. This was a *me* problem, not an *Open Intro* problem, but I note it because it was hard to bounce back from quickly in the remote format (and learnr has Shiny capabilities too!). 
+
+Since the logistics of getting students together to work together outside of lab to finish up each lab was daunting due to different time zones, I ended up cutting a lot of the more critical thinking, open-ended questions that came at the end of the lab. However, these were often the questions touching on the content I most wanted to evaluate. Even when I shortened the lab each week, they took me a long time to grade, and I was mostly looking at code chunks not written text.
+
+To make sure students were making progress on their projects and that they could get feedback from me along the way, I had several project checkpoins throughout the semester. These were in addition to a weekly lab and homework which I recognize was a lot. These had to be reviewed quickly because students needed my feedback before going on to the next stage. If they came in late due to the added flexibility of remote learning, this time crunch for me was even worse. 
+
+## `learnr` prep
+
+I was teaching intro stats again in the spring, and I knew some things had to change. 
+
+I had been to Mine Çetinkaya-Rundel and Colin Rundel's workshop on [building interactive tutorials in R](https://github.com/mine-cetinkaya-rundel/teach-r-online) which taught me all about `learnr`, [`gradethis`](https://github.com/rstudio/gradethis), and [`learnrhash`](https://github.com/rundel/learnrhash/) and seen Mine's [rstudio::global talk](https://www.rstudio.com/resources/rstudioglobal-2021/feedback-at-scale/) about feedback at scale. I had also talked to Marney Pratt about using interactive tutorials in the classroom since she had been created and used [`swirl` tutorials](https://swirlstats.com/) before. In the interterm, I decided to try to use `learnr` to fix some of my lab painpoints, and Marney worked on some [`learnr` tutorials](https://github.com/marneypratt/r4bio) for her biology students. Having an accountability and troubleshooting buddy was REALLY helpful.
+
+### Wait, what are all of these packages?
+
+Definitely go through the materials mentioned above for more details but here is the gist.
+
+The `learnr` package allows you to make interactive tutorials that students can step through, at their own pace. These tutorials are made up of a combination of text, code chunks that can run as they are, and code chunks to be completed and run by students. 
+
+The `gradethis` package provides some automatic feedback as it checks students' answers in real time. You can use multiple choice questions and even check code or code output. Sometimes the automatic feedback really is enough to go on and get students back on the right track (a nudge, if you will). Sometimes the feedback, like R error messages, is a bit cryptic. When students are correct, they get some automatic praise (thanks [`praise`](https://cran.r-project.org/web/packages/praise/index.html) package!).
+
+The `learnrhash` package keeps track of which chunks are engaged with by the students as they work through the tutorial. Magic happens at the end of a tutorial where a hash is produced and students just have to copy and paste it into a Google Form for me to grab later. The `learnrhash` package then has functions to "decode" this garbled mess for the instructor as well. 
+
+
+### Go on with the prep...
+
+I took each of my labs from the fall and turned them into their own `learnr` tutorial. The main text could just be copied over. All I had to do was rewrite questions into those that could be auto-graded by `gradethis` (typically multiple choice and fill in the blank style code chunks) and transfer example code chunks into the right chunk format expected so that they would become runnable within the tutorial. The [addins](http://rstudio.github.io/rstudioaddins/) included in the `gradethis` package were really helfpul for this.  
+
+I made a package, to be installed from GitHub, to distribute the tutorials to my students. Thanks to Desirée De Leon for writing this clear and comprehensive [blog post](https://education.rstudio.com/blog/2020/09/delivering-learnr-tutorials-in-a-package/) to walk me through that process. 
+
+
+## What I did in the spring
+
+I used the `learnr` tutorials as a pre-lab, to be completed individually before each lab. I had students submit their hash from `learnrhash` to make sure that students were at the bare-minimum running each code chunk, another nudge. A completion grade based on this provided just enough accountability to ensure everyone came to lab with at least some familiarity with the material in the tutorial. 
+
+However, I couldn't rely soley on `learnr` tutorials because a major goal of the course is to teach students how to [work reproducibly in an R Markdown document](https://dukespace.lib.duke.edu/dspace/bitstream/handle/10161/8374/Baumer_R%20Markdown-Integrating%20a%20Reproducible%20Analysis%20Tool%20into%20Introductory%20Statistics.pdf?sequence=1). Therefore, I had students create a lab report during lab each week with their answers to the more open-ended questions. These questions focused on the interpretation, communication, and deeper understanding that is hard to auto-check.
+
+As the semester went on, students started to work in their project teams during lab. I turned the project checkpoints into lab report questions. For example, for the simple linear regression lab, the lab report questions had each team fit the two univariate regression models for their project dataset instead of a dataset common to the whole class. I was not able to fit the initial exploration into a lab session, but I did want students to explore on their own before consulting with their group so there wouldn't be too much mind-meld too early on in the process of choosing a question to investigate, so this ended up working out. 
+
+### Comparing to the fall
+
+There were a lot of wins. 
+
+- Students could learn the new material at their own pace and all come in with the same background to approach the lab report questions. This to some extent ameliorated the different backgrounds of randomly assigned lab trios where some had seen R before and others hadn't. 
+
+- Lab report questions were the open-ended, writing-focused prompts that I really wanted to evaluate. Grading was SO MUCH FASTER, and the students could get more meaningful feedback from me on their reasoning rather than me getting bogged down checking their code for mistakes.
+
+- Anecdotally, students seemed to finish lab questions during lab, although many took some time to polish their reports afterwards. I didn't have to cut any problems. Hooray!
+
+- During lab I still got questions on code, but students didn't get as hung up as before and had the tutorials to fall back on while they were waiting for me or a TA to answer their questions. 
+
+### Some of the weeds
+
+There were also some hiccups.
+
+- Install day was gnarly, but honestly it always is with just R and RStudio alone. However, because I was leveraging capabilities from development versions of gradethis and learnrhash, things were slightlly more complicated. Plus, I didn't leave myself a lot of time to hard-core user test beyond me and Marney before the semester started. 
+
+- Students had to install my package on their own computers, not on Smith's RStudio server. Again, this was more on me not giving enough lead time to really get that working well on the whole server system. We were able to get the package installed on individual student's server accounts on a case by case basis if using RStudio on a personal laptop wasn't feasible. 
+
+
+- Occassionally students would find a bug or have trouble submitting the Google Form. To avoid the need to reinstall the package just to fix the bug, I just noted them to fix at the end of the semester and had students not worry about that question/part that was glitchy. Since the submission was really just an accountability check, I often just accepted a screenshot of the hash in a pinch. 
+
+
+- The tutorials do not reliably save a student's progress, so the tutorial would need to be done in one sitting. This was not ideal. You might consider breaking your tutorials into smaller chunks to get around this, or at least give students an estimated time for completion so that they could better plan. Again, user-testing would have been helpful here. 
+
+## My materials
+
+Feel free to adapt my materials for your own use. I would just love to hear how it goes for you. 
+
+- [my package `nudgeStatLabs`](https://github.com/sastoudt/nudgeStatLabs)
+- [my "autograde" gist](https://gist.github.com/sastoudt/0e0bb2f84eca0701ebb07387c247b492) Note: This could get much fancier. I still did a lot of things manually, but there is room for more automation (e.g. using `googlesheets` package to read the data automatically, writing tests to make sure number of chunks run v. total is equal for each student instead of a visual inspection)
+- You'll note that there are two extra tutorials beyond the Open Intro derived labs. One provides data collection for the ["Roadless America"](http://www.amstat.org/asa/files/pdfs/stew/PercentWithinMileofRoad.pdf) activity, and one provides a brief glimpse of scenarios when the bootstrap fails.
+
+### What you would need to change when adapting these to your own setting
+
+- Create your own GitHub repo. If you want to start with mine, you can fork it and go from there.
+- You will need to create your own Google Form for collecting the hashes and replace my link with yours in the tutorials. You can restrict submission to those with your institiution mailing domain, which is handy. Note some students had problems seeing the Googel Form  embedded in the tutorial, so I gave them the stand-alone link for reference as well.
+- You will likely want to update the lab questions, especially those in the back half of the tutorials as mine are tailored to our projects.
+- You might want to refine the questions in the pre-lab and/or decide not to give the solution and instead provide more hints.
+
+### I am on the `learnr` bandwagon!
+
+If I were to teach intro stats in R again, I would definitely use this `learnr` setup. I would probably spend a little time revising the questions and hints though.
+
+However, my next `learnr` frontier is to think about how these kinds of tutorials can be used in upper-level classes, most immediately mathematical statistics/statistical inference/whatever you call that class at your institution.
+
+I have some *really* half-baked ideas, but I'm thinking broadly about investigation via simulation studies to pair with the more theoretical proofs and derivations. This is in the spirit of an approach described in Chelsea Parlett-Pelleriti's [rstudio::global talk](https://www.rstudio.com/resources/rstudioglobal-2021/using-guided-simulation-exercises-to-teach-data-science-with-r/).
+
+Are you teaching math-stat in the fall and want to think with me about this over the summer? Let me know!
+
+
+### Shoutouts
+
+Thanks to Marney for being my `learnr` buddy, Mine, Colin, and Desirée for their materials, Scott and Will for intro stat project solidarity, my students for bearing with the ups and downs in both semesters, and Audrey and Amrita my lab assistants in the spring who were a HUGE help.
+
