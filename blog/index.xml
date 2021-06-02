@@ -10,6 +10,14 @@
     
 	<atom:link href="/blog/index.xml" rel="self" type="application/rss+xml" />
     
+    <item>
+      <title>Using learnr Tutorials in an Intro Stats Class as Pre-Labs</title>
+      <link>/blog/learnr-intro-stat-prelabs/</link>
+      <pubDate>Wed, 02 June 2021 10:20:51 -0700</pubDate>
+      
+      <guid>/blog/learnr-intro-stat-prelabs/</guid>
+      <description>I adapted the intro stat labs from Open Intro (with randomization and simulation) into learnr tutorials and had students complete them prior to coming to lab. This alleviated many pain points for both me and my students. 10/10 would do again.</description>
+    </item>
     
     <item>
       <title>Parallelization Pitfalls</title>
