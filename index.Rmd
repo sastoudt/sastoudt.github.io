@@ -12,7 +12,7 @@ links:
   - label: Google Scholar
     url: "https://scholar.google.com/citations?user=RBdkkIYAAAAJ&hl=en&oi=ao"
   - label: CV
-    url: "https://github.com/sastoudt/sastoudt.github.io/CV_2021.pdf"
+    url: "https://github.com/sastoudt/sastoudt.github.io/blob/master/CV_2021.pdf"
   - label: Email
     url: "mailto:sstoudt@berkeley.edu"
 site: distill::distill_website
