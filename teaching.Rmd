@@ -1,0 +1,46 @@
+---
+title: "Teaching"
+description: |
+  Some additional details about Sara's teaching
+---
+
+# Fall 2021 - Bucknell University
+
+**coming soon**
+   
+# Spring 2021 - Smith College
+
+**SDS 220 - Introduction to Probability and Statistics**
+
+[Interactive learnr tutorials](https://github.com/sastoudt/nudgeStatLabs)
+
+# Fall 2020 - Smith College
+
+**SDS 220 - Introduction to Probability and Statistics**
+
+**SDS/CSC 109 - Communicating with Data**
+
+[Class newsletter](https://buttondown.email/sstoudt/archive)
+
+Read more about the physical data visualization unit [here](https://nebigdatahub.org/data-visualization-beyond-the-screen/).
+
+# NICAR 2020
+
+[Introduction to statistics and R for journalists](https://github.com/sastoudt/NICAR2020_IntroStats)
+
+# Spring 2018 - UC Berkeley
+
+**STAT 198 - Blogging for Data Science, Graduate Student Instructor with Professor Deb Nolan**
+
+
+See the blogs [here](https://stat198-spring18.github.io/blog/)
+
+
+# Fall 2017 - UC Berkeley
+
+**STAT 157- Communicating with Data: The art of writing for data science, Graduate Student Instructor with Professor Deb Nolan**
+
+
+For a snapshot of what we are doing in class, refer to the [tweet-log for the class](https://twitter.com/i/events/1230569061207031808).
+
+

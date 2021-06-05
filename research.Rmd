@@ -1,0 +1,144 @@
+---
+title: "Research"
+description: |
+  Some additional details about Sara's research
+---
+
+# Current Research - Ecology
+
+*description coming soon*
+
+# Current Research - Statistics Pedagogy
+
+*description coming soon*
+
+# Current Research - Other Applied Work
+
+Are you a Bucknell faculty member or Lewisburg-area community member interested in working with me? More details coming soon, but reach out!
+
+# Research with Undergraduate Students
+
+Are you a Bucknell student interested in working with me? More details coming soon, but reach out!
+
+**A Partial Least Squares Calibration Model for Predicting Biogenic Silica**
+
+Co-advised with Greg de Wet
+
+Advisee: Vivienne Maxwell (Smith College)
+
+# Graduate Research
+
+**Clarifying Identifiability Debates in Species Distribution Modeling**
+
+Advisors: Will Fithian and Perry de Valpine
+
+Ecologists commonly make strong parametric assumptions when formulating statistical models. Such assumptions have sparked repeated debates in the literature about statistical identifiability of species distribution and abundance models, among others. At issue is whether the assumption of a particular parametric form serves to impose artificial statistical identifiability that should not be relied upon or instead whether such an assumption is part and parcel of statistical modeling. We borrow from the econometrics literature to introduce a broader view of the identifiability problem than has been taken in ecological debates. In particular we review the concept of nonparametric identifiability and show what can go wrong when we lack this strong form of identifiability, e.g. extreme sensitivity to model misspecification.
+
+Read more in the [Berkeley Science Review.](https://berkeleysciencereview.com/article/2019/12/04/filling-in-the-species-gap)
+
+Other ideas we are interested in thinking more about are:
+
+- assessing the fit of more complicated joint species distribution models (in terms of community metrics that we care about for inference rather than just prediction metrics) under model mis-specification
+
+- accounting for correlation between species’ occurrence and detection in joint species distribution and abundance models;
+
+- combining "good" data (that provides nonparametric identifiability) with "bad" data (that only provides parametric identifiability) to help recover robustness to model misspecification in species distribution and abundance models; and
+
+- making recommendations for data collection for species distribution and abundance models.
+
+# DS421 Research
+
+**Streamlining Climate Model Accessibility for Integration into Site-Specific Climate Research**
+
+Project for Capstone Project, with Jenna Baughman
+
+Climate change is tracked and measured on the global scale, making it hard to incorporate for more localized analysis. There are many different climate products that give different predictions for future climate under different scenarios. This data is stored at the global level per time step, so if you are interested in a time series for one location, you would have to download and process data for the whole globe at each time step, taking computational time and space that may be prohibitive. We aim to streamline this process by allowing users to explore different climate products and helping users access the time series in their location of interest more easily. See our work [here](https://github.com/sastoudt/UCB_DS421_NEX_partnerProject).
+
+**US Drought Vulnerability**
+
+Project for Class Taught by Gaston Sanchez, with Daniel Blaustein-Rejto, Ian Bolliger, Hal Gordon, Andrew Hultgren, Yang Ju, and Kate Pennington
+
+Our goal was to assess variation in vulnerability to drought across counties and census blocks in the continental United States using health, social, and agricultural indicators. See our work [here](https://github.com/bolliger32/US_drought_vulnerability) and check out our Shiny app [here](https://sastoudt.shinyapps.io/US_Drought_Vulnerability/).
+
+**Generalized Additive Models (GAMs) for Understanding Chlorophyll in the Bay Delta, Comparison of GAMs and Weighted Regression**
+
+Advisors: Perry de Valpine, David Senn, Erica Spotswood, Collaborator (comparisons) Marcus Beck
+
+This was a Summer '16 project in collaboration with the San Francisco Estuary Institute. Find more information [here](https://github.com/sastoudt/DS421_summerProject). A Shiny application for the GAM/weighted regression portion can be found [here](https://sastoudt.shinyapp.io/GAM_Delta).
+
+
+# NIST Research
+
+**Interpolation of Atmospheric Greenhouse Gas Fluxes, Evaluation of the accuracy, consistency, and stability of measurements of the Planck constant, Shiny Application for Gas Standard Reference Material Analysis**
+
+Advisors: Antonio Possolo, Collaborators Ana Kerlo (greenhouse gas),Stephan Schlamminger, Jon R Pratt, and Carl J Williams (Planck constant), Christina Liaskos (Shiny app)
+
+Small aircraft collect air quality data around cities by recording air samples as they fly horizontally. If they collect data from multiple horizontal “transects” at different altitudes, we can interpolate to understand the value of various greenhouse gases. The goals of this project are to choose which interpolation method gives the most accurate estimates of greenhouse gas flux and decide how many transects (and at what altitudes) we need for a desired level of precision.
+
+Are Planck constant measurements ready to help redefine the kilogram? We discuss the preconditions for the redefinition [here](http://iopscience.iop.org/article/10.1088/1681-7575/aa966c).
+
+I built a Shiny applications (web applications based in R) to implement the value assignment and uncertainty evaluation for gas mixture standard reference materials This streamlines the analysis process, allowing scientists to harness the power of R (as opposed to something like Excel) to analyze their data without having to learn R themselves.
+
+**Implementations for Easy Use by Scientists: Shiny Applications**
+
+Advisors: Antonio Possolo and Tom Bartel (EIV), Collaborator (nano) Bryan Jimenez
+
+I built Shiny applications to implement the Errors in Variables force calibrations calculations and calculations for the size measurement of nanoparticles. I also worked to finesse the optimization procedure for the EIV approach. This is challenging because we often are pushing the boundaries of how many parameters we need to estimate given the number of data points.
+
+**Errors in Variables Modeling in Force Calibrations**
+
+Advisors: Antonio Possolo and Tom Bartel
+
+I worked on an alternative method for determining the calibration function for force measuring instruments as well as a Monte Carlo uncertainty evaluation for the calibration function. I implemented these methods and am helping to integrate them into the procedure employed at NIST for force calibration reporting. Force measuring instruments are calibrated by recording the readings of each instrument when "known" masses are applied. I use an errors in variables regression method instead of the ordinary least squares method in order to take into consideration the uncertainty in the forces applied. The Monte Carlo method gives a more accurate representation of the calibration uncertainty throughout the transducer’s force range than a single conservative value given by the current approach. Read our paper [here](http://iopscience.iop.org/article/10.1088/0026-1394/53/3/965/meta;jsessionid=2B7013C6CBEADB69E9A44542A78B8E5B.ip-10-40-2-73).
+
+**Homogenization of Surface Temperature Records**
+
+Advisors: Antonio Possolo and Adam Pintar
+
+I worked on improving and making available a homogenization algorithm developed by NIST statisticians. The process of homogenization finds and adjusts for biases unrelated to the climate in temperature records. I worked to improve the uncertainty quantification of the algorithm and to provide a way for the method to handle missing values. I attended the Statistical and Applied Mathematical Sciences Institute’s workshop on international surface temperatures to work on this homogenization algorithm. I am now working with another attendee to create an R package that includes the homogenization algorithm as well as resources for accessing and formatting portions of interest in the International Surface Temperature Initiative databank for use with the algorithm.
+
+**Measuring Optical Apertures for Solar Irradiance Monitoring**
+
+Advisors: Antonio Possolo and Maritoni Litorja
+
+I worked to improve the preciseness and accuracy of aperture measurements used in solar irradiance monitoring. My job was to check for possible biases in the data collection and analysis as well as test different methods and assess their degree of uncertainty. I implemented and compared various algorithms for fitting circles on both simulated data and data collected from my proposed sampling method experiments. My goal was to see which combination of algorithm and sampling method yielded the least uncertainty. I found a combination of fitting algorithm and sampling method that was more accurate than the pair that scientists at NIST were using. My recommendations are currently being implemented at NIST.
+
+
+# Undergraduate Research
+
+**Geostatistical Models for the Spatial Variability of the Abundance of Uranium in Soils and Sediments of the Continental United States**
+
+Undergraduate Honors Thesis, Advisor: Ben Baumer
+
+In my thesis I compared several different models for the spatial distribution of the mass fraction of uranium in soils and sediments across the continental United States, aiming to identify the model that predicts this quantity with smallest uncertainty. I am explored local regression, generalized additive models, and Gaussian processes to interpolate maps of uranium and used cross validation to pick the model that predicts uranium both accurately and precisely. I made interpolated maps and maps characterizing the uncertainty of the estimates that are compatible with Google Earth so that a user can interact with the data, 'flying over' the US or zooming in to a region of interest. Read an extended abstract [here](http://www.geocomputation.org/2015/papers/GC15_78.pdf).
+
+**Modeling Internet Traffic Generation for Telecommunication Applications
+Industrial Careers in Mathematical Sciences Program (PIC Math)**
+
+With: Pamela Badian-Pessot, Vera Bao, Erika Earley, Yadira Flores, Liza Maharjan, Blanche Ngo Mahop, Jordan Menter, Van Nguyen, Laura Rosenbauer, Danielle Williams, and Weijia Zhang
+
+Advisors: Nessy Tania & Veena Mendiratta (Bell Labs)
+
+The goal of this project was to develop a stochastic model that could predict and simulate traffic load on an internet network. The model takes as input number of users and proportion of internet application being used at a given time - namely web surfing, video streaming, online gaming - and outputs simulated traffic data. Using individual user data, we produced models for web surfing, video streaming, and gaming which were combined to form the simulator. The first method fit known theoretical distributions to the data to simulate individual packets; the second used an empirical copula to simulate packets per second. Read our paper [here](http://www.ajuronline.org/uploads/Volume_13_3/AJUR%20Vol%2013%20Issue%203%2008.25.16%20with%20covers%20interactive.pdf).
+
+**March Machine Learning Madness**
+
+With: Lauren Santana, Advisor: Ben Baumer
+
+In pursuit of the perfect March Madness bracket we aimed to determine the most effective model and the most relevant data to predict match-up probabilities. We decided to use an ensemble method of machine learning techniques. The predictions made by a support vector machine, a Naive Bayes classifier, a k nearest neighbors method, a decision tree, random forests, and an artificial neural network were combined using logistic regression to determine final matchup probabilities. These machine learning techniques were trained on historical team and tournament data. We tested the performance of our method in the two stages of Kaggle's March Machine Learning Madness competition. After the 2014 tournament, we assessed our performance using a generalizable simulation-based technique. Read more [here](http://www.math.smith.edu/~bbaumer/pub/jsm2014_perfect_bracket.pdf).
+
+**Roadless America: An Activity for Introduction to Sample Proportions and Their Confidence Intervals**
+
+With: Yue Cao and Dana Udwin
+
+Advisor: Nicholas J. Horton
+
+Our goal was to have an accessible classroom activity that uses random sampling of locations in coordination with Google Maps to determine what proportion of the United States is within one mile of a road and visualize where roadless areas tend to be. The challenge was to implement a sophisticated geographic sampling that could be kept invisible to the user so that students could focus on the big picture ideas. My job involved brainstorming ways to appropriately collect and display this data as well as conveying these complex ideas in a more straightforward way to both students, who were seeing the material for the first time, and to instructors, who were seeing this technology for the first time. We worked on different sets of code and accompanying instructions for different thresholds of experience with the technology. We tested our most simplistic activity on an introductory statistics class at Smith, and used the feedback from the experience to motivate supplementary versions. You can find the classroom activity [here](https://www.amstat.org/education/stew/pdfs/PercentWithinMileofRoad.pdf).
+
+**Factors Associated With Changes in Academic Performance During the Transition from Elementary to Middle School**
+
+With: Dana Hsu and Anna Rockower
+
+Advisor: Katherine Halvorsen
+
+We were asked by a local school district to look at student, teacher, and school variables to try to explain the drop in standardized test scores on the math section between 5th and 6th grade using de-identified data. My job was to clean the data as well as perform univariate and bivariate analysis to see what associations occur with the change in standardized testing score between 5th and 6th grade. I then worked to model the change in scores.

@@ -1,0 +1,22 @@
+---
+title: "Coding Projects"
+description: |
+  Some additional details about Sara's side coding projects
+---
+
+- [Census Data Aggregator](https://github.com/datadesk/census-data-aggregator) While at the Los Angeles Times Data Desk, I worked to add functionality to the Census data aggregator, an open source Python library that helps aggregate data from the census while still accounting for margin of error.
+
+- [stringr Vignette](https://stringr.tidyverse.org/articles/from-base.html): I wrote a vignette to help users transition from performing string operations in base R to using the tidyverse stringr package.
+
+- [Wealth Tax Shiny App](http://wealthtaxsimulator.org/simulator_app/): UC Berkeley economists Emmanuel Saez and Gabriel Zucman analyzed Senator Elizabeth Warren’s proposal for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis (OPA). I created the interactive visualization portion of this project.
+
+- [Travel Time to Greenspaces](https://highschool.latimes.com/whitney-high-school/metro-plans-to-increase-access-to-public-outdoor-spaces/): I helped Riona Sheik crunch some numbers to supplement her story on access to public outdoor spaces via public transportation in Los Angeles (check out the plot).
+
+- [Cabinet of Curiosity](https://github.com/cabinetofcuriosity/coc_lewis_clark_workshop/): I played a supporting role in Ciera Martinez's [natural history data project](https://curiositydata.org). She works with students to make natural history data acessible and visible to data scientists.
+
+- [My Top Songs Spotify Analysis](https://github.com/sastoudt/groove_is_in_the_heart_and_data): Materials from R Ladies Lightning Talk on analyzing my top played songs over time
+
+- [BART Ridership Visualization](https://github.com/sastoudt/BART_ride_viz): Before and after COVID shelter-in-place
+
+- [iNaturalist Records in the time of COVID](https://github.com/sastoudt/covid_citizen_science): Comparison of time trends in records and compare with shelter-in-place order timeline by state. 
+

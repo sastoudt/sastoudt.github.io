@@ -1,0 +1,17 @@
+---
+title: "Hello world!"
+description: |
+  Trying out a new collection for Tidy Tuesday contributions
+author:
+  - name: Sara Stoudt
+date: 06-05-2021
+output:
+  distill::distill_article:
+    self_contained: false
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
