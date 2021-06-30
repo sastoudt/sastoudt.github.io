@@ -14,7 +14,7 @@ links:
   - label: CV
     url: "https://github.com/sastoudt/sastoudt.github.io/blob/master/CV_2021.pdf"
   - label: Email
-    url: "mailto:sstoudt@berkeley.edu"
+    url: "mailto:sas072@bucknell.edu"
 site: distill::distill_website
 output:
   postcards::onofre
