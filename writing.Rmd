@@ -4,6 +4,11 @@ description: |
   Some additional details about Sara's writing for broader audiences
 ---
 
+- [The Origins of Ordinary Least Squares Assumptions: Some Are More Breakable Than Others](https://mathvoices.ams.org/featurecolumn/2022/03/01/ordinary-least-squares/) 
+
+- [Why Do We Plot Data Explaner Zine](https://hdsr.mitpress.mit.edu/pub/49opxv6v/release/1)
+
+- [COVID-19 Case Fatality Rate Bias Visual Explainer](https://hdsr.mitpress.mit.edu/pub/p6sdle0t/release/1)
 
 - [Ecology for the Masses Stat Corner](https://ecologyforthemasses.com/author/sstoudt/)
 

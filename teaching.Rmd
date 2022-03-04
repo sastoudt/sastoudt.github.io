@@ -4,9 +4,29 @@ description: |
   Some additional details about Sara's teaching
 ---
 
+# Students Requesting Letters of Recommendation
+
+Things I will need from you:
+
+- Logistical information: the schools you are applying to, the instructions for submitting, and the deadlines (please give me at least a 2 week notice)
+
+- Information about your goals and trajectory so far: what you are interested in related to the program or job and how does the material in the class(es) that you have had me for fit into that vision for your future.
+
+- Project information: If you completed a project in one of my classes, please remind me of your role, the research question and findings.
+
+# Spring 2022 - Bucknell University
+
+**MTH 217 - Stat II**
+
+**MTH 304 - Statistical Inference Theory**
+
+[Interactive learnr tutorials and R Markdown templates](https://github.com/sastoudt/StatTheoryLabs)
+
 # Fall 2021 - Bucknell University
 
-**coming soon**
+**MTH 216 - Stat I**
+
+**MTH 304 - Statistical Inference Theory**
    
 # Spring 2021 - Smith College
 

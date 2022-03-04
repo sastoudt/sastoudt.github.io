@@ -6,19 +6,27 @@ description: |
 
 # Current Research - Ecology
 
-*description coming soon*
+Things I'm thinking about...
+
+- consequences of model mis-specification in species distribution and abundance models
+- data from participatory science efforts and the behavior of participatory scientists themselves
+- blends of systematic and opportunistic data 
 
 # Current Research - Statistics Pedagogy
 
-*description coming soon*
+Things I'm thinking about...
+
+- teaching writing and data communication more generally in statistics courses
+- creative mediums and alternative research products
+- computing in classes of all levels
 
 # Current Research - Other Applied Work
 
-Are you a Bucknell faculty member or Lewisburg-area community member interested in working with me? More details coming soon, but reach out!
+Are you a Bucknell faculty member or Lewisburg-area community member interested in working with me? I would love to hear from you!
 
 # Research with Undergraduate Students
 
-Are you a Bucknell student interested in working with me? More details coming soon, but reach out!
+Are you a Bucknell student interested in working with me? Reach out if you would be interested in future opportunities!
 
 **A Partial Least Squares Calibration Model for Predicting Biogenic Silica**
 
