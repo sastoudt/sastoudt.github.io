@@ -4,11 +4,13 @@ description: |
   Some additional details about Sara's side coding projects
 ---
 
+- [How do public officials make Land Bank decisions? Artificial Intelligence may seek patterns](https://eyeonohio.com/how-do-public-officials-make-land-bank-decisions-artificial-intelligence-may-seek-patterns/) I helped out with a code review for this investigation of which properties end up in land banks. The project ended up winning the Best Data Journalism award from the All Ohio Excellence in Journalism Awards this year!
+
 - [Census Data Aggregator](https://github.com/datadesk/census-data-aggregator) While at the Los Angeles Times Data Desk, I worked to add functionality to the Census data aggregator, an open source Python library that helps aggregate data from the census while still accounting for margin of error.
 
 - [stringr Vignette](https://stringr.tidyverse.org/articles/from-base.html): I wrote a vignette to help users transition from performing string operations in base R to using the tidyverse stringr package.
 
-- [Wealth Tax Shiny App](http://wealthtaxsimulator.org/simulator_app/): UC Berkeley economists Emmanuel Saez and Gabriel Zucman analyzed Senator Elizabeth Warren’s proposal for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis (OPA). I created the interactive visualization portion of this project.
+- [Wealth Tax Shiny App](https://gist.github.com/sastoudt/6826ae53e0eeb6d8789873d4a4b14396): UC Berkeley economists Emmanuel Saez and Gabriel Zucman analyzed Senator Elizabeth Warren’s proposal for a wealth tax, and Fernando Hoces de la Guardia from the Berkeley Initiative for Transparency in the Social Sciences (BITSS) wanted to turn their work into an open policy analysis (OPA). I created the interactive visualization portion of this project.
 
 - [Travel Time to Greenspaces](https://highschool.latimes.com/whitney-high-school/metro-plans-to-increase-access-to-public-outdoor-spaces/): I helped Riona Sheik crunch some numbers to supplement her story on access to public outdoor spaces via public transportation in Los Angeles (check out the plot).
 

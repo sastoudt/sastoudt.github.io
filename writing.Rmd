@@ -4,6 +4,8 @@ description: |
   Some additional details about Sara's writing for broader audiences
 ---
 
+- [Statistical Concepts and Intersectionality](https://mathvoices.ams.org/featurecolumn/2022/07/01/statistical-concepts-and-intersectionality/)
+
 - [The Origins of Ordinary Least Squares Assumptions: Some Are More Breakable Than Others](https://mathvoices.ams.org/featurecolumn/2022/03/01/ordinary-least-squares/) 
 
 - [Why Do We Plot Data Explaner Zine](https://hdsr.mitpress.mit.edu/pub/49opxv6v/release/1)
