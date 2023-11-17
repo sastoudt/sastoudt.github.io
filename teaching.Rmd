@@ -14,19 +14,33 @@ Things I will need from you:
 
 - Project information: If you completed a project in one of my classes, please remind me of your role, the research question and findings.
 
+# Fall 2023/Spring 2024 - I am on teaching leave.
+
+# Spring 2023 - Bucknell University
+
+**MATH 216 - Stat I**
+
+**MATH 407 - Statistical Design of Scientific Studies**
+
+# Fall 2022 - Bucknell University
+
+**MATH 217 - Stat II**
+
+**FOUN 098-53- Storytelling with Data**
+
 # Spring 2022 - Bucknell University
 
-**MTH 217 - Stat II**
+**MATH 217 - Stat II**
 
-**MTH 304 - Statistical Inference Theory**
+**MATH 304 - Statistical Inference Theory**
 
 [Interactive learnr tutorials and R Markdown templates](https://github.com/sastoudt/StatTheoryLabs)
 
 # Fall 2021 - Bucknell University
 
-**MTH 216 - Stat I**
+**MATH 216 - Stat I**
 
-**MTH 304 - Statistical Inference Theory**
+**MATH 304 - Statistical Inference Theory**
    
 # Spring 2021 - Smith College
 

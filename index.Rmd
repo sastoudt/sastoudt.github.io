@@ -12,7 +12,7 @@ links:
   - label: Google Scholar
     url: "https://scholar.google.com/citations?user=RBdkkIYAAAAJ&hl=en&oi=ao"
   - label: CV
-    url: "https://github.com/sastoudt/sastoudt.github.io/blob/master/CV_2022.pdf"
+    url: "https://github.com/sastoudt/sastoudt.github.io/blob/master/CV_2023.pdf"
   - label: Email
     url: "mailto:sas072@bucknell.edu"
 site: distill::distill_website
@@ -20,4 +20,4 @@ output:
   postcards::onofre
 ---
  
-My name is Sara Stoudt, and I use she/her pronouns. I am an Assistant Professor at Bucknell University in the Mathematics Department. I received my PhD in statistics from the University of California, Berkeley where I was also a [Berkeley Institute for Data Science](https://bids.berkeley.edu/) Fellow. My research focus is on ecological applications of statistics and statistics communication. At Berkeley I was advised by Will Fithian and Perry de Valpine and taught writing for statistics with Deb Nolan. Previously, I received a B.A. in Mathematics from Smith College with an emphasis on Statistics. Check out Deborah Nolan and my new book, ["Communicating with Data: The Art of Writing for Data Science"](https://twitter.com/sastoudt/status/1390675020209340420?s=20") and the [Data Science by Design "Future of Data Science" Anthology](https://datasciencebydesign.org/book).
+My name is Sara Stoudt, and I use she/her pronouns. I am an Assistant Professor at Bucknell University in the Mathematics Department. I received my PhD in statistics from the University of California, Berkeley where I was also a [Berkeley Institute for Data Science](https://bids.berkeley.edu/) Fellow. My research focus is on ecological applications of statistics and statistics communication. At Berkeley I was advised by Will Fithian and Perry de Valpine and taught writing for statistics with Deb Nolan. Previously, I received a B.A. in Mathematics from Smith College with an emphasis on Statistics. Check out Deborah Nolan and my new book, ["Communicating with Data: The Art of Writing for Data Science"](https://twitter.com/sastoudt/status/1390675020209340420?s=20") and the [Data Science by Design "Our Environment" Anthology](https://datasciencebydesign.org/book-2).
