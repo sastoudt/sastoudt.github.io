@@ -4,6 +4,8 @@ description: |
   Some additional details about Sara's side coding projects
 ---
 
+- [Reading for Humanness](https://github.com/sastoudt/reading-for-humanness): Crowdsource data-related themes in science fiction to aid discussion of ethics in the classroom. Reach out if you are interested in contributing!
+
 - [How do public officials make Land Bank decisions? Artificial Intelligence may seek patterns](https://eyeonohio.com/how-do-public-officials-make-land-bank-decisions-artificial-intelligence-may-seek-patterns/) I helped out with a code review for this investigation of which properties end up in land banks. The project ended up winning the Best Data Journalism award from the All Ohio Excellence in Journalism Awards this year!
 
 - [Census Data Aggregator](https://github.com/datadesk/census-data-aggregator) While at the Los Angeles Times Data Desk, I worked to add functionality to the Census data aggregator, an open source Python library that helps aggregate data from the census while still accounting for margin of error.

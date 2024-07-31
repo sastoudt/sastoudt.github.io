@@ -4,7 +4,11 @@ description: |
   Some additional details about Sara's writing for broader audiences
 ---
 
--[A Summer set.seed() Sestina](https://mathvoices.ams.org/featurecolumn/2023/08/01/a-summer-set-seed-sestina/) 
+- [Mastermind Constrained Prose](https://www.tandfonline.com/doi/full/10.1080/10724117.2024.2312039)
+
+- [Sampled Poems Contain Multitudes](https://mathvoices.ams.org/featurecolumn/2023/12/01/sampled-poems-contain-multitudes/)
+
+- [A Summer set.seed() Sestina](https://mathvoices.ams.org/featurecolumn/2023/08/01/a-summer-set-seed-sestina/) 
 
 - [Statistical Concepts and Intersectionality](https://mathvoices.ams.org/featurecolumn/2022/07/01/statistical-concepts-and-intersectionality/)
 
