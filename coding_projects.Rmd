@@ -4,7 +4,13 @@ description: |
   Some additional details about Sara's side coding projects
 ---
 
+- [Data-Driven Narratives: Inspiring Eco-writing with an Interactive Data Exploration Applet](https://github.com/sastoudt/movement_data_prompts): a collaboration with creative writers and students to design an interactive data exploration app to inspire creative writing about the environment
+
 - [Reading for Humanness](https://github.com/sastoudt/reading-for-humanness): Crowdsource data-related themes in science fiction to aid discussion of ethics in the classroom. Reach out if you are interested in contributing!
+
+- [Critical Literacy: Supporting Student Reflection on Social Justice in Data-Related Courses](https://sites.google.com/bucknell.edu/just-computing-bucknell-cu/fellow-projects/reading-guide-project?authuser=0): developing reading guides to help students read about the intersection between social justice and data/algorithms
+
+- [Analysis of the Carceral Sequences in Pennsylvania](https://sites.google.com/bucknell.edu/just-computing-bucknell-cu/fellow-projects/sequence-analysis-project?authuser=0): sequence analysis of moves within the PA Department of Corrections system
 
 - [How do public officials make Land Bank decisions? Artificial Intelligence may seek patterns](https://eyeonohio.com/how-do-public-officials-make-land-bank-decisions-artificial-intelligence-may-seek-patterns/) I helped out with a code review for this investigation of which properties end up in land banks. The project ended up winning the Best Data Journalism award from the All Ohio Excellence in Journalism Awards this year!
 

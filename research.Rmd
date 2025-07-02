@@ -28,6 +28,31 @@ Are you a Bucknell faculty member or Lewisburg-area community member interested 
 
 Are you a Bucknell student interested in working with me? Reach out if you would be interested in future opportunities!
 
+**Data-Driven Narratives: Inspiring Eco-writing with an Interactive Data Exploration Applet**
+
+Co-advised with Elinam Agbo
+
+Advisees: Caitlyn Hickey and Shaheryar Asghar (Bucknell University)
+
+Find out more [here](https://github.com/sastoudt/movement_data_prompts).
+
+
+**Critical Literacy: Supporting Student Reflection on Social Justice in Data-Related Courses**
+
+Co-advised with Nathan Ryan
+
+Advisees: Marina Anglo, Julieanna Nelson-Saunders, Thao Nguyen (Bucknell University)
+
+Find out more [here](https://sites.google.com/bucknell.edu/just-computing-bucknell-cu/fellow-projects/reading-guide-project).
+
+**Analysis of the Carceral Sequences in Pennsylvania**
+
+Co-advised with Nathan Ryan
+
+Advisees: Marina Anglo, Thao Nguyen (Bucknell University)
+
+Find out more [here](https://sites.google.com/bucknell.edu/just-computing-bucknell-cu/fellow-projects/sequence-analysis-project).
+
 **A Partial Least Squares Calibration Model for Predicting Biogenic Silica**
 
 Co-advised with Greg de Wet

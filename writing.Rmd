@@ -4,6 +4,10 @@ description: |
   Some additional details about Sara's writing for broader audiences
 ---
 
+- [Footnote Finding: When Correlation and Regression Slopes Tell (Slightly) Different Stories](https://mathvoices.ams.org/featurecolumn/2025/03/01/footnote-finding/)
+
+- [Is this p-hacking?](https://mathvoices.ams.org/featurecolumn/2024/03/01/is-this-p-hacking/)
+
 - [Mastermind Constrained Prose](https://www.tandfonline.com/doi/full/10.1080/10724117.2024.2312039)
 
 - [Sampled Poems Contain Multitudes](https://mathvoices.ams.org/featurecolumn/2023/12/01/sampled-poems-contain-multitudes/)
